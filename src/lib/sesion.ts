@@ -32,6 +32,31 @@ function clave(): Uint8Array {
   return new Uint8Array(createHash("sha256").update(secreto).digest());
 }
 
+/**
+ * Cifra la sesión y devuelve el valor de la cookie.
+ *
+ * Se expone aparte de `guardarSesion` porque un Route Handler que devuelve
+ * un `NextResponse` propio —una redirección, por ejemplo— NO arrastra las
+ * cookies puestas con `cookies().set()`: hay que escribirlas sobre esa misma
+ * respuesta. Ese detalle costó una sesión entera de depuración.
+ */
+export async function cifrarSesion(contenido: ContenidoSesion): Promise<string> {
+  return new EncryptJWT({ ...contenido })
+    .setProtectedHeader({ alg: "dir", enc: "A256GCM" })
+    .setIssuedAt()
+    .setExpirationTime("8h")
+    .encrypt(clave());
+}
+
+/** Opciones de la cookie de sesión, compartidas para no divergir. */
+export const OPCIONES_COOKIE = {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === "production",
+  sameSite: "lax",
+  path: "/",
+  maxAge: 8 * 60 * 60,
+} as const;
+
 export async function guardarSesion(contenido: ContenidoSesion): Promise<void> {
   const cifrada = await new EncryptJWT({ ...contenido })
     .setProtectedHeader({ alg: "dir", enc: "A256GCM" })

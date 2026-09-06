@@ -1,9 +1,8 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import { redirect } from "next/navigation";
 import type { EventoAuditoria } from "@/contracts";
 import { llamarApi, NoAutorizado } from "@/lib/api";
-import { exigirRol } from "@/lib/rutas";
+import { exigirRol, renovarYVolver } from "@/lib/rutas";
 import { CabeceraPagina, EstadoVacio } from "@/components/cabecera-pagina";
 
 export const metadata: Metadata = { title: "Bitácora" };
@@ -80,7 +79,7 @@ export default async function Auditoria({
       llamarApi<Facetas>("/internal/audit/facets"),
     ]);
   } catch (error) {
-    if (error instanceof NoAutorizado) redirect("/login");
+    if (error instanceof NoAutorizado) renovarYVolver("/auditoria");
     throw error;
   }
 

@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import type { ExpedienteListado, WorkflowStatus } from "@/contracts";
 import { ESTADO_ETIQUETA, SALA_ETIQUETA, WORKFLOW_STATUS } from "@/contracts";
+import { renovarYVolver } from "@/lib/rutas";
 import { llamarApi, NoAutorizado } from "@/lib/api";
 import { tieneRol, usuarioActual } from "@/lib/sesion";
 import { CabeceraPagina, EstadoVacio } from "@/components/cabecera-pagina";
@@ -34,7 +35,7 @@ export default async function Expedientes({
   try {
     datos = await llamarApi<Respuesta>(`/internal/candidates?${query}`);
   } catch (error) {
-    if (error instanceof NoAutorizado) redirect("/login");
+    if (error instanceof NoAutorizado) renovarYVolver("/expedientes");
     throw error;
   }
 

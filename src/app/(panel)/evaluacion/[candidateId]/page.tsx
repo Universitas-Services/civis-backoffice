@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 import type { CriterioBaremo, Evaluacion, ExpedienteDetalle } from "@/contracts";
 import { ErrorApi, llamarApi, NoAutorizado } from "@/lib/api";
-import { exigirRol } from "@/lib/rutas";
+import { exigirRol, renovarYVolver } from "@/lib/rutas";
 import { PantallaEvaluacion } from "@/components/pantalla-evaluacion";
 
 export const metadata: Metadata = { title: "Evaluación" };
@@ -31,7 +31,7 @@ export default async function Evaluar({
       { method: "POST" },
     );
   } catch (error) {
-    if (error instanceof NoAutorizado) redirect("/login");
+    if (error instanceof NoAutorizado) renovarYVolver("/evaluacion");
     if (error instanceof ErrorApi && error.status === 404) notFound();
     if (error instanceof ErrorApi) {
       return (

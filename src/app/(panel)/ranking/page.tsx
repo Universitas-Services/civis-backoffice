@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
-import { redirect } from "next/navigation";
 import type { ResultadoRanking } from "@/contracts";
-import { exigirRol } from "@/lib/rutas";
+import { exigirRol, renovarYVolver } from "@/lib/rutas";
+import { AccionesRanking } from "@/components/acciones-ranking";
 import { llamarApi, NoAutorizado } from "@/lib/api";
 
 export const metadata: Metadata = { title: "Ranking interno" };
@@ -14,12 +14,12 @@ const BANDAS: Record<string, { texto: string; clases: string; simbolo: string }>
 };
 
 export default async function RankingInterno() {
-  await exigirRol("SUPER_ADMIN", "EVALUATOR", "PUBLISHER");
+  const usuario = await exigirRol("SUPER_ADMIN", "EVALUATOR", "PUBLISHER");
   let ranking: ResultadoRanking;
   try {
     ranking = await llamarApi<ResultadoRanking>("/internal/ranking");
   } catch (error) {
-    if (error instanceof NoAutorizado) redirect("/login");
+    if (error instanceof NoAutorizado) renovarYVolver("/ranking");
     throw error;
   }
 
@@ -36,6 +36,12 @@ export default async function RankingInterno() {
         {ranking.eligibleCount} en competencia · {ranking.ineligibleCount} inhabilitados · baremo{" "}
         <strong className="text-toga-700">{ranking.rubricVersion ?? "—"}</strong>
       </p>
+
+      <div className="mt-6">
+        <AccionesRanking
+          puedePublicar={usuario.roles.some((r) => r === "SUPER_ADMIN" || r === "PUBLISHER")}
+        />
+      </div>
 
       {/* Móvil: tarjetas. Escritorio: tabla. Sin desplazamiento horizontal. */}
       <ul className="mt-6 space-y-3 lg:hidden">

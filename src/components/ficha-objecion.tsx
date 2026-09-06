@@ -6,6 +6,7 @@ import type { ObjecionBandeja } from "@/contracts";
 import {
   asignarObjecion,
   resolverObjecion,
+  solicitarInformacion,
   type Resultado,
 } from "@/app/(panel)/objeciones/acciones";
 import { InsigniaObjecion } from "./insignias";
@@ -40,11 +41,16 @@ export function FichaObjecion({
   readonly usuarioId: string;
 }) {
   const [abierta, setAbierta] = useState(false);
+  const [pidiendoInfo, setPidiendoInfo] = useState(false);
   const [conAjuste, setConAjuste] = useState(false);
   const [pendiente, iniciar] = useTransition();
   const [mensajeAsignar, setMensajeAsignar] = useState<string | null>(null);
   const [estado, accion] = useActionState<Resultado, FormData>(
     resolverObjecion.bind(null, objecion.id),
+    { ok: false },
+  );
+  const [info, accionInfo] = useActionState<Resultado, FormData>(
+    solicitarInformacion.bind(null, objecion.id),
     { ok: false },
   );
 
@@ -55,7 +61,15 @@ export function FichaObjecion({
     <article className="rounded-lg border border-toga-200 bg-white p-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="codigo text-xs font-medium text-toga-500">{objecion.trackingCode}</p>
+          {/* El código lleva al expediente completo de la objeción: los hechos
+              denunciados y la identidad del objetante no caben —ni deben caber—
+              en la bandeja. */}
+          <Link
+            href={`/objeciones/${objecion.id}`}
+            className="codigo text-xs font-medium text-balanza-700 hover:underline"
+          >
+            {objecion.trackingCode} →
+          </Link>
           <h2 className="mt-1 font-medium text-toga-900">
             <Link href={`/expedientes/${objecion.candidate.id}`} className="hover:underline">
               {objecion.candidate.firstName} {objecion.candidate.lastName}
@@ -76,6 +90,23 @@ export function FichaObjecion({
         {objecion.affectsCredential && ` · afecta a ${objecion.affectsCredential}`}
       </p>
 
+      {info.exito && (
+        <p
+          role="status"
+          className="mt-3 rounded-md border border-validado-700/20 bg-validado-50 px-4 py-3 text-sm text-validado-700"
+        >
+          {info.exito}
+        </p>
+      )}
+      {info.error && (
+        <p
+          role="alert"
+          className="mt-3 rounded-md border border-balanza-600/25 bg-balanza-50 px-4 py-3 text-sm text-balanza-700"
+        >
+          {info.error}
+        </p>
+      )}
+
       {estado.exito && (
         <p
           role="status"
@@ -93,7 +124,7 @@ export function FichaObjecion({
         </p>
       )}
 
-      {!resuelta && !estado.exito && (
+      {!resuelta && !estado.exito && !info.exito && (
         <div className="mt-4 border-t border-toga-100 pt-4">
           {!asignada ? (
             <button
@@ -109,14 +140,60 @@ export function FichaObjecion({
             >
               {pendiente ? "Asignando…" : "Asignármela y revisar"}
             </button>
-          ) : !abierta ? (
-            <button
-              type="button"
-              onClick={() => setAbierta(true)}
-              className="rounded-md border border-toga-300 px-4 py-2.5 text-sm font-semibold text-toga-700 hover:bg-toga-100"
-            >
-              Resolver objeción
-            </button>
+          ) : !abierta && !pidiendoInfo ? (
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() => setAbierta(true)}
+                className="rounded-md border border-toga-300 px-4 py-2.5 text-sm font-semibold text-toga-700 hover:bg-toga-100"
+              >
+                Resolver objeción
+              </button>
+              <button
+                type="button"
+                onClick={() => setPidiendoInfo(true)}
+                className="rounded-md border border-toga-300 px-4 py-2.5 text-sm font-semibold text-toga-700 hover:bg-toga-100"
+              >
+                Solicitar información
+              </button>
+            </div>
+          ) : pidiendoInfo ? (
+            /* Falta información: no se cierra como infundada ni se deja
+               envejecer sin que nadie sepa por qué está parada. */
+            <form action={accionInfo} className="space-y-3">
+              <div>
+                <label
+                  htmlFor={`i-${objecion.id}`}
+                  className="block text-xs font-medium text-toga-600"
+                >
+                  ¿Qué información falta? <span className="text-balanza-700">*</span>
+                </label>
+                <textarea
+                  id={`i-${objecion.id}`}
+                  name="reason"
+                  rows={3}
+                  required
+                  minLength={15}
+                  placeholder="Qué prueba o aclaración se le pide al objetante."
+                  className="mt-1 w-full rounded-md border border-toga-300 px-3 py-2 text-sm"
+                />
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="submit"
+                  className="rounded-md bg-toga-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-toga-800"
+                >
+                  Registrar solicitud
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPidiendoInfo(false)}
+                  className="rounded-md border border-toga-300 px-4 py-2.5 text-sm font-semibold text-toga-700 hover:bg-toga-100"
+                >
+                  Cancelar
+                </button>
+              </div>
+            </form>
           ) : (
             <form action={accion} className="space-y-4">
               <fieldset>

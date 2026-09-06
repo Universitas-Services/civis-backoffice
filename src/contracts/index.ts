@@ -378,3 +378,165 @@ export interface EventoAuditoria {
   readonly occurredAt: string;
   readonly actor: { readonly id: string; readonly fullName: string; readonly email: string } | null;
 }
+
+// ─────────────────────────────────────────── informes
+
+export interface InformeListado {
+  readonly id: string;
+  readonly version: number;
+  readonly status: "DRAFT" | "PENDING_APPROVAL" | "PUBLISHED" | "WITHDRAWN";
+  readonly sha256: string;
+  readonly createdAt: string;
+  readonly publishedAt: string | null;
+  readonly withdrawnAt: string | null;
+  readonly approvalReason: string | null;
+  readonly preparedBy: { readonly fullName: string } | null;
+  readonly approvedBy: { readonly fullName: string } | null;
+}
+
+export const generarInformeSchema = z.object({
+  cutoffAt: z.string().optional(),
+});
+
+export const publicarInformeSchema = z.object({
+  reason: z.string().trim().min(10, "La aprobación debe estar motivada").max(1000),
+});
+
+// ─────────────────────────────────────────── revisión documental
+
+export interface DocumentoEnRevision {
+  readonly id: string;
+  readonly publicId: string;
+  readonly category: DocumentCategory;
+  readonly originalName: string;
+  readonly sizeBytes: number;
+  readonly sha256: string;
+  readonly scanStatus: string;
+  readonly verificationStatus: "UNVERIFIED" | "VERIFIED" | "REJECTED";
+  readonly classification: "PRIVATE" | "REDACTED" | "PUBLIC";
+  readonly uploadedAt: string;
+  readonly version: number;
+  readonly submission: {
+    readonly fileNumber: string;
+    readonly candidate: {
+      readonly id: string;
+      readonly firstName: string;
+      readonly lastName: string;
+      readonly chamber: Chamber;
+    };
+  };
+  readonly uploadedBy: { readonly fullName: string } | null;
+}
+
+export const verificarDocumentoSchema = z.object({
+  status: z.enum(["VERIFIED", "REJECTED"]),
+  reason: z.string().trim().min(5, "Indique el motivo").max(1000),
+});
+
+export const clasificarDocumentoSchema = z.object({
+  classification: z.enum(["PRIVATE", "REDACTED", "PUBLIC"]),
+  reason: z.string().trim().min(5, "Indique el motivo").max(1000),
+});
+
+// ─────────────────────────────────────────── vista previa pública
+
+export interface FichaPublica {
+  readonly publicId: string;
+  readonly slug: string;
+  readonly fullName: string;
+  readonly chamber: Chamber;
+  readonly total: number;
+  readonly band: SuitabilityBand;
+  readonly ineligible: boolean;
+  readonly position: number | null;
+  readonly tied: boolean;
+  readonly provisional: boolean;
+  readonly publicSummary: string | null;
+  readonly rubricVersion: string;
+  readonly hasFoundedObjections: boolean;
+  readonly objectedCredentials: readonly string[];
+  readonly breakdown: readonly {
+    readonly dimensionKey: string;
+    readonly label: string;
+    readonly points: number;
+    readonly maxPoints: number;
+  }[];
+  readonly documents: readonly {
+    readonly publicId: string;
+    readonly label: string;
+    readonly category: string;
+    readonly sizeBytes: number;
+  }[];
+}
+
+// ─────────────────────────────────────────── historial de evaluación
+
+export interface AjusteEvaluacion {
+  readonly id: string;
+  readonly criterionKey: string;
+  readonly previousValue: string;
+  readonly newValue: string;
+  readonly reason: string;
+  readonly createdAt: string;
+  readonly requestedBy: { readonly fullName: string } | null;
+}
+
+export interface EvaluacionHistorial {
+  readonly id: string;
+  readonly status: "DRAFT" | "SUBMITTED" | "APPROVED" | "SUPERSEDED";
+  readonly totalPoints: string;
+  readonly band: string;
+  readonly ineligible: boolean;
+  readonly ineligibilityReasons: readonly string[];
+  readonly createdAt: string;
+  readonly submittedAt: string | null;
+  readonly approvedAt: string | null;
+  readonly supersededAt: string | null;
+  readonly version: number;
+  readonly rubric: { readonly version: string };
+  readonly evaluator: { readonly fullName: string } | null;
+  readonly approvedBy: { readonly fullName: string } | null;
+  readonly adjustments: readonly AjusteEvaluacion[];
+}
+
+export const cambiarRolesSchema = z.object({
+  roles: z.array(z.enum(ROLES)).min(1, "Un usuario debe conservar al menos un rol"),
+  reason: z.string().trim().min(10, "Indique el motivo (mínimo 10 caracteres)").max(1000),
+});
+
+export const solicitarInfoSchema = z.object({
+  reason: z.string().trim().min(15, "Indique qué información falta").max(2000),
+});
+
+export const retirarPublicacionSchema = z.object({
+  reason: z.string().trim().min(10, "El retiro debe estar motivado").max(1000),
+});
+
+/** `abrir()` devuelve el modelo completo con sus relaciones, pero **no** el
+ *  agregado `_count` de la bandeja: aquí llegan las listas enteras. */
+export interface ObjecionDetalle extends Omit<ObjecionBandeja, "_count"> {
+  /** Datos del objetante. Sólo llegan al abrir la objeción, y esa apertura
+   *  queda registrada en la bitácora. */
+  readonly objectorFullName: string;
+  readonly objectorNationalId: string | null;
+  readonly objectorEmail: string;
+  readonly objectorPhone: string | null;
+  readonly description: string;
+  readonly resolution: string | null;
+  readonly privacyConsentAt: string;
+  readonly attachments: readonly {
+    readonly id: string;
+    readonly originalName: string;
+    readonly sizeBytes: number;
+    readonly sha256: string;
+    readonly scanStatus: string;
+  }[];
+  readonly adjustments: readonly {
+    readonly id: string;
+    readonly criterionKey: string;
+    readonly previousValue: string;
+    readonly newValue: string;
+    readonly reason: string;
+    readonly requestedBy: { readonly fullName: string } | null;
+  }[];
+}

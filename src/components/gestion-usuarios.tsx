@@ -1,8 +1,14 @@
 "use client";
 
 import { useActionState, useState, useTransition } from "react";
+import type { Role } from "@/contracts";
 import { ROLES, ROL_ETIQUETA } from "@/contracts";
-import { cambiarEstado, crearUsuario, type EstadoUsuarios } from "@/app/(panel)/usuarios/acciones";
+import {
+  cambiarEstado,
+  cambiarRoles,
+  crearUsuario,
+  type EstadoUsuarios,
+} from "@/app/(panel)/usuarios/acciones";
 
 export function CrearUsuario() {
   const [abierto, setAbierto] = useState(false);
@@ -200,6 +206,105 @@ export function InterruptorUsuario({
           Cancelar
         </button>
       </div>
+    </div>
+  );
+}
+
+/**
+ * Editor de roles.
+ *
+ * Exige motivo porque cambia quién puede qué en el sistema. Al guardar, la
+ * API cierra las sesiones abiertas de esa persona: su token declara los roles
+ * viejos y seguiría abriéndole puertas que ya no le tocan.
+ */
+export function EditorRoles({
+  id,
+  nombre,
+  rolesActuales,
+}: {
+  readonly id: string;
+  readonly nombre: string;
+  readonly rolesActuales: readonly Role[];
+}) {
+  const [abierto, setAbierto] = useState(false);
+  const [estado, accion] = useActionState<EstadoUsuarios, FormData>(
+    cambiarRoles.bind(null, id),
+    {},
+  );
+
+  if (!abierto) {
+    return (
+      <button
+        type="button"
+        onClick={() => setAbierto(true)}
+        className="text-xs font-medium text-balanza-700 hover:underline"
+      >
+        Cambiar roles
+      </button>
+    );
+  }
+
+  return (
+    <div className="min-w-[18rem] rounded-md border border-toga-300 bg-white p-3">
+      <p className="text-xs font-medium text-toga-900">Roles de {nombre}</p>
+
+      {estado.exito && (
+        <p
+          role="status"
+          className="mt-2 rounded-md border border-validado-700/20 bg-validado-50 px-2 py-1.5 text-xs text-validado-700"
+        >
+          {estado.exito}
+        </p>
+      )}
+      {estado.error && (
+        <p role="alert" className="mt-2 text-xs font-medium text-balanza-700">
+          {estado.error}
+        </p>
+      )}
+
+      {!estado.exito && (
+        <form action={accion} className="mt-2 space-y-2">
+          <div className="flex flex-wrap gap-1.5">
+            {ROLES.map((r) => (
+              <label
+                key={r}
+                className="flex cursor-pointer items-center gap-1.5 rounded-md border border-toga-200 px-2 py-1 text-xs hover:bg-toga-50"
+              >
+                <input
+                  type="checkbox"
+                  name="roles"
+                  value={r}
+                  defaultChecked={rolesActuales.includes(r)}
+                />
+                {ROL_ETIQUETA[r]}
+              </label>
+            ))}
+          </div>
+          <textarea
+            name="reason"
+            rows={2}
+            required
+            minLength={10}
+            placeholder="Motivo del cambio (obligatorio)"
+            className="w-full rounded-md border border-toga-300 px-2 py-1.5 text-xs"
+          />
+          <div className="flex gap-2">
+            <button
+              type="submit"
+              className="rounded-md bg-toga-900 px-3 py-1.5 text-xs font-semibold text-white hover:bg-toga-800"
+            >
+              Guardar
+            </button>
+            <button
+              type="button"
+              onClick={() => setAbierto(false)}
+              className="rounded-md border border-toga-300 px-3 py-1.5 text-xs font-semibold text-toga-700 hover:bg-toga-100"
+            >
+              Cancelar
+            </button>
+          </div>
+        </form>
+      )}
     </div>
   );
 }

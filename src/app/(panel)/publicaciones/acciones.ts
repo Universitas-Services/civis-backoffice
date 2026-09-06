@@ -50,3 +50,48 @@ export async function prepararRanking(): Promise<EstadoPublicacion> {
   revalidatePath("/publicaciones");
   return { exito: "Ranking preparado. Requiere aprobación de otra persona." };
 }
+
+/**
+ * Prepara el snapshot de la ficha de un postulante.
+ *
+ * Antes sólo se podía preparar el ranking, así que un perfil evaluado no
+ * tenía forma de llegar al público desde la interfaz.
+ */
+export async function prepararFicha(
+  candidateId: string,
+): Promise<EstadoPublicacion & { ok?: boolean }> {
+  try {
+    await llamarApi(`/internal/publications/candidate/${candidateId}/prepare`, { method: "POST" });
+    revalidatePath("/publicaciones");
+    return { exito: "Ficha preparada. Requiere aprobación de otra persona." };
+  } catch (error) {
+    return { error: error instanceof ErrorApi ? error.message : "No se pudo preparar" };
+  }
+}
+
+/**
+ * Retira contenido ya publicado.
+ *
+ * Exige motivo: retirar algo del sitio público es una decisión con
+ * consecuencias, y quien la tome debe dejar dicho por qué.
+ */
+export async function retirarPublicacion(
+  id: string,
+  _previo: EstadoPublicacion,
+  formData: FormData,
+): Promise<EstadoPublicacion> {
+  const motivo = String(formData.get("reason") ?? "").trim();
+  if (motivo.length < 10) {
+    return { error: "El retiro debe estar motivado (mínimo 10 caracteres)" };
+  }
+  try {
+    await llamarApi(`/internal/publications/${id}/withdraw`, {
+      method: "POST",
+      body: { reason: motivo },
+    });
+    revalidatePath("/publicaciones");
+    return { exito: "Contenido retirado del sitio público." };
+  } catch (error) {
+    return { error: error instanceof ErrorApi ? error.message : "No se pudo retirar" };
+  }
+}

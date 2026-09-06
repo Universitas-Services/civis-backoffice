@@ -36,12 +36,14 @@ interface Opciones {
 
 export async function llamarApi<T>(ruta: string, opciones: Opciones = {}): Promise<T> {
   const sesion = await leerSesion();
+  const token = sesion?.accessToken ?? null;
+
   const respuesta = await fetch(`${API_INTERNA}${ruta}`, {
     method: opciones.method ?? "GET",
     headers: {
       Accept: "application/json",
       ...(opciones.body ? { "Content-Type": "application/json" } : {}),
-      ...(sesion ? { Authorization: `Bearer ${sesion.accessToken}` } : {}),
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
     body: opciones.body ? JSON.stringify(opciones.body) : undefined,
     ...(opciones.revalidate
@@ -49,6 +51,9 @@ export async function llamarApi<T>(ruta: string, opciones: Opciones = {}): Promi
       : { cache: "no-store" as const }),
   });
 
+  // Un 401 aquí significa que la sesión ya no sirve: la renovación la hace
+  // el proxy ANTES de llegar a la página, que es el único punto donde se
+  // puede guardar el token nuevo. Reintentar aquí rompería la rotación.
   if (respuesta.status === 401) throw new NoAutorizado();
   if (respuesta.status === 204) return undefined as T;
 

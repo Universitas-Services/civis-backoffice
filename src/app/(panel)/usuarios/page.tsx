@@ -1,11 +1,10 @@
 import type { Metadata } from "next";
-import { redirect } from "next/navigation";
 import type { UsuarioDirectorio } from "@/contracts";
 import { ROL_ETIQUETA } from "@/contracts";
 import { llamarApi, NoAutorizado } from "@/lib/api";
-import { exigirRol } from "@/lib/rutas";
+import { exigirRol, renovarYVolver } from "@/lib/rutas";
 import { CabeceraPagina } from "@/components/cabecera-pagina";
-import { CrearUsuario, InterruptorUsuario } from "@/components/gestion-usuarios";
+import { CrearUsuario, EditorRoles, InterruptorUsuario } from "@/components/gestion-usuarios";
 
 export const metadata: Metadata = { title: "Usuarios y roles" };
 
@@ -16,7 +15,7 @@ export default async function Usuarios() {
   try {
     usuarios = await llamarApi<UsuarioDirectorio[]>("/internal/users");
   } catch (error) {
-    if (error instanceof NoAutorizado) redirect("/login");
+    if (error instanceof NoAutorizado) renovarYVolver("/usuarios");
     throw error;
   }
 
@@ -43,6 +42,9 @@ export default async function Usuarios() {
                 <p className="mt-2 text-xs text-toga-600">
                   {u.roles.map((r) => ROL_ETIQUETA[r]).join(" + ")}
                 </p>
+                <div className="mt-2">
+                  <EditorRoles id={u.id} nombre={u.fullName} rolesActuales={u.roles} />
+                </div>
                 <div className="mt-3">
                   <InterruptorUsuario
                     id={u.id}
@@ -90,7 +92,12 @@ export default async function Usuarios() {
                     </th>
                     <td className="px-4 py-3 text-toga-600">{u.email}</td>
                     <td className="px-4 py-3 text-toga-600">
-                      {u.roles.map((r) => ROL_ETIQUETA[r]).join(" + ")}
+                      <span className="block">
+                        {u.roles.map((r) => ROL_ETIQUETA[r]).join(" + ")}
+                      </span>
+                      <span className="mt-1 block">
+                        <EditorRoles id={u.id} nombre={u.fullName} rolesActuales={u.roles} />
+                      </span>
                     </td>
                     <td className="px-4 py-3 text-xs text-toga-500">
                       {u.lastLoginAt

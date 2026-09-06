@@ -74,3 +74,31 @@ export async function resolverObjecion(
     return { ok: false, error: error instanceof ErrorApi ? error.message : "No se pudo resolver" };
   }
 }
+
+/**
+ * Solicita información adicional al objetante.
+ *
+ * Deja la objeción en espera sin cerrarla: si faltan pruebas, cerrarla como
+ * infundada sería injusto, y dejarla sin tocar la haría envejecer sin que
+ * nadie sepa por qué.
+ */
+export async function solicitarInformacion(
+  id: string,
+  _previo: Resultado,
+  formData: FormData,
+): Promise<Resultado> {
+  const motivo = String(formData.get("reason") ?? "").trim();
+  if (motivo.length < 15) {
+    return { ok: false, error: "Indique qué información falta (mínimo 15 caracteres)" };
+  }
+  try {
+    await llamarApi(`/internal/objections/${id}/request-info`, {
+      method: "POST",
+      body: { reason: motivo },
+    });
+    revalidatePath("/objeciones");
+    return { ok: true, exito: "Solicitud registrada. La objeción queda en espera." };
+  } catch (error) {
+    return { ok: false, error: error instanceof ErrorApi ? error.message : "No se pudo solicitar" };
+  }
+}

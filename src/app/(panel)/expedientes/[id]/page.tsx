@@ -4,8 +4,10 @@ import { notFound, redirect } from "next/navigation";
 import type { ExpedienteDetalle } from "@/contracts";
 import { CATEGORIA_ETIQUETA, SALA_ETIQUETA } from "@/contracts";
 import { ErrorApi, llamarApi, NoAutorizado } from "@/lib/api";
+import { renovarYVolver } from "@/lib/rutas";
 import { tieneRol, usuarioActual } from "@/lib/sesion";
 import { CabeceraPagina } from "@/components/cabecera-pagina";
+import { HistorialEvaluaciones } from "@/components/historial-evaluaciones";
 import {
   InsigniaAnalisis,
   InsigniaBanda,
@@ -29,7 +31,7 @@ export default async function DetalleExpediente({
   try {
     e = await llamarApi<ExpedienteDetalle>(`/internal/candidates/${id}`);
   } catch (error) {
-    if (error instanceof NoAutorizado) redirect("/login");
+    if (error instanceof NoAutorizado) renovarYVolver("/expedientes");
     if (error instanceof ErrorApi && error.status === 404) notFound();
     throw error;
   }
@@ -50,14 +52,26 @@ export default async function DetalleExpediente({
           { texto: `${e.firstName} ${e.lastName}` },
         ]}
         acciones={
-          puedeEvaluar ? (
-            <Link
-              href={`/evaluacion/${e.id}`}
-              className="rounded-md bg-toga-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-toga-800"
-            >
-              Evaluar expediente →
-            </Link>
-          ) : undefined
+          <div className="flex flex-wrap items-center gap-3">
+            {/* Sólo la administración puede reconstruir la historia completa de
+                un expediente; para el resto la bitácora no existe. */}
+            {tieneRol(usuario, "SUPER_ADMIN") && (
+              <Link
+                href={`/auditoria/entidad/Candidate/${e.id}`}
+                className="rounded-md border border-toga-300 px-4 py-2.5 text-sm font-medium text-toga-700 hover:border-toga-400"
+              >
+                Ver historial
+              </Link>
+            )}
+            {puedeEvaluar && (
+              <Link
+                href={`/evaluacion/${e.id}`}
+                className="rounded-md bg-toga-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-toga-800"
+              >
+                Evaluar expediente →
+              </Link>
+            )}
+          </div>
         }
       />
 
@@ -122,14 +136,14 @@ export default async function DetalleExpediente({
                   })}
                 </p>
               </div>
-              {e._count.objections > 0 && (
+              {(e._count?.objections ?? 0) > 0 && (
                 <div>
                   <p className="text-xs text-toga-500">Objeciones</p>
                   <Link
                     href={`/objeciones?candidato=${e.id}`}
                     className="mt-0.5 inline-block font-semibold text-balanza-700 hover:underline"
                   >
-                    <span className="cifra">{e._count.objections}</span> recibidas →
+                    <span className="cifra">{e._count?.objections ?? 0}</span> recibidas →
                   </Link>
                 </div>
               )}
@@ -149,6 +163,8 @@ export default async function DetalleExpediente({
               </div>
             </div>
           )}
+
+          <HistorialEvaluaciones candidateId={e.id} />
 
           {/* Los datos internos van aparte y rotulados: quien mira la pantalla
               debe saber en todo momento qué se publica y qué no. */}

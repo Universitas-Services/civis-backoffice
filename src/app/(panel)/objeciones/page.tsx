@@ -1,10 +1,9 @@
 import type { Metadata } from "next";
-import { redirect } from "next/navigation";
 import Link from "next/link";
 import type { ObjecionBandeja } from "@/contracts";
 import { CAUSAL_ETIQUETA, SALA_ETIQUETA } from "@/contracts";
 import { llamarApi, NoAutorizado } from "@/lib/api";
-import { exigirRol } from "@/lib/rutas";
+import { exigirRol, renovarYVolver } from "@/lib/rutas";
 import { CabeceraPagina, EstadoVacio } from "@/components/cabecera-pagina";
 import { InsigniaObjecion } from "@/components/insignias";
 import { FichaObjecion } from "@/components/ficha-objecion";
@@ -32,7 +31,7 @@ export default async function Objeciones({
   try {
     datos = await llamarApi<Respuesta>(`/internal/objections?${query}`);
   } catch (error) {
-    if (error instanceof NoAutorizado) redirect("/login");
+    if (error instanceof NoAutorizado) renovarYVolver("/objeciones");
     throw error;
   }
 

@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { ROLES } from "@/contracts";
+import { cambiarRolesSchema, ROLES } from "@/contracts";
 import { ErrorApi, llamarApi } from "@/lib/api";
 
 const crearSchema = z.object({
@@ -61,5 +61,34 @@ export async function cambiarEstado(
     return { ok: true };
   } catch (error) {
     return { ok: false, error: error instanceof ErrorApi ? error.message : "No se pudo cambiar" };
+  }
+}
+
+/**
+ * Reemplaza el conjunto de roles de un usuario.
+ *
+ * Exige motivo porque cambia quién puede qué. La API además cierra las
+ * sesiones abiertas de esa persona: el token que lleva en el navegador
+ * declara los roles antiguos y no debe seguir sirviendo.
+ */
+export async function cambiarRoles(
+  id: string,
+  _previo: EstadoUsuarios,
+  formData: FormData,
+): Promise<EstadoUsuarios> {
+  const analisis = cambiarRolesSchema.safeParse({
+    roles: formData.getAll("roles"),
+    reason: formData.get("reason"),
+  });
+  if (!analisis.success) {
+    return { error: analisis.error.issues[0]?.message ?? "Datos inválidos" };
+  }
+
+  try {
+    await llamarApi(`/internal/users/${id}/roles`, { method: "PATCH", body: analisis.data });
+    revalidatePath("/usuarios");
+    return { exito: "Roles actualizados. Se cerraron las sesiones abiertas de esa cuenta." };
+  } catch (error) {
+    return { error: error instanceof ErrorApi ? error.message : "No se pudieron cambiar" };
   }
 }

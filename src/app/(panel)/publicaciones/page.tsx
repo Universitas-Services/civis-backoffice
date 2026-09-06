@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
-import { redirect } from "next/navigation";
 import type { SnapshotEnCola } from "@/contracts";
-import { exigirRol } from "@/lib/rutas";
+import { exigirRol, renovarYVolver } from "@/lib/rutas";
 import { llamarApi, NoAutorizado } from "@/lib/api";
 import { FichaSnapshot } from "@/components/ficha-snapshot";
 import { BotonPrepararRanking } from "@/components/boton-preparar-ranking";
+import { PrepararFicha, PublicadosVigentes } from "@/components/publicacion-extra";
 
 export const metadata: Metadata = { title: "Cola de publicación" };
 
@@ -21,7 +21,7 @@ export default async function Publicaciones() {
   try {
     cola = await llamarApi<SnapshotEnCola[]>("/internal/publications/queue");
   } catch (error) {
-    if (error instanceof NoAutorizado) redirect("/login");
+    if (error instanceof NoAutorizado) renovarYVolver("/publicaciones");
     throw error;
   }
 
@@ -38,6 +38,10 @@ export default async function Publicaciones() {
           </p>
         </div>
         <BotonPrepararRanking />
+      </div>
+
+      <div className="mt-6">
+        <PrepararFicha />
       </div>
 
       {cola.length === 0 ? (
@@ -60,6 +64,10 @@ export default async function Publicaciones() {
           ))}
         </ul>
       )}
+
+      <div className="mt-10">
+        <PublicadosVigentes />
+      </div>
     </div>
   );
 }

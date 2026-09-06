@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import type { ResumenDashboard } from "@/contracts";
+import { renovarYVolver } from "@/lib/rutas";
 import { llamarApi, NoAutorizado } from "@/lib/api";
 import { usuarioActual } from "@/lib/sesion";
 import { redirect } from "next/navigation";
@@ -46,7 +47,7 @@ export default async function Dashboard() {
   try {
     resumen = await llamarApi<ResumenDashboard>("/internal/dashboard");
   } catch (error) {
-    if (error instanceof NoAutorizado) redirect("/login");
+    if (error instanceof NoAutorizado) renovarYVolver("/dashboard");
     // El panel conserva navegación y recordatorios aunque las métricas fallen.
   }
 
