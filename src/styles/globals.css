@@ -1,0 +1,146 @@
+@import "tailwindcss";
+
+/**
+ * Paleta "Neutral Judicial".
+ *
+ * Definida en la documentación de diseño para transmitir autoridad sin
+ * recurrir a los colores de la diatriba política: gris pizarra como ancla,
+ * oro viejo como acento (sustituye al rojo de alarma) y grises claros de
+ * lienzo. Los tonos semánticos usan verde esmeralda para lo validado y gris
+ * piedra para lo objetado, porque una objeción es revisión documental
+ * normal, no un ataque.
+ */
+@theme {
+  --color-toga-50: #f8fafc;
+  --color-toga-100: #f1f5f9;
+  --color-toga-200: #e2e8f0;
+  --color-toga-300: #cbd5e1;
+  --color-toga-400: #94a3b8;
+  --color-toga-500: #64748b;
+  --color-toga-600: #475569;
+  --color-toga-700: #334155;
+  --color-toga-800: #1e293b;
+  --color-toga-900: #0f172a;
+
+  --color-balanza-50: #fffbeb;
+  --color-balanza-100: #fef3c7;
+  --color-balanza-200: #fde68a;
+  --color-balanza-500: #f59e0b;
+  --color-balanza-600: #d97706;
+  --color-balanza-700: #b45309;
+
+  --color-validado-50: #ecfdf5;
+  --color-validado-700: #047857;
+
+  --color-objetado-100: #f5f5f4;
+  --color-objetado-600: #57534e;
+
+  /* IBM Plex, auto-alojada por next/font (ver src/lib/fuentes.ts). */
+  --font-institucional: var(--fuente-serif), Georgia, "Times New Roman", serif;
+  --font-sistema: var(--fuente-sans), system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: var(--fuente-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  /* Alias para las utilidades font-sans / font-serif / font-mono. */
+  --font-sans: var(--fuente-sans), system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-serif: var(--fuente-serif), Georgia, "Times New Roman", serif;
+}
+
+:root {
+  color-scheme: light;
+  --duracion-ui: 150ms;
+  --color-gris-pizarra: #0f172a;
+  --color-oro-viejo: #d97706;
+  --color-fondo-general: #f8fafc;
+  --color-lienzo: #ffffff;
+  --color-borde-lienzo: #e2e8f0;
+  --color-validado-texto: #047857;
+  --color-validado-fondo: #ecfdf5;
+  --color-objetado-texto: #57534e;
+  --color-objetado-fondo: #f5f5f4;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--color-fondo-general);
+  color: var(--color-gris-pizarra);
+  font-family: var(--font-sistema);
+  /* 16px es el suelo, también en móvil. Por debajo de 16px la legibilidad
+     cae para personas con baja visión o dislexia (guía del GOV.UK Design
+     System, siguiendo a la British Dyslexia Association). */
+  font-size: 1rem;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Los títulos llevan la serif institucional: aporta el peso de documento
+   formal sin recurrir a ornamento. Merriweather está diseñada para pantalla. */
+h1,
+h2,
+h3 {
+  font-family: var(--font-institucional);
+  letter-spacing: -0.011em;
+  text-wrap: balance;
+}
+
+/**
+ * Medida de línea.
+ *
+ * El USWDS sitúa la lectura cómoda entre 45 y 90 caracteres, con 66 como
+ * óptimo. Sin este tope, en pantallas anchas los párrafos se estiran y el ojo
+ * pierde el renglón al volver.
+ */
+.prosa {
+  max-width: 66ch;
+  text-wrap: pretty;
+}
+
+/* Las cifras de puntaje se comparan en vertical: deben alinearse. */
+.cifra {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+/* Códigos de seguimiento y huellas SHA: deben poder transcribirse sin
+   confundir 0 con O ni 1 con l. */
+code,
+.codigo {
+  font-family: var(--font-mono);
+  font-variant-ligatures: none;
+}
+
+/* Foco siempre visible: requisito de accesibilidad por teclado (WCAG 2.4.7). */
+:focus-visible {
+  outline: 3px solid var(--color-oro-viejo);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* Respeta la preferencia del sistema de reducir movimiento. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Enlace de salto para lectores de pantalla y navegación por teclado. */
+.salto-contenido {
+  position: absolute;
+  left: -9999px;
+  z-index: 999;
+}
+.salto-contenido:focus {
+  left: 1rem;
+  top: 1rem;
+  padding: 0.75rem 1rem;
+  background: var(--color-toga-900);
+  color: white;
+  border-radius: 0.375rem;
+}
