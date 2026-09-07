@@ -42,8 +42,9 @@ export function FichaRevision({
     setAbriendo(true);
     try {
       const r = await fetch(`/api/documentos/descarga/${documento.id}`);
-      const d = (await r.json()) as { url?: string };
-      if (d.url) setUrlDocumento(d.url);
+      // Ver comentario en visor-pdf.tsx: la ruta de descarga confirma que el
+      // documento está disponible; el contenido lo sirve el propio panel.
+      if (r.ok) setUrlDocumento(`/api/documentos/contenido/${documento.id}`);
     } finally {
       setAbriendo(false);
     }

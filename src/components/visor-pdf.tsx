@@ -40,10 +40,14 @@ export function VisorPdf({ documentos }: { readonly documentos: readonly Documen
     setError(null);
     setCargando(true);
     try {
+      // Se confirma que el documento sigue disponible (y que la sesión vale)
+      // antes de pintar el visor.
       const respuesta = await fetch(`/api/documentos/descarga/${documentos[indice]!.id}`);
       if (!respuesta.ok) throw new Error();
-      const datos = (await respuesta.json()) as { url: string };
-      setUrl(datos.url);
+      // El visor consume la ruta del propio panel, no la URL firmada del
+      // almacenamiento: es lo que permite mostrar el PDF en pantalla en vez de
+      // descargarlo, con independencia del proveedor que haya detrás.
+      setUrl(`/api/documentos/contenido/${documentos[indice]!.id}`);
     } catch {
       setError("No se pudo abrir el documento.");
     } finally {
