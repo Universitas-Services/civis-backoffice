@@ -46,6 +46,10 @@ export async function llamarApi<T>(ruta: string, opciones: Opciones = {}): Promi
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
     body: opciones.body ? JSON.stringify(opciones.body) : undefined,
+    // Sin `signal`, `fetch` espera indefinidamente: una API que no responde
+    // dejaría la pantalla cargando para siempre, sin error que mostrar ni
+    // forma de que el usuario sepa qué pasa.
+    signal: AbortSignal.timeout(20_000),
     ...(opciones.revalidate
       ? { next: { revalidate: opciones.revalidate } }
       : { cache: "no-store" as const }),
