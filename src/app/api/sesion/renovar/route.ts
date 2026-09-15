@@ -52,10 +52,15 @@ export async function GET(request: Request): Promise<NextResponse> {
 
   const respuesta = await fetch(`${API_INTERNA}/auth/refresh`, {
     method: "POST",
+    // No se envía `Origin`: es una llamada servidor→servidor, no del navegador.
+    // La cookie de refresh vive cifrada dentro de la sesión del panel y sólo el
+    // servidor la reenvía; el navegador nunca la tiene sobre el dominio de la
+    // API, así que aquí no hay CSRF que contener. Mandar un `Origin` artificial
+    // sólo obligaba a que BACKOFFICE_PUBLIC_URL estuviera en CORS_ORIGINS, y su
+    // ausencia provocaba cierres de sesión cuando no coincidían. El OriginGuard
+    // de la API sigue protegiendo las llamadas reales del navegador a /auth/*.
     headers: {
       Cookie: sesion.refreshCookie,
-      // La API comprueba el origen en las rutas que usan cookie.
-      Origin: base,
     },
     cache: "no-store",
   }).catch(() => null);
