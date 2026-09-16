@@ -48,7 +48,7 @@ export async function iniciarSesion(
     headers: {
       "Content-Type": "application/json",
       Accept: "application/json",
-      ...cabecerasAuthCookie(),
+      ...(await cabecerasAuthCookie()),
     },
     body: JSON.stringify(analisis.data),
     cache: "no-store",
@@ -71,7 +71,7 @@ export async function iniciarSesion(
       error:
         mensaje && mensaje.length > 0
           ? mensaje
-          : "Acceso denegado. Si el mensaje habla de origen, añada BACKOFFICE_PUBLIC_URL a CORS_ORIGINS en la API.",
+          : "Acceso denegado. Compruebe que CORS_ORIGINS tenga exactamente https://civis-backoffice.netlify.app (sin barra final) y que BACKOFFICE_PUBLIC_URL esté definida en Netlify.",
     };
   }
   if (!respuesta.ok) {
@@ -113,7 +113,7 @@ export async function terminarSesion(): Promise<void> {
     // Se avisa a la API para que revoque la familia de refresh tokens.
     await fetch(`${API_INTERNA}/auth/logout`, {
       method: "POST",
-      headers: cabecerasAuthCookie(sesion.refreshCookie),
+      headers: await cabecerasAuthCookie(sesion.refreshCookie),
       cache: "no-store",
     }).catch(() => undefined);
   }
@@ -148,7 +148,7 @@ export async function cambiarContrasena(
       "Content-Type": "application/json",
       Accept: "application/json",
       Authorization: `Bearer ${sesion.accessToken}`,
-      ...cabecerasAuthCookie(sesion.refreshCookie),
+      ...(await cabecerasAuthCookie(sesion.refreshCookie)),
     },
     body: JSON.stringify(analisis.data),
     cache: "no-store",
