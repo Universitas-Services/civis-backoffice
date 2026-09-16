@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { cambiarRolesSchema, ROLES } from "@/contracts";
-import { ErrorApi, llamarApi } from "@/lib/api";
+import { ErrorApi, llamarApiAccion } from "@/lib/api";
 
 const crearSchema = z.object({
   email: z.string().trim().toLowerCase().email("Correo inválido"),
@@ -32,7 +32,7 @@ export async function crearUsuario(
   }
 
   try {
-    const creado = await llamarApi<{ fullName: string; temporaryPassword: string }>(
+    const creado = await llamarApiAccion<{ fullName: string; temporaryPassword: string }>(
       "/internal/users",
       { method: "POST", body: analisis.data },
     );
@@ -56,7 +56,7 @@ export async function cambiarEstado(
     return { ok: false, error: "Indique el motivo (mínimo 10 caracteres)" };
   }
   try {
-    await llamarApi(`/internal/users/${id}/status`, { method: "PATCH", body: { status, reason } });
+    await llamarApiAccion(`/internal/users/${id}/status`, { method: "PATCH", body: { status, reason } });
     revalidatePath("/usuarios");
     return { ok: true };
   } catch (error) {
@@ -85,7 +85,7 @@ export async function cambiarRoles(
   }
 
   try {
-    await llamarApi(`/internal/users/${id}/roles`, { method: "PATCH", body: analisis.data });
+    await llamarApiAccion(`/internal/users/${id}/roles`, { method: "PATCH", body: analisis.data });
     revalidatePath("/usuarios");
     return { exito: "Roles actualizados. Se cerraron las sesiones abiertas de esa cuenta." };
   } catch (error) {

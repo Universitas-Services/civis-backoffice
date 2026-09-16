@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { ErrorApi, llamarApi } from "@/lib/api";
+import { ErrorApi, llamarApiAccion } from "@/lib/api";
 import type { Evaluacion } from "@/contracts";
 
 const puntajeSchema = z.object({
@@ -37,7 +37,7 @@ export async function guardarPuntajes(
   }
 
   try {
-    const evaluacion = await llamarApi<Evaluacion>(`/internal/evaluations/${evaluationId}/scores`, {
+    const evaluacion = await llamarApiAccion<Evaluacion>(`/internal/evaluations/${evaluationId}/scores`, {
       method: "PUT",
       body: { scores: analisis.data, internalNotes },
     });
@@ -52,7 +52,7 @@ export async function enviarEvaluacion(
   candidateId: string,
 ): Promise<Resultado> {
   try {
-    await llamarApi(`/internal/evaluations/${evaluationId}/submit`, { method: "POST" });
+    await llamarApiAccion(`/internal/evaluations/${evaluationId}/submit`, { method: "POST" });
     revalidatePath(`/evaluacion/${candidateId}`);
     return { ok: true };
   } catch (error) {
@@ -69,7 +69,7 @@ export async function aprobarEvaluacion(
     return { ok: false, error: "La aprobación debe estar motivada (mínimo 10 caracteres)" };
   }
   try {
-    await llamarApi(`/internal/evaluations/${evaluationId}/approve`, {
+    await llamarApiAccion(`/internal/evaluations/${evaluationId}/approve`, {
       method: "POST",
       body: { reason },
     });

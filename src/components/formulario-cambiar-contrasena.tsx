@@ -10,7 +10,7 @@ function BotonGuardar() {
     <button
       type="submit"
       disabled={pending}
-      className="rounded-md bg-toga-900 px-5 py-3 text-base font-semibold text-white hover:bg-toga-800 disabled:opacity-60"
+      className="rounded-md bg-balanza-600 px-5 py-3 text-base font-semibold text-white hover:bg-balanza-700 disabled:opacity-60"
     >
       {pending ? "Actualizando…" : "Cambiar contraseña"}
     </button>
@@ -41,11 +41,13 @@ export function FormularioCambiarContrasena() {
           name="currentPassword"
           type="password"
           autoComplete="current-password"
-          className={inputClass}
+          className={`${inputClass}${state.campos?.currentPassword ? " campo-con-error" : ""}`}
+          aria-invalid={Boolean(state.campos?.currentPassword)}
+          aria-describedby={state.campos?.currentPassword ? "currentPassword-error" : undefined}
           required
         />
         {state.campos?.currentPassword && (
-          <p role="alert" className="mt-1 text-sm text-balanza-700">
+          <p id="currentPassword-error" role="alert" className="mensaje-error-campo text-sm">
             {state.campos.currentPassword}
           </p>
         )}
@@ -59,14 +61,16 @@ export function FormularioCambiarContrasena() {
           name="newPassword"
           type="password"
           autoComplete="new-password"
-          className={inputClass}
+          className={`${inputClass}${state.campos?.newPassword ? " campo-con-error" : ""}`}
+          aria-invalid={Boolean(state.campos?.newPassword)}
+          aria-describedby={state.campos?.newPassword ? "newPassword-error" : undefined}
           required
         />
         <p className="mt-1 text-sm text-toga-500">
           Mínimo 12 caracteres, con mayúscula, minúscula y número.
         </p>
         {state.campos?.newPassword && (
-          <p role="alert" className="mt-1 text-sm text-balanza-700">
+          <p id="newPassword-error" role="alert" className="mensaje-error-campo text-sm">
             {state.campos.newPassword}
           </p>
         )}
@@ -80,11 +84,13 @@ export function FormularioCambiarContrasena() {
           name="confirmPassword"
           type="password"
           autoComplete="new-password"
-          className={inputClass}
+          className={`${inputClass}${state.campos?.confirmPassword ? " campo-con-error" : ""}`}
+          aria-invalid={Boolean(state.campos?.confirmPassword)}
+          aria-describedby={state.campos?.confirmPassword ? "confirmPassword-error" : undefined}
           required
         />
         {state.campos?.confirmPassword && (
-          <p role="alert" className="mt-1 text-sm text-balanza-700">
+          <p id="confirmPassword-error" role="alert" className="mensaje-error-campo text-sm">
             {state.campos.confirmPassword}
           </p>
         )}

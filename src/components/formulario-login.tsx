@@ -10,7 +10,7 @@ function Boton() {
     <button
       type="submit"
       disabled={pending}
-      className="flex w-full items-center justify-center gap-2 rounded-md bg-toga-900 px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-toga-800 disabled:opacity-60"
+      className="flex w-full items-center justify-center gap-2 rounded-md bg-balanza-600 px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-balanza-700 disabled:opacity-60"
     >
       <svg viewBox="0 0 16 16" className="h-4 w-4" fill="none" aria-hidden="true">
         <rect x="3" y="7" width="10" height="7" rx="1.5" stroke="currentColor" strokeWidth="1.5" />
@@ -25,7 +25,7 @@ export function FormularioLogin() {
   const [estado, accion] = useActionState<EstadoLogin, FormData>(iniciarSesion, {});
 
   const claseCampo =
-    "mt-1 w-full rounded-md border border-toga-300 bg-white px-3 py-2.5 text-sm text-toga-900 transition-colors placeholder:text-toga-400 focus:border-balanza-600";
+    "mt-1 w-full rounded-md border border-toga-300 bg-white px-3 py-2.5 text-sm text-toga-900 transition-colors placeholder:text-toga-400 focus:border-balanza-600 focus:ring-2 focus:ring-balanza-600/20";
 
   return (
     <form action={accion} className="space-y-4" noValidate>
@@ -48,10 +48,12 @@ export function FormularioLogin() {
           type="email"
           autoComplete="username"
           required
-          className={claseCampo}
+          aria-invalid={Boolean(estado.campos?.email)}
+          aria-describedby={estado.campos?.email ? "email-error" : undefined}
+          className={`${claseCampo}${estado.campos?.email ? " campo-con-error" : ""}`}
         />
         {estado.campos?.email && (
-          <p role="alert" className="mt-1 text-xs font-medium text-balanza-700">
+          <p id="email-error" role="alert" className="mensaje-error-campo">
             {estado.campos.email}
           </p>
         )}
@@ -67,10 +69,12 @@ export function FormularioLogin() {
           type="password"
           autoComplete="current-password"
           required
-          className={claseCampo}
+          aria-invalid={Boolean(estado.campos?.password)}
+          aria-describedby={estado.campos?.password ? "password-error" : undefined}
+          className={`${claseCampo}${estado.campos?.password ? " campo-con-error" : ""}`}
         />
         {estado.campos?.password && (
-          <p role="alert" className="mt-1 text-xs font-medium text-balanza-700">
+          <p id="password-error" role="alert" className="mensaje-error-campo">
             {estado.campos.password}
           </p>
         )}

@@ -9,6 +9,7 @@ import {
   verificarDocumento,
   type EstadoRevision,
 } from "@/app/(panel)/revision-documental/acciones";
+import { useToastDesdeEstado } from "@/hooks/use-toast-desde-estado";
 import { InsigniaAnalisis, InsigniaClasificacion } from "./insignias";
 
 /**
@@ -37,6 +38,8 @@ export function FichaRevision({
     clasificarDocumento.bind(null, documento.id),
     {},
   );
+  useToastDesdeEstado(verificacion);
+  useToastDesdeEstado(clasificacion);
 
   async function abrir() {
     setAbriendo(true);
@@ -101,23 +104,6 @@ export function FichaRevision({
         )}
       </div>
 
-      {(verificacion.exito ?? clasificacion.exito) && (
-        <p
-          role="status"
-          className="mt-4 rounded-md border border-validado-700/20 bg-validado-50 px-4 py-3 text-sm text-validado-700"
-        >
-          {verificacion.exito ?? clasificacion.exito}
-        </p>
-      )}
-      {(verificacion.error ?? clasificacion.error) && (
-        <p
-          role="alert"
-          className="mt-4 rounded-md border border-balanza-600/25 bg-balanza-50 px-4 py-3 text-sm text-balanza-700"
-        >
-          {verificacion.error ?? clasificacion.error}
-        </p>
-      )}
-
       <div className="mt-4 grid gap-4 border-t border-toga-100 pt-4 lg:grid-cols-2">
         {/* ── Verificación ─────────────────────────────────────────── */}
         {puedeVerificar && !verificacion.exito && (
@@ -141,7 +127,7 @@ export function FichaRevision({
             />
             <button
               type="submit"
-              className="rounded-md bg-toga-900 px-4 py-2 text-sm font-semibold text-white hover:bg-toga-800"
+              className="rounded-md bg-balanza-600 px-4 py-2 text-sm font-semibold text-white hover:bg-balanza-700"
             >
               Registrar verificación
             </button>

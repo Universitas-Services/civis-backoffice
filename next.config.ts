@@ -32,7 +32,11 @@ const nextConfig: NextConfig = {
           "img-src 'self' data:",
           "font-src 'self'",
           "style-src 'self' 'unsafe-inline'",
-          "script-src 'self' 'unsafe-inline'",
+          // React DevTools / reconstrucción de callstacks usan eval() en
+          // desarrollo. En producción React no lo usa: no abrir el agujero.
+          process.env.NODE_ENV === "production"
+            ? "script-src 'self' 'unsafe-inline'"
+            : "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
           ["connect-src 'self'", apiOrigin].filter(Boolean).join(" "),
           // El visor enmarca el documento servido por la API, no por el
           // almacenamiento: los bytes pasan por ella para poder entregarse

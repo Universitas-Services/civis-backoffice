@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import type { ResultadoRanking } from "@/contracts";
-import { ErrorApi, llamarApi } from "@/lib/api";
+import { ErrorApi, llamarApiAccion } from "@/lib/api";
 
 export interface EstadoRanking {
   readonly error?: string;
@@ -19,7 +19,7 @@ export interface EstadoRanking {
  */
 export async function recalcularRanking(): Promise<EstadoRanking> {
   try {
-    const r = await llamarApi<ResultadoRanking>("/internal/ranking/recalculate", {
+    const r = await llamarApiAccion<ResultadoRanking>("/internal/ranking/recalculate", {
       method: "POST",
     });
     revalidatePath("/ranking");
@@ -39,7 +39,7 @@ export async function recalcularRanking(): Promise<EstadoRanking> {
  */
 export async function vistaPreviaPublica(): Promise<EstadoRanking> {
   try {
-    const previa = await llamarApi<ResultadoRanking>("/internal/ranking/public-preview");
+    const previa = await llamarApiAccion<ResultadoRanking>("/internal/ranking/public-preview");
     return { previa };
   } catch (error) {
     return { error: error instanceof ErrorApi ? error.message : "No se pudo cargar la previa" };

@@ -9,6 +9,8 @@ import {
   solicitarInformacion,
   type Resultado,
 } from "@/app/(panel)/objeciones/acciones";
+import { useToast } from "@/components/toast-provider";
+import { useToastDesdeEstado } from "@/hooks/use-toast-desde-estado";
 import { InsigniaObjecion } from "./insignias";
 
 const CRITERIOS_AJUSTABLES = [
@@ -44,7 +46,7 @@ export function FichaObjecion({
   const [pidiendoInfo, setPidiendoInfo] = useState(false);
   const [conAjuste, setConAjuste] = useState(false);
   const [pendiente, iniciar] = useTransition();
-  const [mensajeAsignar, setMensajeAsignar] = useState<string | null>(null);
+  const toast = useToast();
   const [estado, accion] = useActionState<Resultado, FormData>(
     resolverObjecion.bind(null, objecion.id),
     { ok: false },
@@ -53,6 +55,8 @@ export function FichaObjecion({
     solicitarInformacion.bind(null, objecion.id),
     { ok: false },
   );
+  useToastDesdeEstado(estado);
+  useToastDesdeEstado(info);
 
   const resuelta = RESUELTAS.includes(objecion.status);
   const asignada = Boolean(objecion.assignedTo);
@@ -90,40 +94,6 @@ export function FichaObjecion({
         {objecion.affectsCredential && ` · afecta a ${objecion.affectsCredential}`}
       </p>
 
-      {info.exito && (
-        <p
-          role="status"
-          className="mt-3 rounded-md border border-validado-700/20 bg-validado-50 px-4 py-3 text-sm text-validado-700"
-        >
-          {info.exito}
-        </p>
-      )}
-      {info.error && (
-        <p
-          role="alert"
-          className="mt-3 rounded-md border border-balanza-600/25 bg-balanza-50 px-4 py-3 text-sm text-balanza-700"
-        >
-          {info.error}
-        </p>
-      )}
-
-      {estado.exito && (
-        <p
-          role="status"
-          className="mt-3 rounded-md border border-validado-700/20 bg-validado-50 px-4 py-3 text-sm text-validado-700"
-        >
-          {estado.exito}
-        </p>
-      )}
-      {(estado.error ?? mensajeAsignar) && (
-        <p
-          role="alert"
-          className="mt-3 rounded-md border border-balanza-600/25 bg-balanza-50 px-4 py-3 text-sm text-balanza-700"
-        >
-          {estado.error ?? mensajeAsignar}
-        </p>
-      )}
-
       {!resuelta && !estado.exito && !info.exito && (
         <div className="mt-4 border-t border-toga-100 pt-4">
           {!asignada ? (
@@ -133,10 +103,11 @@ export function FichaObjecion({
               onClick={() =>
                 iniciar(async () => {
                   const r = await asignarObjecion(objecion.id, usuarioId);
-                  if (!r.ok) setMensajeAsignar(r.error ?? "No se pudo asignar");
+                  if (r.ok) toast.exito(r.exito ?? "Objeción asignada.");
+                  else toast.error(r.error ?? "No se pudo asignar");
                 })
               }
-              className="rounded-md bg-toga-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-toga-800 disabled:opacity-60"
+              className="rounded-md bg-balanza-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-balanza-700 disabled:opacity-60"
             >
               {pendiente ? "Asignando…" : "Asignármela y revisar"}
             </button>
@@ -181,7 +152,7 @@ export function FichaObjecion({
               <div className="flex flex-wrap gap-2">
                 <button
                   type="submit"
-                  className="rounded-md bg-toga-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-toga-800"
+                  className="rounded-md bg-balanza-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-balanza-700"
                 >
                   Registrar solicitud
                 </button>
@@ -306,7 +277,7 @@ export function FichaObjecion({
               <div className="flex flex-wrap gap-2">
                 <button
                   type="submit"
-                  className="rounded-md bg-toga-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-toga-800"
+                  className="rounded-md bg-balanza-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-balanza-700"
                 >
                   Registrar resolución
                 </button>

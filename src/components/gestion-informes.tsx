@@ -8,6 +8,7 @@ import {
   publicarInforme,
   type EstadoInformes,
 } from "@/app/(panel)/informes/acciones";
+import { useToastDesdeEstado } from "@/hooks/use-toast-desde-estado";
 
 function Boton({ texto, cargando }: { readonly texto: string; readonly cargando: string }) {
   const { pending } = useFormStatus();
@@ -15,7 +16,7 @@ function Boton({ texto, cargando }: { readonly texto: string; readonly cargando:
     <button
       type="submit"
       disabled={pending}
-      className="rounded-md bg-toga-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-toga-800 disabled:opacity-60"
+      className="rounded-md bg-balanza-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-balanza-700 disabled:opacity-60"
     >
       {pending ? cargando : texto}
     </button>
@@ -25,6 +26,7 @@ function Boton({ texto, cargando }: { readonly texto: string; readonly cargando:
 export function GenerarInforme() {
   const [estado, accion] = useActionState<EstadoInformes, FormData>(generarInforme, {});
   const [abierto, setAbierto] = useState(false);
+  useToastDesdeEstado(estado);
 
   return (
     <section aria-labelledby="generar">
@@ -35,28 +37,11 @@ export function GenerarInforme() {
         <button
           type="button"
           onClick={() => setAbierto(!abierto)}
-          className="rounded-md bg-toga-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-toga-800"
+          className="rounded-md bg-balanza-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-balanza-700"
         >
           {abierto ? "Cancelar" : "+ Nuevo borrador"}
         </button>
       </div>
-
-      {estado.exito && (
-        <p
-          role="status"
-          className="mt-4 rounded-md border border-validado-700/20 bg-validado-50 px-4 py-3 text-sm text-validado-700"
-        >
-          {estado.exito}
-        </p>
-      )}
-      {estado.error && (
-        <p
-          role="alert"
-          className="mt-4 rounded-md border border-balanza-600/25 bg-balanza-50 px-4 py-3 text-sm text-balanza-700"
-        >
-          {estado.error}
-        </p>
-      )}
 
       {abierto && (
         <form action={accion} className="mt-4 rounded-lg border border-toga-200 bg-white p-5">
@@ -112,6 +97,7 @@ export function FichaInforme({
     publicarInforme.bind(null, informe.id),
     {},
   );
+  useToastDesdeEstado(estado);
   const e = ESTADO[informe.status] ?? ESTADO.DRAFT!;
   const pendiente = informe.status === "PENDING_APPROVAL";
 
@@ -162,23 +148,6 @@ export function FichaInforme({
           </p>
         )}
       </div>
-
-      {estado.exito && (
-        <p
-          role="status"
-          className="mt-3 rounded-md border border-validado-700/20 bg-validado-50 px-4 py-3 text-sm text-validado-700"
-        >
-          {estado.exito}
-        </p>
-      )}
-      {estado.error && (
-        <p
-          role="alert"
-          className="mt-3 rounded-md border border-balanza-600/25 bg-balanza-50 px-4 py-3 text-sm text-balanza-700"
-        >
-          {estado.error}
-        </p>
-      )}
 
       {puedePublicar && pendiente && !loGeneroElMismoUsuario && !estado.exito && (
         <form action={accion} className="mt-4 space-y-3 border-t border-toga-100 pt-4">

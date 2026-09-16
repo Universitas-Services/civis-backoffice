@@ -41,6 +41,35 @@ export const ESTADO_ETIQUETA: Record<WorkflowStatus, string> = {
   ARCHIVED: "Archivada",
 };
 
+export const PUBLICATION_STATUS = [
+  "NOT_PUBLISHED",
+  "DRAFT",
+  "PENDING_APPROVAL",
+  "PUBLISHED",
+  "WITHDRAWN",
+] as const;
+export type PublicationStatus = (typeof PUBLICATION_STATUS)[number];
+
+export const PUBLICACION_ETIQUETA: Record<PublicationStatus, string> = {
+  NOT_PUBLISHED: "No publicado",
+  DRAFT: "Borrador de publicación",
+  PENDING_APPROVAL: "Pendiente de aprobación",
+  PUBLISHED: "Publicado",
+  WITHDRAWN: "Retirado",
+};
+
+/** Etiqueta legible para publicationStatus; fallback sin códigos crudos. */
+export function etiquetarPublicacion(status: string): string {
+  if (status in PUBLICACION_ETIQUETA) {
+    return PUBLICACION_ETIQUETA[status as PublicationStatus];
+  }
+  return status
+    .toLowerCase()
+    .split("_")
+    .map((p) => (p ? p[0]!.toUpperCase() + p.slice(1) : p))
+    .join(" ");
+}
+
 export type SuitabilityBand = "HIGH" | "MEDIUM" | "LOW" | "INELIGIBLE";
 
 export interface Sesion {
@@ -144,7 +173,8 @@ export const CHAMBERS = [
   "ELECTORAL",
   "CASACION_CIVIL",
   "CASACION_PENAL",
-  "CASACION_SOCIAL",
+  "PLENA",
+  "SOCIAL",
 ] as const;
 export type Chamber = (typeof CHAMBERS)[number];
 
@@ -154,7 +184,8 @@ export const SALA_ETIQUETA: Record<Chamber, string> = {
   ELECTORAL: "Electoral",
   CASACION_CIVIL: "Casación Civil",
   CASACION_PENAL: "Casación Penal",
-  CASACION_SOCIAL: "Casación Social",
+  PLENA: "Sala Plena",
+  SOCIAL: "Sala Social",
 };
 
 export const DOCUMENT_CATEGORY = [
@@ -180,21 +211,49 @@ export const CATEGORIA_ETIQUETA: Record<DocumentCategory, string> = {
   OTHER: "Otros soportes",
 };
 
+export const PREFIJOS_TELEFONO = [
+  "0412",
+  "0414",
+  "0416",
+  "0422",
+  "0424",
+  "0426",
+] as const;
+export type PrefijoTelefono = (typeof PREFIJOS_TELEFONO)[number];
+
 export const nationalIdSchema = z
   .string()
   .trim()
   .toUpperCase()
-  .regex(/^[VEJ]-?\d{6,9}$/, "Formato esperado: V-12345678")
-  .transform((v) => (v.includes("-") ? v : `${v[0]}-${v.slice(1)}`));
+  .regex(/^V-\d{6,8}$/, "Formato esperado: V-12345678 (6 a 8 dígitos)")
+  .transform((v) => (v.includes("-") ? v : `V-${v.replace(/^V/, "")}`));
+
+const nombrePersonaSchema = z
+  .string()
+  .trim()
+  .min(2, "Mínimo 2 caracteres")
+  .max(80, "Máximo 80 caracteres")
+  .regex(
+    /^[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]+(?:\s+[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]+)*$/,
+    "Sólo letras y espacios (sin números ni signos)",
+  );
+
+export const telefonoVeSchema = z
+  .string()
+  .trim()
+  .regex(
+    /^0(412|414|416|422|424|426) \d{7}$/,
+    "Formato esperado: 0424 1234567",
+  );
 
 export const crearExpedienteSchema = z.object({
   nationalId: nationalIdSchema,
-  firstName: z.string().trim().min(2, "Mínimo 2 caracteres").max(80),
-  lastName: z.string().trim().min(2, "Mínimo 2 caracteres").max(80),
+  firstName: nombrePersonaSchema,
+  lastName: nombrePersonaSchema,
   chamber: z.enum(CHAMBERS, { message: "Seleccione la sala" }),
   publicSummary: z.string().trim().max(1200).optional(),
   email: z.string().trim().toLowerCase().email("Correo inválido").optional().or(z.literal("")),
-  phone: z.string().trim().max(40).optional(),
+  phone: telefonoVeSchema.optional().or(z.literal("")),
   internalNotes: z.string().trim().max(4000).optional(),
 });
 export type CrearExpedienteInput = z.infer<typeof crearExpedienteSchema>;

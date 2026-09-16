@@ -8,6 +8,8 @@ import {
   retirarPublicacion,
   type EstadoPublicacion,
 } from "@/app/(panel)/publicaciones/acciones";
+import { useToast } from "@/components/toast-provider";
+import { useToastDesdeEstado } from "@/hooks/use-toast-desde-estado";
 
 interface Candidato {
   readonly id: string;
@@ -29,9 +31,9 @@ export function PrepararFicha() {
   const [candidatos, setCandidatos] = useState<Candidato[]>([]);
   const [elegido, setElegido] = useState("");
   const [vista, setVista] = useState<FichaPublica | null>(null);
-  const [mensaje, setMensaje] = useState<{ texto: string; error: boolean } | null>(null);
   const [pendiente, iniciar] = useTransition();
   const [cargandoVista, setCargandoVista] = useState(false);
+  const toast = useToast();
 
   useEffect(() => {
     void fetch("/api/candidatos-publicables")
@@ -47,7 +49,7 @@ export function PrepararFicha() {
     try {
       const r = await fetch(`/api/vista-previa/${elegido}`);
       if (r.ok) setVista((await r.json()) as FichaPublica);
-      else setMensaje({ texto: "No se pudo generar la vista previa.", error: true });
+      else toast.error("No se pudo generar la vista previa.");
     } finally {
       setCargandoVista(false);
     }
@@ -104,27 +106,15 @@ export function PrepararFicha() {
           onClick={() =>
             iniciar(async () => {
               const r = await prepararFicha(elegido);
-              setMensaje({ texto: r.error ?? r.exito ?? "", error: Boolean(r.error) });
+              if (r.error) toast.error(r.error);
+              else if (r.exito) toast.exito(r.exito);
             })
           }
-          className="rounded-md bg-toga-900 px-4 py-2 text-sm font-semibold text-white hover:bg-toga-800 disabled:opacity-50"
+          className="rounded-md bg-balanza-600 px-4 py-2 text-sm font-semibold text-white hover:bg-balanza-700 disabled:opacity-50"
         >
           {pendiente ? "Preparando…" : "Preparar ficha"}
         </button>
       </div>
-
-      {mensaje && (
-        <p
-          role={mensaje.error ? "alert" : "status"}
-          className={`mt-3 rounded-md px-4 py-3 text-sm ${
-            mensaje.error
-              ? "border border-balanza-600/25 bg-balanza-50 text-balanza-700"
-              : "border border-validado-700/20 bg-validado-50 text-validado-700"
-          }`}
-        >
-          {mensaje.texto}
-        </p>
-      )}
 
       {vista && (
         <div className="mt-4 rounded-lg border-2 border-dashed border-toga-300 bg-toga-50 p-5">
@@ -140,7 +130,7 @@ export function PrepararFicha() {
             {vista.total}
             <span className="ml-1 text-sm font-normal text-toga-500">/ 100</span>
             {vista.ineligible && (
-              <span className="ml-3 rounded-full bg-toga-800 px-2.5 py-1 text-xs font-medium text-toga-100">
+              <span className="ml-3 rounded-full bg-balanza-600 px-2.5 py-1 text-xs font-medium text-white">
                 Inhabilitado
               </span>
             )}
@@ -223,6 +213,7 @@ function FichaRetirar({ snapshot }: { readonly snapshot: SnapshotPublicado }) {
     retirarPublicacion.bind(null, snapshot.id),
     {},
   );
+  useToastDesdeEstado(estado);
 
   const nombre = snapshot.candidate
     ? `${snapshot.candidate.firstName} ${snapshot.candidate.lastName}`
@@ -250,23 +241,6 @@ function FichaRetirar({ snapshot }: { readonly snapshot: SnapshotPublicado }) {
         )}
       </div>
 
-      {estado.exito && (
-        <p
-          role="status"
-          className="mt-3 rounded-md border border-validado-700/20 bg-validado-50 px-3 py-2 text-sm text-validado-700"
-        >
-          {estado.exito}
-        </p>
-      )}
-      {estado.error && (
-        <p
-          role="alert"
-          className="mt-3 rounded-md border border-balanza-600/25 bg-balanza-50 px-3 py-2 text-sm text-balanza-700"
-        >
-          {estado.error}
-        </p>
-      )}
-
       {abierto && !estado.exito && (
         <form action={accion} className="mt-3 space-y-2 border-t border-toga-100 pt-3">
           <label htmlFor={`w-${snapshot.id}`} className="block text-xs font-medium text-toga-600">
@@ -283,7 +257,7 @@ function FichaRetirar({ snapshot }: { readonly snapshot: SnapshotPublicado }) {
           />
           <button
             type="submit"
-            className="rounded-md bg-toga-900 px-4 py-2 text-sm font-semibold text-white hover:bg-toga-800"
+            className="rounded-md bg-balanza-600 px-4 py-2 text-sm font-semibold text-white hover:bg-balanza-700"
           >
             Confirmar retiro
           </button>

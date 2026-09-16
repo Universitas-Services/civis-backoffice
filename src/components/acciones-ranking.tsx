@@ -7,6 +7,7 @@ import {
   vistaPreviaPublica,
   type EstadoRanking,
 } from "@/app/(panel)/ranking/acciones";
+import { useToastDesdeEstado } from "@/hooks/use-toast-desde-estado";
 
 /**
  * Acciones sobre el ranking interno.
@@ -18,6 +19,7 @@ import {
 export function AccionesRanking({ puedePublicar }: { readonly puedePublicar: boolean }) {
   const [pendiente, iniciar] = useTransition();
   const [estado, setEstado] = useState<EstadoRanking>({});
+  useToastDesdeEstado(estado);
 
   return (
     <section className="rounded-lg border border-toga-200 bg-white p-5">
@@ -44,23 +46,6 @@ export function AccionesRanking({ puedePublicar }: { readonly puedePublicar: boo
           La previa muestra sólo a quienes ya tienen ficha publicada.
         </p>
       </div>
-
-      {estado.exito && (
-        <p
-          role="status"
-          className="mt-3 rounded-md border border-validado-700/20 bg-validado-50 px-4 py-3 text-sm text-validado-700"
-        >
-          {estado.exito}
-        </p>
-      )}
-      {estado.error && (
-        <p
-          role="alert"
-          className="mt-3 rounded-md border border-balanza-600/25 bg-balanza-50 px-4 py-3 text-sm text-balanza-700"
-        >
-          {estado.error}
-        </p>
-      )}
 
       {estado.previa && <TablaPrevia previa={estado.previa} />}
     </section>

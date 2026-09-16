@@ -16,9 +16,11 @@ import { COOKIE_SESION } from "./config";
 interface ContenidoSesion {
   readonly usuario: Sesion;
   readonly accessToken: string;
-  /** Cookie de refresh que emitió la API, para renovar sin volver a pedir clave. */
+  /** Par `nombre=valor` de la cookie de refresh de la API (sin atributos Set-Cookie). */
   readonly refreshCookie: string | null;
 }
+
+export type { ContenidoSesion };
 
 function clave(): Uint8Array {
   const secreto = process.env.SESSION_SECRET;

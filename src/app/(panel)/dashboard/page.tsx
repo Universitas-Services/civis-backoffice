@@ -100,20 +100,17 @@ export default async function Dashboard() {
 
       {resumen && (
         <div className="mt-8">
-          <div className="mb-4 flex flex-wrap items-end justify-between gap-2">
-            <div>
-              <h2 className="text-lg font-semibold text-toga-900">Estado del proceso</h2>
-              <p className="mt-1 text-sm text-toga-500">
-                Datos agregados por la API; última consulta{" "}
-                {new Intl.DateTimeFormat("es-VE", {
-                  dateStyle: "medium",
-                  timeStyle: "short",
-                }).format(new Date(resumen.generatedAt))}
-                .
-              </p>
-            </div>
-            <p className="codigo text-xs text-toga-500">
-              Baremo {resumen.rubricVersion ?? "sin versión"}
+          <div className="mb-4 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+            <h2 className="text-lg font-semibold text-toga-900">Estado del proceso</h2>
+            <p className="text-xs text-toga-500 sm:text-right">
+              Actualizado{" "}
+              {new Intl.DateTimeFormat("es-VE", {
+                day: "2-digit",
+                month: "2-digit",
+                year: "numeric",
+                hour: "2-digit",
+                minute: "2-digit",
+              }).format(new Date(resumen.generatedAt))}
             </p>
           </div>
           <GraficosDashboard data={resumen} />

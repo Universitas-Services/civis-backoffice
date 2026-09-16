@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { aprobarPublicacionSchema } from "@/contracts";
-import { ErrorApi, llamarApi } from "@/lib/api";
+import { ErrorApi, llamarApiAccion } from "@/lib/api";
 
 export interface EstadoPublicacion {
   readonly error?: string;
@@ -28,7 +28,7 @@ export async function publicarSnapshot(
   }
 
   try {
-    await llamarApi(`/internal/publications/${id}/publish`, {
+    await llamarApiAccion(`/internal/publications/${id}/publish`, {
       method: "POST",
       body: analisis.data,
     });
@@ -43,7 +43,7 @@ export async function publicarSnapshot(
 /** Prepara el snapshot del ranking público a partir del estado actual. */
 export async function prepararRanking(): Promise<EstadoPublicacion> {
   try {
-    await llamarApi("/internal/publications/ranking/prepare", { method: "POST" });
+    await llamarApiAccion("/internal/publications/ranking/prepare", { method: "POST" });
   } catch (error) {
     return { error: error instanceof ErrorApi ? error.message : "No se pudo preparar" };
   }
@@ -61,7 +61,7 @@ export async function prepararFicha(
   candidateId: string,
 ): Promise<EstadoPublicacion & { ok?: boolean }> {
   try {
-    await llamarApi(`/internal/publications/candidate/${candidateId}/prepare`, { method: "POST" });
+    await llamarApiAccion(`/internal/publications/candidate/${candidateId}/prepare`, { method: "POST" });
     revalidatePath("/publicaciones");
     return { exito: "Ficha preparada. Requiere aprobación de otra persona." };
   } catch (error) {
@@ -85,7 +85,7 @@ export async function retirarPublicacion(
     return { error: "El retiro debe estar motivado (mínimo 10 caracteres)" };
   }
   try {
-    await llamarApi(`/internal/publications/${id}/withdraw`, {
+    await llamarApiAccion(`/internal/publications/${id}/withdraw`, {
       method: "POST",
       body: { reason: motivo },
     });

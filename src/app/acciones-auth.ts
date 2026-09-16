@@ -3,6 +3,10 @@
 import { redirect } from "next/navigation";
 import { cambiarContrasenaSchema, loginSchema } from "@/contracts";
 import { API_INTERNA } from "@/lib/config";
+import {
+  cabecerasAuthCookie,
+  extraerRefreshCookie,
+} from "@/lib/auth-refresh";
 import { cerrarSesion, guardarSesion, leerSesion } from "@/lib/sesion";
 
 export interface EstadoLogin {
@@ -41,7 +45,11 @@ export async function iniciarSesion(
 
   const respuesta = await fetch(`${API_INTERNA}/auth/login`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+      ...cabecerasAuthCookie(),
+    },
     body: JSON.stringify(analisis.data),
     cache: "no-store",
   }).catch(() => null);
@@ -52,9 +60,23 @@ export async function iniciarSesion(
   if (respuesta.status === 429) {
     return { error: "Demasiados intentos. Espere unos minutos antes de volver a probar." };
   }
-  if (!respuesta.ok) {
-    // Mensaje genérico a propósito: no se revela si el correo existe.
+  if (respuesta.status === 401) {
     return { error: "Credenciales inválidas." };
+  }
+  if (respuesta.status === 403) {
+    const data = (await respuesta.json().catch(() => null)) as { message?: string } | null;
+    const mensaje = data?.message?.trim();
+    // OriginGuard o cuenta bloqueada por intentos — no confundir con clave mala.
+    return {
+      error:
+        mensaje && mensaje.length > 0
+          ? mensaje
+          : "Acceso denegado. Si el mensaje habla de origen, añada BACKOFFICE_PUBLIC_URL a CORS_ORIGINS en la API.",
+    };
+  }
+  if (!respuesta.ok) {
+    const data = (await respuesta.json().catch(() => null)) as { message?: string } | null;
+    return { error: data?.message ?? `No se pudo iniciar sesión (${respuesta.status}).` };
   }
 
   const datos = (await respuesta.json()) as {
@@ -62,6 +84,14 @@ export async function iniciarSesion(
     user: { id: string; email: string; fullName: string; roles: string[] };
     mustChangePassword: boolean;
   };
+
+  const refreshCookie = extraerRefreshCookie(respuesta);
+  if (!refreshCookie) {
+    return {
+      error:
+        "El servidor no entregó la cookie de sesión (refresh). Revise que la API setee cp_refresh en el login.",
+    };
+  }
 
   await guardarSesion({
     usuario: {
@@ -71,7 +101,7 @@ export async function iniciarSesion(
       roles: datos.user.roles as never,
     },
     accessToken: datos.accessToken,
-    refreshCookie: respuesta.headers.get("set-cookie"),
+    refreshCookie,
   });
 
   redirect(datos.mustChangePassword ? "/cambiar-contrasena" : "/dashboard");
@@ -83,7 +113,7 @@ export async function terminarSesion(): Promise<void> {
     // Se avisa a la API para que revoque la familia de refresh tokens.
     await fetch(`${API_INTERNA}/auth/logout`, {
       method: "POST",
-      headers: sesion.refreshCookie ? { Cookie: sesion.refreshCookie } : {},
+      headers: cabecerasAuthCookie(sesion.refreshCookie),
       cache: "no-store",
     }).catch(() => undefined);
   }
@@ -116,7 +146,9 @@ export async function cambiarContrasena(
     method: "POST",
     headers: {
       "Content-Type": "application/json",
+      Accept: "application/json",
       Authorization: `Bearer ${sesion.accessToken}`,
+      ...cabecerasAuthCookie(sesion.refreshCookie),
     },
     body: JSON.stringify(analisis.data),
     cache: "no-store",
@@ -128,6 +160,7 @@ export async function cambiarContrasena(
     return { error: data?.message ?? "No se pudo cambiar la contraseña." };
   }
 
+  // La API revoca todas las sesiones y limpia el refresh: hay que volver a entrar.
   await cerrarSesion();
   redirect("/login?passwordChanged=1");
 }

@@ -10,6 +10,7 @@ import {
   enviarEvaluacion,
   guardarPuntajes,
 } from "@/app/(panel)/evaluacion/[candidateId]/acciones";
+import { useToast } from "@/components/toast-provider";
 import { InsigniaBanda } from "./insignias";
 import { VisorPdf } from "./visor-pdf";
 
@@ -49,6 +50,7 @@ export function PantallaEvaluacion({
 }) {
   const router = useRouter();
   const [pendiente, iniciar] = useTransition();
+  const toast = useToast();
 
   const iniciales = useMemo(() => {
     const mapa = new Map<string, ValorCriterio>();
@@ -72,7 +74,6 @@ export function PantallaEvaluacion({
     estado: evaluacion.status,
   });
   const [sucio, setSucio] = useState(false);
-  const [mensaje, setMensaje] = useState<{ texto: string; error: boolean } | null>(null);
   const [motivoAprobacion, setMotivoAprobacion] = useState("");
 
   const porDimension = useMemo(() => {
@@ -103,7 +104,6 @@ export function PantallaEvaluacion({
   }
 
   function guardar() {
-    setMensaje(null);
     const scores = [...valores.entries()]
       // Sólo se envía lo que tiene valor o justificación: enviar ceros vacíos
       // dispararía la exigencia de justificación de la API sin motivo.
@@ -117,7 +117,7 @@ export function PantallaEvaluacion({
       }));
 
     if (scores.length === 0) {
-      setMensaje({ texto: "Asigne al menos un criterio antes de guardar.", error: true });
+      toast.error("Asigne al menos un criterio antes de guardar.");
       return;
     }
 
@@ -132,9 +132,9 @@ export function PantallaEvaluacion({
           estado: r.evaluacion.status,
         });
         setSucio(false);
-        setMensaje({ texto: "Puntajes guardados. El total lo calculó el servidor.", error: false });
+        toast.exito("Puntajes guardados. El total lo calculó el servidor.");
       } else {
-        setMensaje({ texto: r.error ?? "No se pudo guardar", error: true });
+        toast.error(r.error ?? "No se pudo guardar");
       }
     });
   }
@@ -183,7 +183,7 @@ export function PantallaEvaluacion({
         </div>
 
         {servidor.inhabilitado && !sucio && (
-          <p className="mt-2 rounded-md bg-toga-800 px-3 py-2 text-xs text-toga-100">
+          <p className="mt-2 rounded-md bg-balanza-700 px-3 py-2 text-xs text-white">
             <span aria-hidden="true" className="mr-1.5">
               ✕
             </span>
@@ -212,19 +212,6 @@ export function PantallaEvaluacion({
               {servidor.estado === "DRAFT"
                 ? "Este borrador pertenece a otro evaluador: puede consultarlo pero no modificarlo."
                 : `La evaluación está en ${servidor.estado} y ya no admite cambios. Para corregirla, registre un ajuste trazable.`}
-            </p>
-          )}
-
-          {mensaje && (
-            <p
-              role={mensaje.error ? "alert" : "status"}
-              className={`mb-4 rounded-md px-4 py-3 text-sm ${
-                mensaje.error
-                  ? "border border-balanza-600/25 bg-balanza-50 text-balanza-700"
-                  : "border border-validado-700/20 bg-validado-50 text-validado-700"
-              }`}
-            >
-              {mensaje.texto}
             </p>
           )}
 
@@ -356,7 +343,7 @@ export function PantallaEvaluacion({
                 type="button"
                 onClick={guardar}
                 disabled={pendiente}
-                className="w-full rounded-md bg-toga-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-toga-800 disabled:opacity-60"
+                className="w-full rounded-md bg-balanza-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-balanza-700 disabled:opacity-60"
               >
                 {pendiente ? "Guardando…" : "Guardar y recalcular"}
               </button>
@@ -366,8 +353,10 @@ export function PantallaEvaluacion({
                 onClick={() =>
                   iniciar(async () => {
                     const r = await enviarEvaluacion(evaluacion.id, expediente.id);
-                    if (r.ok) router.refresh();
-                    else setMensaje({ texto: r.error ?? "No se pudo enviar", error: true });
+                    if (r.ok) {
+                      toast.exito("Evaluación enviada a revisión.");
+                      router.refresh();
+                    } else toast.error(r.error ?? "No se pudo enviar");
                   })
                 }
                 className="w-full rounded-md border border-toga-300 px-4 py-2.5 text-sm font-semibold text-toga-700 hover:bg-toga-100 disabled:opacity-50"
@@ -403,11 +392,13 @@ export function PantallaEvaluacion({
                       expediente.id,
                       motivoAprobacion,
                     );
-                    if (r.ok) router.refresh();
-                    else setMensaje({ texto: r.error ?? "No se pudo aprobar", error: true });
+                    if (r.ok) {
+                      toast.exito("Evaluación aprobada.");
+                      router.refresh();
+                    } else toast.error(r.error ?? "No se pudo aprobar");
                   })
                 }
-                className="w-full rounded-md bg-toga-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-toga-800 disabled:opacity-60"
+                className="w-full rounded-md bg-balanza-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-balanza-700 disabled:opacity-60"
               >
                 Aprobar evaluación
               </button>

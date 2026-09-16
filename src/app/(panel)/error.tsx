@@ -30,7 +30,7 @@ export default function ErrorPanel({
           <button
             type="button"
             onClick={reset}
-            className="rounded-md bg-toga-900 px-5 py-2.5 text-sm font-semibold text-white hover:bg-toga-800"
+            className="rounded-md bg-balanza-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-balanza-700"
           >
             Reintentar
           </button>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState, useTransition } from "react";
+import { useActionState, useEffect, useState, useTransition } from "react";
 import type { Role } from "@/contracts";
 import { ROLES, ROL_ETIQUETA } from "@/contracts";
 import {
@@ -9,10 +9,13 @@ import {
   crearUsuario,
   type EstadoUsuarios,
 } from "@/app/(panel)/usuarios/acciones";
+import { useToast } from "@/components/toast-provider";
+import { useToastDesdeEstado } from "@/hooks/use-toast-desde-estado";
 
 export function CrearUsuario() {
   const [abierto, setAbierto] = useState(false);
   const [estado, accion] = useActionState<EstadoUsuarios, FormData>(crearUsuario, {});
+  useToastDesdeEstado(estado);
 
   return (
     <section aria-labelledby="crear">
@@ -23,7 +26,7 @@ export function CrearUsuario() {
         <button
           type="button"
           onClick={() => setAbierto(!abierto)}
-          className="rounded-md bg-toga-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-toga-800"
+          className="rounded-md bg-balanza-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-balanza-700"
         >
           {abierto ? "Cancelar" : "+ Nuevo usuario"}
         </button>
@@ -43,15 +46,6 @@ export function CrearUsuario() {
             {estado.contrasenaTemporal}
           </p>
         </div>
-      )}
-
-      {estado.error && (
-        <p
-          role="alert"
-          className="mt-4 rounded-md border border-balanza-600/25 bg-balanza-50 px-4 py-3 text-sm text-balanza-700"
-        >
-          {estado.error}
-        </p>
       )}
 
       {abierto && !estado.contrasenaTemporal && (
@@ -101,7 +95,7 @@ export function CrearUsuario() {
 
           <button
             type="submit"
-            className="mt-5 rounded-md bg-toga-900 px-5 py-2.5 text-sm font-semibold text-white hover:bg-toga-800"
+            className="mt-5 rounded-md bg-balanza-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-balanza-700"
           >
             Crear usuario
           </button>
@@ -130,8 +124,8 @@ export function InterruptorUsuario({
 }) {
   const [confirmando, setConfirmando] = useState(false);
   const [motivo, setMotivo] = useState("");
-  const [error, setError] = useState<string | null>(null);
   const [pendiente, iniciar] = useTransition();
+  const toast = useToast();
 
   if (esUnoMismo) {
     return (
@@ -175,11 +169,6 @@ export function InterruptorUsuario({
         placeholder="Motivo (obligatorio)"
         className="mt-2 w-full rounded-md border border-toga-300 px-2 py-1.5 text-xs"
       />
-      {error && (
-        <p role="alert" className="mt-1 text-xs font-medium text-balanza-700">
-          {error}
-        </p>
-      )}
       <div className="mt-2 flex gap-2">
         <button
           type="button"
@@ -187,20 +176,21 @@ export function InterruptorUsuario({
           onClick={() =>
             iniciar(async () => {
               const r = await cambiarEstado(id, activo ? "SUSPENDED" : "ACTIVE", motivo);
-              if (r.ok) setConfirmando(false);
-              else setError(r.error ?? "No se pudo cambiar");
+              if (r.ok) {
+                setConfirmando(false);
+                toast.exito(activo ? `${nombre} suspendido.` : `${nombre} reactivado.`);
+              } else {
+                toast.error(r.error ?? "No se pudo cambiar");
+              }
             })
           }
-          className="rounded-md bg-toga-900 px-3 py-1.5 text-xs font-semibold text-white hover:bg-toga-800 disabled:opacity-60"
+          className="rounded-md bg-balanza-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-balanza-700 disabled:opacity-60"
         >
           {pendiente ? "…" : "Confirmar"}
         </button>
         <button
           type="button"
-          onClick={() => {
-            setConfirmando(false);
-            setError(null);
-          }}
+          onClick={() => setConfirmando(false)}
           className="rounded-md border border-toga-300 px-3 py-1.5 text-xs font-semibold text-toga-700 hover:bg-toga-100"
         >
           Cancelar
@@ -231,6 +221,11 @@ export function EditorRoles({
     cambiarRoles.bind(null, id),
     {},
   );
+  useToastDesdeEstado(estado);
+
+  useEffect(() => {
+    if (estado.exito) setAbierto(false);
+  }, [estado.exito]);
 
   if (!abierto) {
     return (
@@ -248,22 +243,7 @@ export function EditorRoles({
     <div className="min-w-[18rem] rounded-md border border-toga-300 bg-white p-3">
       <p className="text-xs font-medium text-toga-900">Roles de {nombre}</p>
 
-      {estado.exito && (
-        <p
-          role="status"
-          className="mt-2 rounded-md border border-validado-700/20 bg-validado-50 px-2 py-1.5 text-xs text-validado-700"
-        >
-          {estado.exito}
-        </p>
-      )}
-      {estado.error && (
-        <p role="alert" className="mt-2 text-xs font-medium text-balanza-700">
-          {estado.error}
-        </p>
-      )}
-
-      {!estado.exito && (
-        <form action={accion} className="mt-2 space-y-2">
+      <form action={accion} className="mt-2 space-y-2">
           <div className="flex flex-wrap gap-1.5">
             {ROLES.map((r) => (
               <label
@@ -291,7 +271,7 @@ export function EditorRoles({
           <div className="flex gap-2">
             <button
               type="submit"
-              className="rounded-md bg-toga-900 px-3 py-1.5 text-xs font-semibold text-white hover:bg-toga-800"
+              className="rounded-md bg-balanza-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-balanza-700"
             >
               Guardar
             </button>
@@ -304,7 +284,6 @@ export function EditorRoles({
             </button>
           </div>
         </form>
-      )}
     </div>
   );
 }

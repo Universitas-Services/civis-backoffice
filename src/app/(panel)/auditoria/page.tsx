@@ -144,7 +144,7 @@ export default async function Auditoria({
           </div>
           <button
             type="submit"
-            className="rounded-md bg-toga-900 px-5 py-2 text-sm font-semibold text-white hover:bg-toga-800"
+            className="rounded-md bg-balanza-600 px-5 py-2 text-sm font-semibold text-white hover:bg-balanza-700"
           >
             Filtrar
           </button>
