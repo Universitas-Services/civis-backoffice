@@ -4,6 +4,7 @@ import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
 import type { SnapshotEnCola } from "@/contracts";
 import { publicarSnapshot, type EstadoPublicacion } from "@/app/(panel)/publicaciones/acciones";
+import { useToastDesdeEstado } from "@/hooks/use-toast-desde-estado";
 
 function BotonPublicar({ bloqueado }: { readonly bloqueado: boolean }) {
   const { pending } = useFormStatus();
@@ -11,7 +12,7 @@ function BotonPublicar({ bloqueado }: { readonly bloqueado: boolean }) {
     <button
       type="submit"
       disabled={pending || bloqueado}
-      className="rounded-md bg-toga-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-toga-800 disabled:cursor-not-allowed disabled:opacity-50"
+      className="rounded-md bg-balanza-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-balanza-700 disabled:cursor-not-allowed disabled:opacity-50"
     >
       {pending ? "Publicando…" : "Aprobar y publicar"}
     </button>
@@ -28,6 +29,7 @@ export function FichaSnapshot({
   readonly loPreparoElMismoUsuario: boolean;
 }) {
   const [estado, accion] = useActionState<EstadoPublicacion, FormData>(publicarSnapshot, {});
+  useToastDesdeEstado(estado);
 
   const nombre = snapshot.candidate
     ? `${snapshot.candidate.firstName} ${snapshot.candidate.lastName}`
@@ -69,23 +71,6 @@ export function FichaSnapshot({
       ) : (
         <form action={accion} className="mt-4 space-y-3">
           <input type="hidden" name="snapshotId" value={snapshot.id} />
-
-          {estado.error && (
-            <p
-              role="alert"
-              className="rounded-md border border-balanza-600/25 bg-balanza-50 px-3 py-2 text-sm text-balanza-700"
-            >
-              {estado.error}
-            </p>
-          )}
-          {estado.exito && (
-            <p
-              role="status"
-              className="rounded-md border border-validado-700/20 bg-validado-50 px-3 py-2 text-sm text-validado-700"
-            >
-              {estado.exito}
-            </p>
-          )}
 
           <div>
             <label

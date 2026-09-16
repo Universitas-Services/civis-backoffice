@@ -74,7 +74,7 @@ export function HistorialEvaluaciones({ candidateId }: { readonly candidateId: s
                         {e.texto}
                       </span>
                       {ev.ineligible && (
-                        <span className="inline-flex rounded-full bg-toga-800 px-2.5 py-1 text-xs font-medium text-toga-100">
+                        <span className="inline-flex rounded-full bg-balanza-600 px-2.5 py-1 text-xs font-medium text-white">
                           Inhabilitado
                         </span>
                       )}

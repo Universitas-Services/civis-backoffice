@@ -2,6 +2,13 @@
 
 import { useRef, useState } from "react";
 import { CATEGORIA_ETIQUETA, DOCUMENT_CATEGORY, type DocumentCategory } from "@/contracts";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export interface DocumentoCargado {
   readonly id: string;
@@ -23,10 +30,13 @@ export function ZonaDocumentos({
   submissionId,
   documentos,
   onCambio,
+  mostrarLista = true,
 }: {
   readonly submissionId: string;
   readonly documentos: readonly DocumentoCargado[];
   readonly onCambio: (docs: DocumentoCargado[]) => void;
+  /** En el detalle del expediente la lista la pinta el servidor; aquí solo la zona de carga. */
+  readonly mostrarLista?: boolean;
 }) {
   const [categoria, setCategoria] = useState<DocumentCategory>("CURRICULUM");
   const [arrastrando, setArrastrando] = useState(false);
@@ -70,21 +80,24 @@ export function ZonaDocumentos({
   return (
     <div className="space-y-4">
       <div className="rounded-lg border border-toga-200 bg-white p-5">
-        <label htmlFor="categoria" className="block text-xs font-medium text-toga-600">
+        <label htmlFor="categoria-trigger" className="block text-xs font-medium text-toga-600">
           Tipo de documento que va a cargar
         </label>
-        <select
-          id="categoria"
+        <Select
           value={categoria}
-          onChange={(e) => setCategoria(e.target.value as DocumentCategory)}
-          className="mt-1 w-full rounded-md border border-toga-300 bg-white px-3 py-2 text-sm sm:w-72"
+          onValueChange={(v) => setCategoria(v as DocumentCategory)}
         >
-          {DOCUMENT_CATEGORY.map((c) => (
-            <option key={c} value={c}>
-              {CATEGORIA_ETIQUETA[c]}
-            </option>
-          ))}
-        </select>
+          <SelectTrigger id="categoria-trigger" className="mt-1 w-full sm:w-72">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {DOCUMENT_CATEGORY.map((c) => (
+              <SelectItem key={c} value={c}>
+                {CATEGORIA_ETIQUETA[c]}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
 
         <div
           onDragOver={(e) => {
@@ -161,7 +174,7 @@ export function ZonaDocumentos({
         </ul>
       )}
 
-      {documentos.length > 0 && (
+      {mostrarLista && documentos.length > 0 && (
         <div className="rounded-lg border border-toga-200 bg-white">
           <p className="border-b border-toga-100 px-5 py-3 text-sm font-semibold text-toga-900">
             <span className="cifra">{documentos.length}</span>{" "}
@@ -178,9 +191,6 @@ export function ZonaDocumentos({
                     {CATEGORIA_ETIQUETA[d.category]} · {Math.round(d.sizeBytes / 1024)} KB
                   </span>
                 </div>
-                <p className="codigo mt-1 break-all text-[0.7rem] text-toga-400">
-                  SHA-256: {d.sha256}
-                </p>
               </li>
             ))}
           </ul>

@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { ErrorApi, llamarApi } from "@/lib/api";
+import { ErrorApi, llamarApiAccion } from "@/lib/api";
 
 const resolverSchema = z.object({
   resolution: z.enum(["RESOLVED_FOUNDED", "RESOLVED_UNFOUNDED", "REJECTED_INADMISSIBLE"]),
@@ -23,7 +23,7 @@ export interface Resultado {
 
 export async function asignarObjecion(id: string, evaluatorId: string): Promise<Resultado> {
   try {
-    await llamarApi(`/internal/objections/${id}/assign`, { method: "POST", body: { evaluatorId } });
+    await llamarApiAccion(`/internal/objections/${id}/assign`, { method: "POST", body: { evaluatorId } });
     revalidatePath("/objeciones");
     return { ok: true, exito: "Objeción asignada." };
   } catch (error) {
@@ -59,7 +59,7 @@ export async function resolverObjecion(
     criterionKey && newValue !== undefined ? { criterionKey, newValue } : null;
 
   try {
-    await llamarApi(`/internal/objections/${id}/resolve`, {
+    await llamarApiAccion(`/internal/objections/${id}/resolve`, {
       method: "POST",
       body: { resolution, reason, proposedAdjustment },
     });
@@ -92,7 +92,7 @@ export async function solicitarInformacion(
     return { ok: false, error: "Indique qué información falta (mínimo 15 caracteres)" };
   }
   try {
-    await llamarApi(`/internal/objections/${id}/request-info`, {
+    await llamarApiAccion(`/internal/objections/${id}/request-info`, {
       method: "POST",
       body: { reason: motivo },
     });

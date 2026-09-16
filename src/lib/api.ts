@@ -1,13 +1,15 @@
 import "server-only";
-import { API_INTERNA } from "./config";
-import { leerSesion } from "./sesion";
+import { NextResponse } from "next/server";
+import { API_INTERNA, COOKIE_SESION } from "./config";
+import { renovarSesionTras401 } from "./auth-refresh";
+import { cerrarSesion, cifrarSesion, guardarSesion, leerSesion, OPCIONES_COOKIE } from "./sesion";
 
 /**
  * Cliente de la API para el panel interno.
  *
  * Se ejecuta SIEMPRE en el servidor: adjunta el token desde la cookie cifrada,
  * de modo que el navegador nunca lo ve. Un 401 se propaga como `NoAutorizado`
- * para que la capa superior redirija al login.
+ * para que la capa superior redirija al login (páginas) o renueve (acciones).
  */
 export class ErrorApi extends Error {
   constructor(
@@ -32,9 +34,31 @@ interface Opciones {
   readonly body?: unknown;
   /** Segundos de caché. Por defecto 0: el panel muestra siempre el estado real. */
   readonly revalidate?: number;
+  /**
+   * Si true (Server Actions), ante 401 renueva el access una vez y reintenta.
+   * En RSC debe quedarse en false: durante el render no se pueden escribir
+   * cookies; renovar ahí consumiría el refresh sin poder guardarlo.
+   */
+  readonly renovarSi401?: boolean;
 }
 
 export async function llamarApi<T>(ruta: string, opciones: Opciones = {}): Promise<T> {
+  return ejecutarLlamada<T>(ruta, opciones, Boolean(opciones.renovarSi401));
+}
+
+/**
+ * Variante para Server Actions: renueva el access una vez ante 401.
+ * No usar desde Server Components (render).
+ */
+export async function llamarApiAccion<T>(ruta: string, opciones: Opciones = {}): Promise<T> {
+  return ejecutarLlamada<T>(ruta, { ...opciones, renovarSi401: true }, true);
+}
+
+async function ejecutarLlamada<T>(
+  ruta: string,
+  opciones: Opciones,
+  puedeRenovar: boolean,
+): Promise<T> {
   const sesion = await leerSesion();
   const token = sesion?.accessToken ?? null;
 
@@ -46,23 +70,39 @@ export async function llamarApi<T>(ruta: string, opciones: Opciones = {}): Promi
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
     body: opciones.body ? JSON.stringify(opciones.body) : undefined,
-    // Sin `signal`, `fetch` espera indefinidamente: una API que no responde
-    // dejaría la pantalla cargando para siempre, sin error que mostrar ni
-    // forma de que el usuario sepa qué pasa.
     signal: AbortSignal.timeout(20_000),
     ...(opciones.revalidate
       ? { next: { revalidate: opciones.revalidate } }
       : { cache: "no-store" as const }),
   });
 
-  // Un 401 aquí significa que la sesión ya no sirve: la renovación la hace
-  // el proxy ANTES de llegar a la página, que es el único punto donde se
-  // puede guardar el token nuevo. Reintentar aquí rompería la rotación.
-  if (respuesta.status === 401) throw new NoAutorizado();
+  if (respuesta.status === 401) {
+    if (!puedeRenovar || !sesion?.refreshCookie) {
+      await cerrarSesion().catch(() => undefined);
+      throw new NoAutorizado();
+    }
+
+    const tokens = await renovarSesionTras401(token, sesion.refreshCookie);
+    if (!tokens) {
+      await cerrarSesion().catch(() => undefined);
+      throw new NoAutorizado();
+    }
+
+    await guardarSesion({
+      usuario: sesion.usuario,
+      accessToken: tokens.accessToken,
+      refreshCookie: tokens.refreshCookie,
+    });
+
+    // Un solo reintento, sin volver a renovar (evita bucles / doble rotación).
+    return ejecutarLlamada<T>(ruta, { ...opciones, renovarSi401: false }, false);
+  }
+
   if (respuesta.status === 204) return undefined as T;
 
   const datos = (await respuesta.json().catch(() => null)) as
-    (T & { message?: string; errors?: { field: string; message: string }[] }) | null;
+    | (T & { message?: string; errors?: { field: string; message: string }[] })
+    | null;
 
   if (!respuesta.ok) {
     throw new ErrorApi(
@@ -72,4 +112,73 @@ export async function llamarApi<T>(ruta: string, opciones: Opciones = {}): Promi
     );
   }
   return datos as T;
+}
+
+type FetchAutenticadoInit = {
+  readonly method?: string;
+  readonly headers?: HeadersInit;
+  readonly body?: BodyInit | null;
+  readonly signal?: AbortSignal;
+};
+
+/**
+ * Fetch a la API con Bearer + renovación ante 401, para Route Handlers.
+ * Devuelve la Response de la API y, si renovó, el valor cifrado de la cookie
+ * de sesión para que el handler lo escriba en su NextResponse.
+ */
+export async function fetchAutenticado(
+  rutaApi: string,
+  init: FetchAutenticadoInit = {},
+): Promise<{ respuesta: Response | null; cookieSesionNueva?: string }> {
+  const sesion = await leerSesion();
+  if (!sesion?.accessToken) {
+    return { respuesta: null };
+  }
+
+  const hacer = (access: string) =>
+    fetch(`${API_INTERNA}${rutaApi}`, {
+      method: init.method ?? "GET",
+      headers: {
+        ...(init.headers ?? {}),
+        Authorization: `Bearer ${access}`,
+      },
+      body: init.body,
+      cache: "no-store",
+      signal: init.signal ?? AbortSignal.timeout(20_000),
+    }).catch(() => null);
+
+  let respuesta = await hacer(sesion.accessToken);
+  if (!respuesta) return { respuesta: null };
+
+  if (respuesta.status !== 401 || !sesion.refreshCookie) {
+    return { respuesta };
+  }
+
+  const tokens = await renovarSesionTras401(sesion.accessToken, sesion.refreshCookie);
+  if (!tokens) {
+    await cerrarSesion().catch(() => undefined);
+    return { respuesta };
+  }
+
+  respuesta = await hacer(tokens.accessToken);
+  if (!respuesta) return { respuesta: null };
+
+  const cookieSesionNueva = await cifrarSesion({
+    usuario: sesion.usuario,
+    accessToken: tokens.accessToken,
+    refreshCookie: tokens.refreshCookie,
+  });
+
+  return { respuesta, cookieSesionNueva };
+}
+
+/** Adjunta la cookie de sesión renovada a una NextResponse de un proxy. */
+export function adjuntarCookieSesion(
+  salida: NextResponse,
+  cookieSesionNueva?: string,
+): NextResponse {
+  if (cookieSesionNueva) {
+    salida.cookies.set(COOKIE_SESION, cookieSesionNueva, OPCIONES_COOKIE);
+  }
+  return salida;
 }

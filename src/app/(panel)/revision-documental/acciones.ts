@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { clasificarDocumentoSchema, verificarDocumentoSchema } from "@/contracts";
-import { ErrorApi, llamarApi } from "@/lib/api";
+import { ErrorApi, llamarApiAccion } from "@/lib/api";
 
 export interface EstadoRevision {
   readonly error?: string;
@@ -24,7 +24,7 @@ export async function verificarDocumento(
   }
 
   try {
-    await llamarApi(`/internal/documents/${id}/verification`, {
+    await llamarApiAccion(`/internal/documents/${id}/verification`, {
       method: "PATCH",
       body: analisis.data,
     });
@@ -61,7 +61,7 @@ export async function clasificarDocumento(
   }
 
   try {
-    await llamarApi(`/internal/documents/${id}/classification`, {
+    await llamarApiAccion(`/internal/documents/${id}/classification`, {
       method: "PATCH",
       body: analisis.data,
     });

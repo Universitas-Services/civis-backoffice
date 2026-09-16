@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { generarInformeSchema, publicarInformeSchema } from "@/contracts";
-import { ErrorApi, llamarApi } from "@/lib/api";
+import { ErrorApi, llamarApiAccion } from "@/lib/api";
 
 export interface EstadoInformes {
   readonly error?: string;
@@ -30,7 +30,7 @@ export async function generarInforme(
     : undefined;
 
   try {
-    const creado = await llamarApi<{ version: number; sha256: string }>("/internal/reports/draft", {
+    const creado = await llamarApiAccion<{ version: number; sha256: string }>("/internal/reports/draft", {
       method: "POST",
       body: cutoffAt ? { cutoffAt } : {},
     });
@@ -54,7 +54,7 @@ export async function publicarInforme(
   }
 
   try {
-    await llamarApi(`/internal/reports/${id}/publish`, {
+    await llamarApiAccion(`/internal/reports/${id}/publish`, {
       method: "POST",
       body: analisis.data,
     });

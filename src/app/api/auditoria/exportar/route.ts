@@ -1,27 +1,19 @@
-import { API_INTERNA } from "@/lib/config";
-import { leerSesion } from "@/lib/sesion";
+import { NextResponse } from "next/server";
+import { adjuntarCookieSesion, fetchAutenticado } from "@/lib/api";
 
 /**
  * Descarga del CSV de la bitácora.
- *
- * Se hace por proxy porque el navegador no tiene el token. Se reenvían las
- * cabeceras de la API tal cual —incluidas `Content-Disposition` y el número
- * de filas— para que el archivo llegue con su nombre y sin recodificarse.
  */
 export async function GET(request: Request): Promise<Response> {
-  const sesion = await leerSesion();
-  if (!sesion) return new Response("Sesión expirada", { status: 401 });
-
   const entrante = new URL(request.url);
-  const destino = new URL(`${API_INTERNA}/internal/audit/export`);
-  for (const [clave, valor] of entrante.searchParams) destino.searchParams.set(clave, valor);
+  const qs = entrante.searchParams.toString();
+  const ruta = `/internal/audit/export${qs ? `?${qs}` : ""}`;
 
-  const respuesta = await fetch(destino, {
-    headers: { Authorization: `Bearer ${sesion.accessToken}` },
-    cache: "no-store",
-  }).catch(() => null);
+  const { respuesta, cookieSesionNueva } = await fetchAutenticado(ruta);
 
-  if (!respuesta) return new Response("No se pudo contactar con el servidor", { status: 502 });
+  if (!respuesta) {
+    return NextResponse.json({ message: "Sesión expirada" }, { status: 401 });
+  }
 
   const cabeceras = new Headers();
   for (const clave of ["content-type", "content-disposition", "x-total-rows", "x-truncated"]) {
@@ -30,5 +22,6 @@ export async function GET(request: Request): Promise<Response> {
   }
   cabeceras.set("Cache-Control", "no-store");
 
-  return new Response(respuesta.body, { status: respuesta.status, headers: cabeceras });
+  const salida = new NextResponse(respuesta.body, { status: respuesta.status, headers: cabeceras });
+  return adjuntarCookieSesion(salida, cookieSesionNueva);
 }

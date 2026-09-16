@@ -1,14 +1,12 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import { FormularioLogin } from "@/components/formulario-login";
 
 export const metadata: Metadata = { title: "Ingresar" };
 
 /**
- * Pantalla de acceso a dos paneles.
- *
- * Izquierda: fondo gris pizarra sólido, para el propósito institucional.
- * Derecha: el formulario sobre lienzo claro, donde va toda la atención.
- * En móvil el panel de marca se reduce a una franja superior.
+ * Acceso centrado en card: fondo institucional (azul + vino) y formulario
+ * sobre lienzo claro. Sin scroll de página: todo cabe en el viewport.
  */
 export default async function Login({
   searchParams,
@@ -17,89 +15,64 @@ export default async function Login({
 }) {
   const params = await searchParams;
   return (
-    <div className="min-h-dvh md:grid md:grid-cols-2">
-      {/* ── Panel de marca ─────────────────────────────────────────── */}
-      <section className="relative flex flex-col justify-between overflow-hidden bg-toga-900 px-6 py-8 md:px-10 md:py-12">
-        {/* Marca de agua: retícula sobria que evoca la pauta de un documento. */}
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-x-0 bottom-0 h-1/2 opacity-[0.07]"
-          style={{
-            backgroundImage:
-              "repeating-linear-gradient(0deg, transparent 0 22px, #fff 22px 23px), repeating-linear-gradient(90deg, transparent 0 22px, #fff 22px 23px)",
-          }}
-        />
+    <div className="relative flex h-dvh items-center justify-center overflow-hidden px-4 py-4 sm:px-6">
+      <div
+        aria-hidden="true"
+        className="absolute inset-0 bg-toga-900"
+        style={{
+          backgroundImage: `
+            radial-gradient(ellipse 80% 60% at 0% 0%, rgb(122 30 45 / 0.45), transparent 55%),
+            radial-gradient(ellipse 70% 50% at 100% 100%, rgb(122 30 45 / 0.35), transparent 50%),
+            linear-gradient(160deg, #0f2a44 0%, #111827 55%, #0f2a44 100%)
+          `,
+        }}
+      />
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 opacity-[0.06]"
+        style={{
+          backgroundImage:
+            "repeating-linear-gradient(0deg, transparent 0 22px, #fff 22px 23px), repeating-linear-gradient(90deg, transparent 0 22px, #fff 22px 23px)",
+        }}
+      />
 
-        <div className="relative flex items-center gap-3">
-          <svg
-            viewBox="0 0 32 36"
-            className="h-10 w-10 text-balanza-500"
-            fill="none"
-            aria-hidden="true"
-          >
-            <path
-              d="M16 1.5 30 6v12c0 8.2-5.6 14.2-14 16.5C7.6 32.2 2 26.2 2 18V6l14-4.5Z"
-              stroke="currentColor"
-              strokeWidth="1.75"
-              strokeLinejoin="round"
-            />
-            <path
-              d="M9 13h14M10.5 13v9M21.5 13v9M8 22h16"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-            />
-            <path
-              d="M13 17.5l2.5 2.5 5-5.5"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-          <span className="leading-tight">
-            <span className="block font-serif text-base font-semibold text-white">
-              CONSEJO INDEPENDIENTE
-            </span>
-            <span className="block text-[0.62rem] uppercase tracking-[0.2em] text-toga-400">
-              Verificación de credenciales
-            </span>
-          </span>
-        </div>
-
-        <p className="relative mt-8 max-w-md font-serif text-lg leading-relaxed text-toga-200 md:mt-0 md:text-2xl">
-          Plataforma de auditoría técnica y veeduría cívica para la conformación del Tribunal
-          Supremo de Justicia.
-        </p>
-
-        <p className="relative mt-8 hidden text-sm text-toga-500 md:block">
-          Toda operación queda registrada en la bitácora de auditoría.
-        </p>
-      </section>
-
-      {/* ── Panel del formulario ───────────────────────────────────── */}
       <section
         id="contenido"
-        className="flex items-center justify-center bg-toga-50 px-6 py-12 md:px-10"
+        className="relative w-full max-w-md rounded-xl border border-white/10 bg-toga-50 shadow-[0_24px_64px_rgb(0_0_0_/0.35)]"
       >
-        <div className="w-full max-w-sm">
-          <h1 className="text-xl font-semibold tracking-tight text-toga-900">
-            Ingresar al sistema
-          </h1>
-          <p className="mt-1.5 text-sm text-toga-500">Acceso restringido al personal autorizado.</p>
+        <div className="h-1.5 rounded-t-xl bg-gradient-to-r from-balanza-600 via-balanza-600 to-toga-800" />
 
-          <div className="mt-7">
+        <div className="px-6 py-6 sm:px-8 sm:py-7">
+          <div className="flex flex-col items-center text-center">
+            <Image
+              src="/brand/logo-completo.png"
+              alt="CIVIS — Consejo Independiente de Verificación de Credenciales"
+              width={180}
+              height={196}
+              className="h-20 w-auto object-contain sm:h-24"
+              priority
+            />
+
+            <h1 className="mt-4 text-xl font-semibold tracking-tight text-toga-900">
+              Ingresar al sistema
+            </h1>
+            <p className="mt-1 text-sm text-toga-500">
+              Acceso restringido al personal autorizado.
+            </p>
+          </div>
+
+          <div className="mt-5">
             {params.passwordChanged === "1" && (
-              <p className="mb-4 rounded-md border border-validado-700/25 bg-validado-50 px-4 py-3 text-base text-validado-700">
+              <p className="mb-3 rounded-md border border-validado-700/25 bg-validado-50 px-4 py-2.5 text-sm text-validado-700">
                 Contraseña actualizada. Ingrese nuevamente.
               </p>
             )}
             <FormularioLogin />
           </div>
 
-          <p className="mt-8 border-t border-toga-200 pt-5 text-xs leading-relaxed text-toga-500">
-            Sistema de uso exclusivo para el personal del Consejo. Los intentos de acceso, con éxito
-            o sin él, quedan registrados.
+          <p className="mt-5 text-center text-xs leading-relaxed text-toga-500">
+            Uso exclusivo del Consejo Independiente. Los intentos de acceso quedan
+            registrados en la bitácora.
           </p>
         </div>
       </section>

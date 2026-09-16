@@ -10,7 +10,7 @@ const BANDAS: Record<string, { texto: string; clases: string; simbolo: string }>
   HIGH: { texto: "Altamente idóneo", clases: "bg-validado-50 text-validado-700", simbolo: "●" },
   MEDIUM: { texto: "Idóneo medio", clases: "bg-balanza-50 text-balanza-700", simbolo: "◐" },
   LOW: { texto: "Insuficiente", clases: "bg-objetado-100 text-objetado-600", simbolo: "○" },
-  INELIGIBLE: { texto: "Inhabilitado", clases: "bg-toga-800 text-toga-100", simbolo: "✕" },
+  INELIGIBLE: { texto: "Inhabilitado", clases: "bg-balanza-600 text-white", simbolo: "✕" },
 };
 
 export default async function RankingInterno() {

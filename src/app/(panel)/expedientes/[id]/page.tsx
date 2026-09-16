@@ -1,20 +1,22 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
+import { History, Lock, Scale } from "lucide-react";
 import type { ExpedienteDetalle } from "@/contracts";
-import { CATEGORIA_ETIQUETA, SALA_ETIQUETA } from "@/contracts";
+import { SALA_ETIQUETA } from "@/contracts";
 import { ErrorApi, llamarApi, NoAutorizado } from "@/lib/api";
 import { renovarYVolver } from "@/lib/rutas";
 import { tieneRol, usuarioActual } from "@/lib/sesion";
 import { CabeceraPagina } from "@/components/cabecera-pagina";
 import { HistorialEvaluaciones } from "@/components/historial-evaluaciones";
 import {
-  InsigniaAnalisis,
   InsigniaBanda,
-  InsigniaClasificacion,
   InsigniaEstado,
+  InsigniaPublicacion,
   Puntaje,
 } from "@/components/insignias";
+import { SeccionDocumentosExpediente } from "@/components/seccion-documentos-expediente";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 export const metadata: Metadata = { title: "Expediente" };
 
@@ -42,6 +44,10 @@ export default async function DetalleExpediente({
     tieneRol(usuario, "SUPER_ADMIN", "EVALUATOR") &&
     ["READY_FOR_EVALUATION", "EVALUATION_IN_PROGRESS"].includes(e.workflowStatus);
 
+  const puedeCargar =
+    tieneRol(usuario, "SUPER_ADMIN", "SECRETARY") &&
+    ["DRAFT", "DOCUMENT_REVIEW"].includes(e.workflowStatus);
+
   return (
     <>
       <CabeceraPagina
@@ -58,17 +64,19 @@ export default async function DetalleExpediente({
             {tieneRol(usuario, "SUPER_ADMIN") && (
               <Link
                 href={`/auditoria/entidad/Candidate/${e.id}`}
-                className="rounded-md border border-toga-300 px-4 py-2.5 text-sm font-medium text-toga-700 hover:border-toga-400"
+                className="inline-flex items-center gap-2 rounded-md border border-toga-300 px-4 py-2.5 text-sm font-medium text-toga-700 hover:border-toga-400"
               >
+                <History className="h-4 w-4" aria-hidden="true" />
                 Ver historial
               </Link>
             )}
             {puedeEvaluar && (
               <Link
                 href={`/evaluacion/${e.id}`}
-                className="rounded-md bg-toga-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-toga-800"
+                className="inline-flex items-center gap-2 rounded-md bg-balanza-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-balanza-700"
               >
-                Evaluar expediente →
+                <Scale className="h-4 w-4" aria-hidden="true" />
+                Evaluar expediente
               </Link>
             )}
           </div>
@@ -76,47 +84,20 @@ export default async function DetalleExpediente({
       />
 
       <div className="grid gap-6 px-5 py-6 sm:px-8 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
-        {/* ── Documentos ──────────────────────────────────────────── */}
-        <section aria-labelledby="documentos">
-          <h2 id="documentos" className="text-base font-semibold text-toga-900">
-            Documentos del expediente
-          </h2>
+        <SeccionDocumentosExpediente
+          candidateId={e.id}
+          submissionId={expediente?.id ?? null}
+          workflowStatus={e.workflowStatus}
+          documentos={expediente?.documents ?? []}
+          puedeCargar={puedeCargar}
+        />
 
-          {!expediente || expediente.documents.length === 0 ? (
-            <p className="mt-3 rounded-lg border border-dashed border-toga-300 bg-white p-8 text-center text-sm text-toga-500">
-              Este expediente todavía no tiene documentos cargados.
-            </p>
-          ) : (
-            <ul className="mt-3 space-y-3">
-              {expediente.documents.map((d) => (
-                <li key={d.id} className="rounded-lg border border-toga-200 bg-white p-4">
-                  <div className="flex flex-wrap items-baseline justify-between gap-2">
-                    <span className="min-w-0 truncate font-medium text-toga-900">
-                      {d.originalName}
-                    </span>
-                    <span className="shrink-0 text-xs text-toga-500">
-                      {CATEGORIA_ETIQUETA[d.category]} · {Math.round(d.sizeBytes / 1024)} KB
-                      {d.version > 1 && ` · versión ${d.version}`}
-                    </span>
-                  </div>
-                  <div className="mt-2.5 flex flex-wrap gap-2">
-                    <InsigniaClasificacion valor={d.classification} />
-                    <InsigniaAnalisis valor={d.scanStatus} />
-                  </div>
-                  <p className="codigo mt-2 break-all text-[0.7rem] text-toga-400">
-                    SHA-256: {d.sha256}
-                  </p>
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
-
-        {/* ── Estado ──────────────────────────────────────────────── */}
         <aside className="space-y-4">
-          <div className="rounded-lg border border-toga-200 bg-white p-5">
-            <h2 className="text-sm font-semibold text-toga-900">Estado</h2>
-            <div className="mt-3 space-y-3 text-sm">
+          <Card>
+            <CardHeader>
+              <CardTitle>Estado</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3 text-sm">
               <div>
                 <p className="text-xs text-toga-500">Etapa del flujo</p>
                 <div className="mt-1">
@@ -125,7 +106,9 @@ export default async function DetalleExpediente({
               </div>
               <div>
                 <p className="text-xs text-toga-500">Publicación</p>
-                <p className="mt-0.5 font-medium text-toga-900">{e.publicationStatus}</p>
+                <div className="mt-1">
+                  <InsigniaPublicacion estado={e.publicationStatus} />
+                </div>
               </div>
               <div>
                 <p className="text-xs text-toga-500">Recibido</p>
@@ -147,60 +130,64 @@ export default async function DetalleExpediente({
                   </Link>
                 </div>
               )}
-            </div>
-          </div>
+            </CardContent>
+          </Card>
 
           {evaluacion && (
-            <div className="rounded-lg border border-toga-200 bg-white p-5">
-              <h2 className="text-sm font-semibold text-toga-900">Evaluación vigente</h2>
-              <div className="mt-3">
+            <Card>
+              <CardHeader>
+                <CardTitle>Evaluación vigente</CardTitle>
+              </CardHeader>
+              <CardContent>
                 <Puntaje valor={Number(evaluacion.totalPoints)} />
-              </div>
-              <div className="mt-3">
-                <InsigniaBanda
-                  banda={evaluacion.ineligible ? "INELIGIBLE" : (evaluacion.band as never)}
-                />
-              </div>
-            </div>
+                <div className="mt-3">
+                  <InsigniaBanda
+                    banda={evaluacion.ineligible ? "INELIGIBLE" : (evaluacion.band as never)}
+                  />
+                </div>
+              </CardContent>
+            </Card>
           )}
 
           <HistorialEvaluaciones candidateId={e.id} />
 
           {/* Los datos internos van aparte y rotulados: quien mira la pantalla
               debe saber en todo momento qué se publica y qué no. */}
-          <div className="rounded-lg border border-toga-300 bg-toga-100 p-5">
-            <h2 className="text-sm font-semibold text-toga-900">
-              <span aria-hidden="true" className="mr-1.5">
-                🔒
-              </span>
-              Datos internos
-            </h2>
-            <p className="mt-1 text-xs text-toga-500">No se publican en ningún caso.</p>
-            <dl className="mt-3 space-y-2.5 text-sm">
-              <div>
-                <dt className="text-xs text-toga-500">Cédula</dt>
-                <dd className="codigo text-toga-900">{e.nationalId}</dd>
-              </div>
-              {e.email && (
+          <Card className="border-toga-300 bg-toga-100 shadow-none">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Lock className="h-4 w-4 text-toga-600" aria-hidden="true" />
+                Datos internos
+              </CardTitle>
+              <CardDescription>No se publican en ningún caso.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <dl className="space-y-2.5 text-sm">
                 <div>
-                  <dt className="text-xs text-toga-500">Correo</dt>
-                  <dd className="break-all text-toga-900">{e.email}</dd>
+                  <dt className="text-xs text-toga-500">Cédula</dt>
+                  <dd className="codigo text-toga-900">{e.nationalId}</dd>
                 </div>
-              )}
-              {e.phone && (
-                <div>
-                  <dt className="text-xs text-toga-500">Teléfono</dt>
-                  <dd className="text-toga-900">{e.phone}</dd>
-                </div>
-              )}
-              {e.internalNotes && (
-                <div>
-                  <dt className="text-xs text-toga-500">Notas</dt>
-                  <dd className="leading-relaxed text-toga-700">{e.internalNotes}</dd>
-                </div>
-              )}
-            </dl>
-          </div>
+                {e.email && (
+                  <div>
+                    <dt className="text-xs text-toga-500">Correo</dt>
+                    <dd className="break-all text-toga-900">{e.email}</dd>
+                  </div>
+                )}
+                {e.phone && (
+                  <div>
+                    <dt className="text-xs text-toga-500">Teléfono</dt>
+                    <dd className="text-toga-900">{e.phone}</dd>
+                  </div>
+                )}
+                {e.internalNotes && (
+                  <div>
+                    <dt className="text-xs text-toga-500">Notas</dt>
+                    <dd className="leading-relaxed text-toga-700">{e.internalNotes}</dd>
+                  </div>
+                )}
+              </dl>
+            </CardContent>
+          </Card>
         </aside>
       </div>
     </>

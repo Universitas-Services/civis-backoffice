@@ -1,15 +1,20 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import type { ExpedienteListado, WorkflowStatus } from "@/contracts";
-import { ESTADO_ETIQUETA, SALA_ETIQUETA, WORKFLOW_STATUS } from "@/contracts";
+import type { ExpedienteListado } from "@/contracts";
+import { WORKFLOW_STATUS, SALA_ETIQUETA } from "@/contracts";
 import { renovarYVolver } from "@/lib/rutas";
 import { llamarApi, NoAutorizado } from "@/lib/api";
 import { tieneRol, usuarioActual } from "@/lib/sesion";
 import { CabeceraPagina, EstadoVacio } from "@/components/cabecera-pagina";
-import { InsigniaBanda, InsigniaEstado } from "@/components/insignias";
+import { FiltrosExpedientes } from "@/components/filtros-expedientes";
+import { InsigniaEstado } from "@/components/insignias";
+import { Paginacion } from "@/components/paginacion";
+import { TablaExpedientes } from "@/components/tabla-expedientes";
 
 export const metadata: Metadata = { title: "Expedientes" };
+
+const PAGE_SIZE = 10;
 
 interface Respuesta {
   readonly items: readonly ExpedienteListado[];
@@ -27,7 +32,11 @@ export default async function Expedientes({
   if (!usuario) redirect("/login");
   const params = await searchParams;
 
-  const query = new URLSearchParams({ page: params.page ?? "1", pageSize: "25" });
+  const page = Math.max(1, Number(params.page) || 1);
+  const query = new URLSearchParams({
+    page: String(page),
+    pageSize: String(PAGE_SIZE),
+  });
   if (params.buscar) query.set("buscar", params.buscar);
   if (params.estado) query.set("estado", params.estado);
 
@@ -40,6 +49,7 @@ export default async function Expedientes({
   }
 
   const puedeCrear = tieneRol(usuario, "SUPER_ADMIN", "SECRETARY", "EVALUATOR");
+  const pageSize = datos.pageSize || PAGE_SIZE;
 
   return (
     <>
@@ -50,7 +60,7 @@ export default async function Expedientes({
           puedeCrear ? (
             <Link
               href="/expedientes/nuevo"
-              className="rounded-md bg-toga-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-toga-800"
+              className="rounded-md bg-balanza-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-balanza-700"
             >
               + Nuevo expediente
             </Link>
@@ -59,49 +69,11 @@ export default async function Expedientes({
       />
 
       <div className="px-5 py-6 sm:px-8">
-        {/* Filtros por GET: enlazables y funcionan sin JavaScript. */}
-        <form
-          method="get"
-          className="flex flex-col gap-3 rounded-lg border border-toga-200 bg-white p-4 sm:flex-row sm:items-end"
-        >
-          <div className="flex-1">
-            <label htmlFor="buscar" className="block text-xs font-medium text-toga-600">
-              Nombre, cédula o número de expediente
-            </label>
-            <input
-              id="buscar"
-              name="buscar"
-              type="search"
-              defaultValue={params.buscar ?? ""}
-              placeholder="Ej.: Villalba, V-11223344, EXP-0009"
-              className="mt-1 w-full rounded-md border border-toga-300 px-3 py-2 text-sm"
-            />
-          </div>
-          <div className="sm:w-60">
-            <label htmlFor="estado" className="block text-xs font-medium text-toga-600">
-              Etapa
-            </label>
-            <select
-              id="estado"
-              name="estado"
-              defaultValue={params.estado ?? ""}
-              className="mt-1 w-full rounded-md border border-toga-300 bg-white px-3 py-2 text-sm"
-            >
-              <option value="">Todas las etapas</option>
-              {WORKFLOW_STATUS.map((e) => (
-                <option key={e} value={e}>
-                  {ESTADO_ETIQUETA[e]}
-                </option>
-              ))}
-            </select>
-          </div>
-          <button
-            type="submit"
-            className="rounded-md bg-toga-900 px-5 py-2 text-sm font-semibold text-white hover:bg-toga-800"
-          >
-            Filtrar
-          </button>
-        </form>
+        <FiltrosExpedientes
+          buscar={params.buscar ?? ""}
+          estado={params.estado ?? ""}
+          etapas={WORKFLOW_STATUS}
+        />
 
         {datos.items.length === 0 ? (
           <div className="mt-6">
@@ -122,9 +94,18 @@ export default async function Expedientes({
           <>
             <p className="mt-6 text-sm text-toga-500">
               {datos.total} {datos.total === 1 ? "expediente" : "expedientes"}
+              {" · "}
+              página <span className="cifra font-medium text-toga-900">{datos.page}</span> de{" "}
+              <span className="cifra font-medium text-toga-900">
+                {Math.max(1, Math.ceil(datos.total / pageSize))}
+              </span>
+              {" · "}
+              mostrando{" "}
+              <span className="cifra">
+                {(datos.page - 1) * pageSize + 1}–{Math.min(datos.page * pageSize, datos.total)}
+              </span>
             </p>
 
-            {/* Móvil: tarjetas. Escritorio: tabla. Sin scroll horizontal. */}
             <ul className="mt-3 space-y-3 lg:hidden">
               {datos.items.map((e) => (
                 <li key={e.id}>
@@ -145,97 +126,25 @@ export default async function Expedientes({
                       {SALA_ETIQUETA[e.chamber]} · {e.submissions[0]?._count.documents ?? 0}{" "}
                       documentos
                       {e._count.objections > 0 && ` · ${e._count.objections} objeciones`}
+                      {e.evaluations[0] && ` · ${Number(e.evaluations[0].totalPoints)} pts`}
                     </p>
                   </Link>
                 </li>
               ))}
             </ul>
 
-            <div className="mt-3 hidden overflow-hidden rounded-lg border border-toga-200 bg-white lg:block">
-              <table className="w-full text-left text-sm">
-                <caption className="sr-only">Expedientes registrados</caption>
-                <thead className="border-b-2 border-toga-300 bg-toga-50">
-                  <tr>
-                    <th scope="col" className="px-4 py-3 font-semibold text-toga-700">
-                      Expediente
-                    </th>
-                    <th scope="col" className="px-4 py-3 font-semibold text-toga-700">
-                      Postulante
-                    </th>
-                    <th scope="col" className="px-4 py-3 font-semibold text-toga-700">
-                      Sala
-                    </th>
-                    <th scope="col" className="px-4 py-3 font-semibold text-toga-700">
-                      Etapa
-                    </th>
-                    <th scope="col" className="px-4 py-3 text-center font-semibold text-toga-700">
-                      Docs.
-                    </th>
-                    <th scope="col" className="px-4 py-3 text-center font-semibold text-toga-700">
-                      Obj.
-                    </th>
-                    <th scope="col" className="px-4 py-3 font-semibold text-toga-700">
-                      Evaluación
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-toga-100">
-                  {datos.items.map((e) => {
-                    const evaluacion = e.evaluations[0];
-                    return (
-                      <tr key={e.id} className="hover:bg-toga-50">
-                        <th
-                          scope="row"
-                          className="codigo px-4 py-3 text-left text-xs font-medium text-toga-600"
-                        >
-                          {e.submissions[0]?.fileNumber ?? "—"}
-                        </th>
-                        <td className="px-4 py-3">
-                          <Link
-                            href={`/expedientes/${e.id}`}
-                            className="font-medium text-toga-900 hover:text-balanza-700 hover:underline"
-                          >
-                            {e.firstName} {e.lastName}
-                          </Link>
-                        </td>
-                        <td className="px-4 py-3 text-toga-600">{SALA_ETIQUETA[e.chamber]}</td>
-                        <td className="px-4 py-3">
-                          <InsigniaEstado estado={e.workflowStatus as WorkflowStatus} />
-                        </td>
-                        <td className="cifra px-4 py-3 text-center text-toga-600">
-                          {e.submissions[0]?._count.documents ?? 0}
-                        </td>
-                        <td className="cifra px-4 py-3 text-center">
-                          {e._count.objections > 0 ? (
-                            <span className="font-semibold text-balanza-700">
-                              {e._count.objections}
-                            </span>
-                          ) : (
-                            <span className="text-toga-400">—</span>
-                          )}
-                        </td>
-                        <td className="px-4 py-3">
-                          {evaluacion ? (
-                            <span className="flex items-center gap-2">
-                              <span className="cifra font-semibold text-toga-900">
-                                {Number(evaluacion.totalPoints)}
-                              </span>
-                              <InsigniaBanda
-                                banda={
-                                  evaluacion.ineligible ? "INELIGIBLE" : (evaluacion.band as never)
-                                }
-                              />
-                            </span>
-                          ) : (
-                            <span className="text-xs text-toga-400">Sin evaluar</span>
-                          )}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+            <TablaExpedientes items={datos.items} />
+
+            <Paginacion
+              ruta="/expedientes"
+              page={datos.page}
+              pageSize={pageSize}
+              total={datos.total}
+              params={{
+                buscar: params.buscar,
+                estado: params.estado,
+              }}
+            />
           </>
         )}
       </div>

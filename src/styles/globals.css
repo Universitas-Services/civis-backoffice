@@ -1,39 +1,47 @@
 @import "tailwindcss";
 
 /**
- * Paleta "Neutral Judicial".
+ * Paleta institucional CIVIS.
  *
- * Definida en la documentación de diseño para transmitir autoridad sin
- * recurrir a los colores de la diatriba política: gris pizarra como ancla,
- * oro viejo como acento (sustituye al rojo de alarma) y grises claros de
- * lienzo. Los tonos semánticos usan verde esmeralda para lo validado y gris
- * piedra para lo objetado, porque una objeción es revisión documental
- * normal, no un ataque.
+ * Anclas de marca (guía de color):
+ *   Vino institucional  #7A1E2D
+ *   Azul profundo       #0F2A44
+ *   Gris principal      #64748B
+ *   Gris claro          #CBD5E1
+ *   Blanco              #F8FAFC
+ *   Negro               #111827
+ *
+ * Los nombres de token (`toga`, `balanza`) se conservan para no reescribir
+ * toda la UI: cambian los valores, no las clases. `toga` ancla el azul/gris
+ * institucional; `balanza` pasa del oro viejo al vino como acento.
+ *
+ * Semánticos: verde esmeralda para lo validado; gris piedra para lo objetado
+ * (una objeción es revisión, no alarma).
  */
 @theme {
   --color-toga-50: #f8fafc;
-  --color-toga-100: #f1f5f9;
+  --color-toga-100: #eef2f6;
   --color-toga-200: #e2e8f0;
   --color-toga-300: #cbd5e1;
   --color-toga-400: #94a3b8;
   --color-toga-500: #64748b;
-  --color-toga-600: #475569;
+  --color-toga-600: #4a5d73;
   --color-toga-700: #334155;
-  --color-toga-800: #1e293b;
-  --color-toga-900: #0f172a;
+  --color-toga-800: #1a3a55;
+  --color-toga-900: #0f2a44;
 
-  --color-balanza-50: #fffbeb;
-  --color-balanza-100: #fef3c7;
-  --color-balanza-200: #fde68a;
-  --color-balanza-500: #f59e0b;
-  --color-balanza-600: #d97706;
-  --color-balanza-700: #b45309;
+  --color-balanza-50: #fdf2f4;
+  --color-balanza-100: #f9e4e8;
+  --color-balanza-200: #e8b4bc;
+  --color-balanza-500: #9a2a3a;
+  --color-balanza-600: #7a1e2d;
+  --color-balanza-700: #5c1622;
 
   --color-validado-50: #ecfdf5;
   --color-validado-700: #047857;
 
-  --color-objetado-100: #f5f5f4;
-  --color-objetado-600: #57534e;
+  --color-objetado-100: #f1f5f9;
+  --color-objetado-600: #64748b;
 
   /* IBM Plex, auto-alojada por next/font (ver src/lib/fuentes.ts). */
   --font-institucional: var(--fuente-serif), Georgia, "Times New Roman", serif;
@@ -48,15 +56,17 @@
 :root {
   color-scheme: light;
   --duracion-ui: 150ms;
-  --color-gris-pizarra: #0f172a;
-  --color-oro-viejo: #d97706;
+  --color-gris-pizarra: #111827;
+  --color-oro-viejo: #7a1e2d; /* legacy: ahora vino institucional */
+  --color-vino: #7a1e2d;
+  --color-azul-profundo: #0f2a44;
   --color-fondo-general: #f8fafc;
   --color-lienzo: #ffffff;
-  --color-borde-lienzo: #e2e8f0;
+  --color-borde-lienzo: #cbd5e1;
   --color-validado-texto: #047857;
   --color-validado-fondo: #ecfdf5;
-  --color-objetado-texto: #57534e;
-  --color-objetado-fondo: #f5f5f4;
+  --color-objetado-texto: #64748b;
+  --color-objetado-fondo: #f1f5f9;
 }
 
 html {
@@ -77,7 +87,7 @@ body {
 }
 
 /* Los títulos llevan la serif institucional: aporta el peso de documento
-   formal sin recurrir a ornamento. Merriweather está diseñada para pantalla. */
+   formal sin recurrir a ornamento. */
 h1,
 h2,
 h3 {
@@ -114,9 +124,35 @@ code,
 
 /* Foco siempre visible: requisito de accesibilidad por teclado (WCAG 2.4.7). */
 :focus-visible {
-  outline: 3px solid var(--color-oro-viejo);
+  outline: 3px solid var(--color-vino);
   outline-offset: 2px;
   border-radius: 2px;
+}
+
+@keyframes entrada-ui {
+  from {
+    opacity: 0;
+    transform: translateY(0.5rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Errores de validación de campo: rojo claro, distinto del vino de marca. */
+.mensaje-error-campo {
+  margin-top: 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.4;
+  color: #dc2626;
+}
+
+.campo-con-error {
+  border-color: #dc2626 !important;
+  background-color: #fef2f2;
+  box-shadow: 0 0 0 1px #dc2626;
 }
 
 /* Respeta la preferencia del sistema de reducir movimiento. */
@@ -128,6 +164,26 @@ code,
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+}
+
+/* Scroll del menú lateral: fino, contraste sobre vinotinto. */
+.barra-lateral-nav {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(255 255 255 / 0.35) transparent;
+}
+.barra-lateral-nav::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.barra-lateral-nav::-webkit-scrollbar-track {
+  background: transparent;
+}
+.barra-lateral-nav::-webkit-scrollbar-thumb {
+  background: rgb(255 255 255 / 0.35);
+  border-radius: 999px;
+}
+.barra-lateral-nav::-webkit-scrollbar-thumb:hover {
+  background: rgb(255 255 255 / 0.55);
 }
 
 /* Enlace de salto para lectores de pantalla y navegación por teclado. */

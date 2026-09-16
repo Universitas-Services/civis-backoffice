@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useTransition } from "react";
 import { prepararRanking } from "@/app/(panel)/publicaciones/acciones";
+import { useToast } from "@/components/toast-provider";
 
 export function BotonPrepararRanking() {
   const [pendiente, iniciar] = useTransition();
-  const [mensaje, setMensaje] = useState<{ texto: string; error: boolean } | null>(null);
+  const toast = useToast();
 
   return (
     <div className="text-right">
@@ -15,21 +16,14 @@ export function BotonPrepararRanking() {
         onClick={() =>
           iniciar(async () => {
             const r = await prepararRanking();
-            setMensaje({ texto: r.error ?? r.exito ?? "", error: Boolean(r.error) });
+            if (r.error) toast.error(r.error);
+            else if (r.exito) toast.exito(r.exito);
           })
         }
         className="rounded-md border border-toga-300 bg-white px-4 py-2.5 text-sm font-semibold text-toga-700 hover:bg-toga-100 disabled:opacity-60"
       >
         {pendiente ? "Preparando…" : "Preparar ranking público"}
       </button>
-      {mensaje && (
-        <p
-          role="status"
-          className={`mt-2 max-w-xs text-xs ${mensaje.error ? "text-balanza-700" : "text-validado-700"}`}
-        >
-          {mensaje.texto}
-        </p>
-      )}
     </div>
   );
 }
