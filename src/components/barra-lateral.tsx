@@ -7,6 +7,8 @@ import { usePathname } from "next/navigation";
 import type { Sesion } from "@/contracts";
 import { seccionesDe } from "@/lib/secciones-nav";
 import { terminarSesion } from "@/app/acciones-auth";
+import { ConTooltip, TooltipProvider } from "@/components/ui/tooltip";
+import { EVENTO_SIDEBAR_DOCUMENTO } from "@/lib/sidebar-panel";
 
 const CLAVE_COLAPSADO = "civis.sidebar.colapsado";
 
@@ -29,6 +31,7 @@ export function BarraLateral({ usuario }: { readonly usuario: Sesion }) {
   const pathname = usePathname() ?? "";
   const visibles = seccionesDe(usuario);
   const [colapsado, setColapsado] = useState(false);
+  const [documentoAbierto, setDocumentoAbierto] = useState(false);
   const [listo, setListo] = useState(false);
 
   useEffect(() => {
@@ -40,78 +43,99 @@ export function BarraLateral({ usuario }: { readonly usuario: Sesion }) {
     setListo(true);
   }, []);
 
+  useEffect(() => {
+    function onDocumento(ev: Event) {
+      const detail = (ev as CustomEvent<{ abierto?: boolean }>).detail;
+      setDocumentoAbierto(Boolean(detail?.abierto));
+    }
+    window.addEventListener(EVENTO_SIDEBAR_DOCUMENTO, onDocumento);
+    return () => {
+      window.removeEventListener(EVENTO_SIDEBAR_DOCUMENTO, onDocumento);
+      setDocumentoAbierto(false);
+    };
+  }, []);
+
   function alternar() {
-    setColapsado((prev) => {
-      const siguiente = !prev;
+    const actualmenteEstrecho = colapsado || documentoAbierto;
+    if (actualmenteEstrecho) {
+      setDocumentoAbierto(false);
+      setColapsado(false);
       try {
-        localStorage.setItem(CLAVE_COLAPSADO, siguiente ? "1" : "0");
+        localStorage.setItem(CLAVE_COLAPSADO, "0");
       } catch {
         /* ignore */
       }
-      return siguiente;
-    });
+      return;
+    }
+    setColapsado(true);
+    try {
+      localStorage.setItem(CLAVE_COLAPSADO, "1");
+    } catch {
+      /* ignore */
+    }
   }
 
-  const estrecho = listo && colapsado;
+  const estrecho = listo && (colapsado || documentoAbierto);
 
   return (
-    <aside
-      className={`flex w-full shrink-0 flex-col bg-balanza-600 transition-[width] duration-200 md:sticky md:top-0 md:h-dvh md:self-start md:overflow-hidden ${
-        estrecho ? "md:w-16" : "md:w-64"
-      }`}
-    >
-      <div
-        className={`flex shrink-0 items-center border-b border-white/15 ${
-          estrecho ? "justify-center px-2 py-3" : "gap-2.5 px-3 py-3"
+    <TooltipProvider delayDuration={200}>
+      <aside
+        className={`flex w-full shrink-0 flex-col bg-balanza-600 transition-[width] duration-200 md:sticky md:top-0 md:h-dvh md:self-start md:overflow-hidden ${
+          estrecho ? "md:w-16" : "md:w-64"
         }`}
       >
-        <button
-          type="button"
-          onClick={alternar}
-          aria-expanded={!colapsado}
-          aria-controls="nav-panel"
-          aria-label={colapsado ? "Expandir menú" : "Comprimir menú"}
-          className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-white transition-colors hover:bg-black/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+        <div
+          className={`flex shrink-0 items-center border-b border-white/15 ${
+            estrecho ? "justify-center px-2 py-3" : "gap-2.5 px-3 py-3"
+          }`}
         >
-          <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" aria-hidden="true">
-            <path
-              d="M3.5 6.5h17M3.5 12h17M3.5 17.5h17"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
+          <button
+            type="button"
+            onClick={alternar}
+            aria-expanded={!colapsado}
+            aria-controls="nav-panel"
+            aria-label={colapsado ? "Expandir menú" : "Comprimir menú"}
+            className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-white transition-colors hover:bg-black/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+          >
+            <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" aria-hidden="true">
+              <path
+                d="M3.5 6.5h17M3.5 12h17M3.5 17.5h17"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+              />
+            </svg>
+          </button>
+
+          <div className={`min-w-0 flex-1 ${estrecho ? "md:hidden" : "flex justify-center pr-1"}`}>
+            <Image
+              src="/brand/logo-horiz-slogan-blanco.png"
+              alt="CIVIS — Consejo Independiente de Verificación de Credenciales"
+              width={280}
+              height={72}
+              className="h-11 w-auto max-w-full object-contain"
+              priority
             />
-          </svg>
-        </button>
-
-        <div className={`min-w-0 flex-1 ${estrecho ? "md:hidden" : "flex justify-center pr-1"}`}>
-          <Image
-            src="/brand/logo-horiz-slogan-blanco.png"
-            alt="CIVIS — Consejo Independiente de Verificación de Credenciales"
-            width={280}
-            height={72}
-            className="h-11 w-auto max-w-full object-contain"
-            priority
-          />
+          </div>
         </div>
-      </div>
 
-      <nav
-        id="nav-panel"
-        aria-label="Secciones del panel"
-        className="barra-lateral-nav min-h-0 flex-1 overflow-x-auto px-2 py-3 md:overflow-x-hidden md:overflow-y-auto"
-      >
-        <ul className={`flex gap-1 ${estrecho ? "md:flex-col md:items-center" : "md:flex-col"}`}>
-          {visibles.map((s) => {
-            const activa = rutaCoincide(pathname, s.href);
-            return (
-              <li key={s.href} className={estrecho ? "md:w-full" : undefined}>
+        <nav
+          id="nav-panel"
+          aria-label="Secciones del panel"
+          className="barra-lateral-nav min-h-0 flex-1 overflow-x-auto px-2 py-3 md:overflow-x-hidden md:overflow-y-auto"
+        >
+          <ul className={`flex gap-1 ${estrecho ? "md:flex-col md:items-center" : "md:flex-col"}`}>
+            {visibles.map((s) => {
+              const activa = rutaCoincide(pathname, s.href);
+              const enlace = (
                 <Link
                   href={s.href}
-                  title={s.texto}
                   aria-label={s.texto}
                   aria-current={activa ? "page" : undefined}
                   className={`flex items-center rounded-md text-sm transition-colors ${
-                    estrecho ? "justify-center px-2 py-2.5 md:mx-auto md:w-10" : "gap-3 px-3 py-2 md:border-l-2"
+                    estrecho
+                      ? "justify-center px-2 py-2.5 md:mx-auto md:w-10"
+                      : "gap-3 px-3 py-2 md:border-l-2"
                   } ${
                     activa
                       ? "bg-black/25 text-white md:border-white"
@@ -121,42 +145,61 @@ export function BarraLateral({ usuario }: { readonly usuario: Sesion }) {
                   <IconoSeccion href={s.href} className="h-5 w-5 shrink-0" />
                   <span className={estrecho ? "md:hidden" : ""}>{s.texto}</span>
                 </Link>
-              </li>
-            );
-          })}
-        </ul>
-      </nav>
+              );
 
-      <div
-        className={`shrink-0 border-t border-white/15 ${
-          estrecho ? "px-2 py-3" : "px-4 py-4 text-center"
-        }`}
-      >
-        {!estrecho && (
-          <>
-            <p className="truncate text-sm font-medium text-white">{usuario.fullName}</p>
-            <p className="truncate text-xs text-white/70">{usuario.email}</p>
-          </>
-        )}
-        <form
-          action={terminarSesion}
-          className={estrecho ? "flex justify-center" : "mt-3 flex justify-center"}
+              return (
+                <li key={s.href} className={estrecho ? "md:w-full" : undefined}>
+                  {estrecho ? (
+                    <ConTooltip texto={s.texto} side="right">
+                      {enlace}
+                    </ConTooltip>
+                  ) : (
+                    enlace
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        </nav>
+
+        <div
+          className={`shrink-0 border-t border-white/15 ${
+            estrecho ? "px-2 py-3" : "px-4 py-4 text-center"
+          }`}
         >
-          <button
-            type="submit"
-            title="Cerrar sesión"
-            aria-label="Cerrar sesión"
-            className={`text-white/80 transition-colors hover:text-white ${
-              estrecho
-                ? "inline-flex h-10 w-10 items-center justify-center rounded-md hover:bg-black/20"
-                : "text-xs font-medium underline-offset-2 hover:underline"
-            }`}
+          {!estrecho && (
+            <>
+              <p className="truncate text-sm font-medium text-white">{usuario.fullName}</p>
+              <p className="truncate text-xs text-white/70">{usuario.email}</p>
+            </>
+          )}
+          <form
+            action={terminarSesion}
+            className={estrecho ? "flex justify-center" : "mt-3 flex justify-center"}
           >
-            {estrecho ? <IconoSalir className="h-5 w-5" /> : "Cerrar sesión"}
-          </button>
-        </form>
-      </div>
-    </aside>
+            {estrecho ? (
+              <ConTooltip texto="Cerrar sesión" side="right">
+                <button
+                  type="submit"
+                  aria-label="Cerrar sesión"
+                  className="inline-flex h-10 w-10 items-center justify-center rounded-md text-white/80 transition-colors hover:bg-black/20 hover:text-white"
+                >
+                  <IconoSalir className="h-5 w-5" />
+                </button>
+              </ConTooltip>
+            ) : (
+              <button
+                type="submit"
+                aria-label="Cerrar sesión"
+                className="text-xs font-medium text-white/80 underline-offset-2 transition-colors hover:text-white hover:underline"
+              >
+                Cerrar sesión
+              </button>
+            )}
+          </form>
+        </div>
+      </aside>
+    </TooltipProvider>
   );
 }
 

@@ -1,60 +1,37 @@
 import type { Metadata } from "next";
-import type { DocumentoEnRevision } from "@/contracts";
-import { llamarApi, NoAutorizado } from "@/lib/api";
-import { exigirRol, renovarYVolver } from "@/lib/rutas";
+import { exigirRol } from "@/lib/rutas";
+import { listarPostulantesRevision } from "@/lib/maqueta-revision-documental";
 import { CabeceraPagina, EstadoVacio } from "@/components/cabecera-pagina";
-import { FichaRevision } from "@/components/ficha-revision";
+import { ListaPostulantesRevision } from "@/components/revision-maqueta/lista-postulantes-revision";
 
 export const metadata: Metadata = { title: "Revisión documental" };
 
 export default async function RevisionDocumental() {
-  const usuario = await exigirRol("SUPER_ADMIN", "SECRETARY", "EVALUATOR", "PUBLISHER");
-
-  let documentos: readonly DocumentoEnRevision[];
-  try {
-    documentos = await llamarApi<DocumentoEnRevision[]>("/internal/documents/review-queue");
-  } catch (error) {
-    if (error instanceof NoAutorizado) renovarYVolver("/revision-documental");
-    throw error;
-  }
-
-  // Sólo quien publica decide qué archivo se hace público. La pantalla lo
-  // oculta al resto, pero la API es quien lo impide de verdad.
-  const puedeClasificar = usuario.roles.some((r) => r === "SUPER_ADMIN" || r === "PUBLISHER");
-  const puedeVerificar = usuario.roles.some(
-    (r) => r === "SUPER_ADMIN" || r === "SECRETARY" || r === "EVALUATOR",
-  );
+  await exigirRol("SUPER_ADMIN", "SECRETARY", "EVALUATOR", "PUBLISHER");
+  const postulantes = listarPostulantesRevision();
 
   return (
     <>
       <CabeceraPagina
         titulo="Revisión documental"
-        descripcion="Documentos cargados que esperan verificación. Aquí se comprueba que son legibles y corresponden a lo declarado, antes de que el expediente pase a evaluación."
+        descripcion="Postulantes enviados a revisión documental. Elija un expediente para ver y revisar sus documentos."
       />
 
       <div className="px-5 py-6 sm:px-8">
-        {documentos.length === 0 ? (
+        {postulantes.length === 0 ? (
           <EstadoVacio
-            titulo="No hay documentos pendientes de verificar"
-            detalle="Aparecerán aquí en cuanto secretaría cargue documentos en un expediente que siga en borrador o en revisión."
+            titulo="No hay postulantes en revisión"
+            detalle="Aparecerán aquí cuando secretaría envíe un expediente a revisión documental."
           />
         ) : (
           <>
             <p className="text-sm text-toga-500">
-              {documentos.length}{" "}
-              {documentos.length === 1 ? "documento pendiente" : "documentos pendientes"}
+              <span className="cifra font-medium text-toga-800">{postulantes.length}</span>{" "}
+              {postulantes.length === 1
+                ? "postulante en revisión"
+                : "postulantes en revisión"}
             </p>
-            <ul className="mt-4 space-y-4">
-              {documentos.map((d) => (
-                <li key={d.id}>
-                  <FichaRevision
-                    documento={d}
-                    puedeVerificar={puedeVerificar}
-                    puedeClasificar={puedeClasificar}
-                  />
-                </li>
-              ))}
-            </ul>
+            <ListaPostulantesRevision items={postulantes} />
           </>
         )}
       </div>

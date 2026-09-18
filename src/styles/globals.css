@@ -166,24 +166,15 @@ code,
   }
 }
 
-/* Scroll del menú lateral: fino, contraste sobre vinotinto. */
+/* Menú lateral: scroll interno sin barra visible. */
 .barra-lateral-nav {
-  scrollbar-width: thin;
-  scrollbar-color: rgb(255 255 255 / 0.35) transparent;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
 .barra-lateral-nav::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-.barra-lateral-nav::-webkit-scrollbar-track {
-  background: transparent;
-}
-.barra-lateral-nav::-webkit-scrollbar-thumb {
-  background: rgb(255 255 255 / 0.35);
-  border-radius: 999px;
-}
-.barra-lateral-nav::-webkit-scrollbar-thumb:hover {
-  background: rgb(255 255 255 / 0.55);
+  display: none;
+  width: 0;
+  height: 0;
 }
 
 /* Enlace de salto para lectores de pantalla y navegación por teclado. */
