@@ -35,13 +35,9 @@ export function SidebarChecklistDocumentos({
   const total = slots.length;
 
   /** Forzar abierto (p. ej. bloque completo que el usuario expandió). */
-  const [forzarAbierto, setForzarAbierto] = useState<Set<BloqueDocumentoId>>(
-    () => new Set(),
-  );
+  const [forzarAbierto, setForzarAbierto] = useState<Set<BloqueDocumentoId>>(() => new Set());
   /** Forzar cerrado (p. ej. bloque incompleto que el usuario comprimió). */
-  const [forzarCerrado, setForzarCerrado] = useState<Set<BloqueDocumentoId>>(
-    () => new Set(),
-  );
+  const [forzarCerrado, setForzarCerrado] = useState<Set<BloqueDocumentoId>>(() => new Set());
 
   const resumenPorBloque = ORDEN_BLOQUES.map((bloque) => {
     const items = slots.filter((s) => s.bloque === bloque);
@@ -123,9 +119,7 @@ export function SidebarChecklistDocumentos({
               key={bloque}
               className={cn(
                 "rounded-md border",
-                completo
-                  ? "border-validado-700/25 bg-validado-50/40"
-                  : "border-transparent",
+                completo ? "border-validado-700/25 bg-validado-50/40" : "border-transparent",
               )}
             >
               <button

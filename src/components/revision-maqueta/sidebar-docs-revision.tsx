@@ -2,12 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { Check, ChevronDown, ChevronRight, FileText } from "lucide-react";
-import {
-  BLOQUE_ETIQUETA,
-  ordenBloquesRevision,
-  type BloqueDocumentoId,
-  type DocumentoRevisionMock,
-} from "@/lib/maqueta-revision-documental";
+import { BLOQUE_ETIQUETA } from "@/lib/maqueta-expediente-documentos";
+import { ordenBloquesRevision } from "@/contracts";
+import type { BloqueDocumentoId } from "@/lib/maqueta-expediente-documentos";
+import type { DocumentoRevision } from "@/lib/adaptar-revision-api";
 import { cn } from "@/lib/utils";
 
 export function SidebarDocsRevision({
@@ -16,18 +14,14 @@ export function SidebarDocsRevision({
   activo,
   onSeleccionar,
 }: {
-  readonly documentos: readonly DocumentoRevisionMock[];
+  readonly documentos: readonly DocumentoRevision[];
   readonly formulariosGuardados: ReadonlySet<string>;
   readonly activo?: string;
   readonly onSeleccionar: (id: string) => void;
 }) {
   const bloques = ordenBloquesRevision();
-  const [forzarAbierto, setForzarAbierto] = useState<Set<BloqueDocumentoId>>(
-    () => new Set(),
-  );
-  const [forzarCerrado, setForzarCerrado] = useState<Set<BloqueDocumentoId>>(
-    () => new Set(),
-  );
+  const [forzarAbierto, setForzarAbierto] = useState<Set<BloqueDocumentoId>>(() => new Set());
+  const [forzarCerrado, setForzarCerrado] = useState<Set<BloqueDocumentoId>>(() => new Set());
 
   const resumen = bloques
     .map((bloque) => {
@@ -111,9 +105,7 @@ export function SidebarDocsRevision({
               key={bloque}
               className={cn(
                 "rounded-md border",
-                completo
-                  ? "border-validado-700/25 bg-validado-50/40"
-                  : "border-transparent",
+                completo ? "border-validado-700/25 bg-validado-50/40" : "border-transparent",
               )}
             >
               <button
@@ -168,8 +160,7 @@ export function SidebarDocsRevision({
                           onClick={() => onSeleccionar(d.id)}
                           className={cn(
                             "flex w-full items-start gap-2 rounded-md px-2 py-1.5 text-left text-xs transition-colors",
-                            activo === d.id &&
-                              "bg-toga-100 ring-1 ring-inset ring-balanza-600/40",
+                            activo === d.id && "bg-toga-100 ring-1 ring-inset ring-balanza-600/40",
                             ok
                               ? "text-validado-700 hover:bg-validado-50"
                               : "text-toga-700 hover:bg-toga-50",

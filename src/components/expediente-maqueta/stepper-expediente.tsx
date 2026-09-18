@@ -67,12 +67,7 @@ export function StepperExpedienteMaqueta({ fase }: { readonly fase: 0 | 1 }) {
               >
                 {paso.titulo}
               </p>
-              <p
-                className={cn(
-                  "mt-0.5 text-xs",
-                  activo ? "text-toga-600" : "text-toga-400",
-                )}
-              >
+              <p className={cn("mt-0.5 text-xs", activo ? "text-toga-600" : "text-toga-400")}>
                 {paso.detalle}
               </p>
             </li>

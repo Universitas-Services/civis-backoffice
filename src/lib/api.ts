@@ -40,6 +40,8 @@ interface Opciones {
    * cookies; renovar ahí consumiría el refresh sin poder guardarlo.
    */
   readonly renovarSi401?: boolean;
+  /** Timeout en ms. Por defecto 20s; extract IA necesita ≥ 90s. */
+  readonly timeoutMs?: number;
 }
 
 export async function llamarApi<T>(ruta: string, opciones: Opciones = {}): Promise<T> {
@@ -58,6 +60,8 @@ async function ejecutarLlamada<T>(
   ruta: string,
   opciones: Opciones,
   puedeRenovar: boolean,
+  /** True si esta llamada ya es el reintento tras un refresh exitoso. */
+  yaRenovo = false,
 ): Promise<T> {
   const sesion = await leerSesion();
   const token = sesion?.accessToken ?? null;
@@ -70,14 +74,27 @@ async function ejecutarLlamada<T>(
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
     body: opciones.body ? JSON.stringify(opciones.body) : undefined,
-    signal: AbortSignal.timeout(20_000),
+    signal: AbortSignal.timeout(opciones.timeoutMs ?? 20_000),
     ...(opciones.revalidate
       ? { next: { revalidate: opciones.revalidate } }
       : { cache: "no-store" as const }),
   });
 
   if (respuesta.status === 401) {
-    if (!puedeRenovar || !sesion?.refreshCookie) {
+    // Reintento tras refresh: el access es válido; no tumbar la sesión.
+    if (yaRenovo) {
+      const datos401 = (await respuesta.json().catch(() => null)) as {
+        message?: string;
+      } | null;
+      throw new ErrorApi(datos401?.message ?? "No autorizado", 401);
+    }
+
+    // RSC: no borrar cookie — renovarYVolver necesita el refresh intacto.
+    if (!puedeRenovar) {
+      throw new NoAutorizado();
+    }
+
+    if (!sesion?.refreshCookie) {
       await cerrarSesion().catch(() => undefined);
       throw new NoAutorizado();
     }
@@ -94,15 +111,13 @@ async function ejecutarLlamada<T>(
       refreshCookie: tokens.refreshCookie,
     });
 
-    // Un solo reintento, sin volver a renovar (evita bucles / doble rotación).
-    return ejecutarLlamada<T>(ruta, { ...opciones, renovarSi401: false }, false);
+    return ejecutarLlamada<T>(ruta, { ...opciones, renovarSi401: false }, false, true);
   }
 
   if (respuesta.status === 204) return undefined as T;
 
   const datos = (await respuesta.json().catch(() => null)) as
-    | (T & { message?: string; errors?: { field: string; message: string }[] })
-    | null;
+    (T & { message?: string; errors?: { field: string; message: string }[] }) | null;
 
   if (!respuesta.ok) {
     throw new ErrorApi(
@@ -156,7 +171,8 @@ export async function fetchAutenticado(
 
   const tokens = await renovarSesionTras401(sesion.accessToken, sesion.refreshCookie);
   if (!tokens) {
-    await cerrarSesion().catch(() => undefined);
+    // No cerrar sesión aquí: un proxy (PDF) que pierde la carrera de refresh
+    // no debe tumbar al operador. Dejamos el 401 y la Action/página deciden.
     return { respuesta };
   }
 

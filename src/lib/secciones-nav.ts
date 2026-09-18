@@ -14,17 +14,17 @@ export const SECCIONES: readonly {
   {
     href: "/dashboard",
     texto: "Panel",
-    roles: ["SUPER_ADMIN", "SECRETARY", "EVALUATOR", "PUBLISHER"],
+    roles: ["SUPER_ADMIN", "SECRETARY", "REVIEWER", "EVALUATOR", "PUBLISHER"],
   },
   {
     href: "/expedientes",
     texto: "Expedientes",
-    roles: ["SUPER_ADMIN", "SECRETARY", "EVALUATOR", "PUBLISHER"],
+    roles: ["SUPER_ADMIN", "SECRETARY", "REVIEWER", "EVALUATOR", "PUBLISHER"],
   },
   {
     href: "/revision-documental",
     texto: "Revisión documental",
-    roles: ["SUPER_ADMIN", "SECRETARY", "EVALUATOR", "PUBLISHER"],
+    roles: ["SUPER_ADMIN", "REVIEWER", "EVALUATOR"],
   },
   { href: "/evaluacion", texto: "Evaluación", roles: ["SUPER_ADMIN", "EVALUATOR"] },
   { href: "/objeciones", texto: "Objeciones", roles: ["SUPER_ADMIN", "EVALUATOR"] },

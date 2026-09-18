@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { FileStack } from "lucide-react";
+import { categoryDesdeSlotKey } from "@/contracts";
 import { useToast } from "@/components/toast-provider";
 import { construirSlotsVisibles } from "@/lib/maqueta-expediente-documentos";
 import { marcarSidebarDocumentoAbierto } from "@/lib/sidebar-panel";
@@ -13,11 +14,15 @@ import type { DatosPostulanteMaqueta } from "./paso-datos-postulante";
 export function PasoCargaDocumentos({
   datos,
   salaLabel,
+  submissionId,
   onEnviarRevision,
+  enviandoRevision = false,
 }: {
   readonly datos: DatosPostulanteMaqueta;
   readonly salaLabel: string;
+  readonly submissionId: string;
   readonly onEnviarRevision: () => void;
+  readonly enviandoRevision?: boolean;
 }) {
   const toast = useToast();
   const [pendientes, setPendientes] = useState<Record<string, File | null>>({});
@@ -26,6 +31,7 @@ export function PasoCargaDocumentos({
   const [guardando, setGuardando] = useState(false);
   const [enRevision, setEnRevision] = useState(false);
   const [confirmandoRevision, setConfirmandoRevision] = useState(false);
+  const [avisoObligatorios, setAvisoObligatorios] = useState(false);
 
   const slots = useMemo(() => construirSlotsVisibles(), []);
   const slotActivo = slots.find((s) => s.slotKey === activo);
@@ -43,8 +49,12 @@ export function PasoCargaDocumentos({
     return set;
   }, [guardados]);
 
+  const obligatoriosFaltantes = useMemo(() => {
+    return slots.filter((s) => !s.opcional && !slotsConGuardados.has(s.slotKey));
+  }, [slots, slotsConGuardados]);
+
   function seleccionar(slotKey: string) {
-    if (enRevision) return;
+    if (enRevision || enviandoRevision) return;
     setActivo(slotKey);
   }
 
@@ -55,17 +65,41 @@ export function PasoCargaDocumentos({
   async function guardarDocumento(slotKey: string) {
     const file = pendientes[slotKey];
     const slot = slots.find((s) => s.slotKey === slotKey);
-    if (!file || !slot || enRevision) return;
+    if (!file || !slot || enRevision || enviandoRevision) return;
     if (!slot.multiple && (guardados[slotKey]?.length ?? 0) > 0) return;
+
+    const category = categoryDesdeSlotKey(slotKey);
+    if (!category) {
+      toast.error("Tipo de documento no reconocido.");
+      return;
+    }
 
     setGuardando(true);
     try {
-      // Placeholder: aquí irá la llamada a la API por variable/documento.
-      await new Promise((r) => setTimeout(r, 350));
+      const cuerpo = new FormData();
+      cuerpo.append("category", category);
+      cuerpo.append("file", file);
+
+      const respuesta = await fetch(`/api/documentos/${submissionId}`, {
+        method: "POST",
+        body: cuerpo,
+      });
+      const datosResp = (await respuesta.json()) as {
+        id?: string;
+        originalName?: string;
+        sizeBytes?: number;
+        message?: string;
+      };
+
+      if (!respuesta.ok || !datosResp.id) {
+        toast.error(datosResp.message ?? "No se pudo cargar el documento.");
+        return;
+      }
+
       const nuevo: ArchivoGuardado = {
-        id: `${slotKey}-${Date.now()}`,
-        name: file.name,
-        size: file.size,
+        id: datosResp.id,
+        name: datosResp.originalName ?? file.name,
+        size: datosResp.sizeBytes ?? file.size,
       };
       setGuardados((prev) => ({
         ...prev,
@@ -73,17 +107,29 @@ export function PasoCargaDocumentos({
       }));
       setPendientes((prev) => ({ ...prev, [slotKey]: null }));
       toast.exito(`Documento guardado: ${slot.titulo}`);
+    } catch {
+      toast.error("Fallo de conexión al cargar el documento.");
     } finally {
       setGuardando(false);
     }
   }
 
   function quitarGuardado(slotKey: string, id: string) {
-    if (enRevision) return;
+    if (enRevision || enviandoRevision) return;
+    // La API no expone borrado; sólo quitamos de la UI de esta sesión.
     setGuardados((prev) => ({
       ...prev,
       [slotKey]: (prev[slotKey] ?? []).filter((g) => g.id !== id),
     }));
+  }
+
+  function pedirConfirmacionEnvio() {
+    if (obligatoriosFaltantes.length > 0 && !avisoObligatorios) {
+      setAvisoObligatorios(true);
+      setConfirmandoRevision(true);
+      return;
+    }
+    setConfirmandoRevision(true);
   }
 
   function confirmarEnviarRevision() {
@@ -92,6 +138,8 @@ export function PasoCargaDocumentos({
     setActivo(undefined);
     onEnviarRevision();
   }
+
+  const bloqueado = enRevision || enviandoRevision;
 
   return (
     <div className="space-y-6">
@@ -140,7 +188,7 @@ export function PasoCargaDocumentos({
                 etiquetaAnadir={slotActivo.etiquetaAnadir}
                 pendiente={pendientes[slotActivo.slotKey] ?? null}
                 guardados={guardados[slotActivo.slotKey] ?? []}
-                bloqueado={enRevision}
+                bloqueado={bloqueado}
                 guardando={guardando}
                 onPendiente={(f) => setPendiente(slotActivo.slotKey, f)}
                 onGuardar={() => void guardarDocumento(slotActivo.slotKey)}
@@ -170,6 +218,19 @@ export function PasoCargaDocumentos({
               </p>
             ) : confirmandoRevision ? (
               <div className="space-y-3">
+                {obligatoriosFaltantes.length > 0 && (
+                  <p className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+                    Faltan {obligatoriosFaltantes.length} recaudo
+                    {obligatoriosFaltantes.length === 1 ? "" : "s"} obligatorio
+                    {obligatoriosFaltantes.length === 1 ? "" : "s"} (p. ej.{" "}
+                    {obligatoriosFaltantes
+                      .slice(0, 3)
+                      .map((s) => s.titulo)
+                      .join("; ")}
+                    {obligatoriosFaltantes.length > 3 ? "…" : ""}). La API permite enviar igual;
+                    confirme solo si es intencional.
+                  </p>
+                )}
                 <p className="text-sm text-toga-700">
                   ¿Confirma enviar a revisión el expediente de{" "}
                   <span className="font-semibold">
@@ -181,13 +242,18 @@ export function PasoCargaDocumentos({
                   <button
                     type="button"
                     onClick={confirmarEnviarRevision}
-                    className="rounded-md bg-balanza-600 px-4 py-2 text-sm font-semibold text-white hover:bg-balanza-700"
+                    disabled={enviandoRevision}
+                    className="rounded-md bg-balanza-600 px-4 py-2 text-sm font-semibold text-white hover:bg-balanza-700 disabled:opacity-60"
                   >
-                    Confirmar envío a revisión
+                    {enviandoRevision ? "Enviando…" : "Confirmar envío a revisión"}
                   </button>
                   <button
                     type="button"
-                    onClick={() => setConfirmandoRevision(false)}
+                    onClick={() => {
+                      setConfirmandoRevision(false);
+                      setAvisoObligatorios(false);
+                    }}
+                    disabled={enviandoRevision}
                     className="rounded-md border border-toga-300 bg-white px-4 py-2 text-sm font-medium text-toga-700 hover:bg-toga-50"
                   >
                     Cancelar
@@ -197,11 +263,13 @@ export function PasoCargaDocumentos({
             ) : (
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <p className="text-xs text-toga-500">
-                  Los documentos son opcionales. Puede enviar a revisión en cualquier momento.
+                  {obligatoriosFaltantes.length > 0
+                    ? `${obligatoriosFaltantes.length} obligatorio${obligatoriosFaltantes.length === 1 ? "" : "s"} pendiente${obligatoriosFaltantes.length === 1 ? "" : "s"}.`
+                    : "Recaudos obligatorios completos. Puede enviar a revisión."}
                 </p>
                 <button
                   type="button"
-                  onClick={() => setConfirmandoRevision(true)}
+                  onClick={pedirConfirmacionEnvio}
                   className="rounded-md bg-balanza-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-balanza-700"
                 >
                   Enviar a revisión
@@ -215,7 +283,7 @@ export function PasoCargaDocumentos({
           slots={slots}
           guardados={slotsConGuardados}
           activo={activo}
-          bloqueado={enRevision}
+          bloqueado={bloqueado}
           onSeleccionar={seleccionar}
         />
       </div>

@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { exigirRol } from "@/lib/rutas";
-import { obtenerPostulanteRevision } from "@/lib/maqueta-revision-documental";
+import type { ExpedienteDetalle } from "@/contracts";
+import { ErrorApi, llamarApi, NoAutorizado } from "@/lib/api";
+import { postulanteDesdeExpediente } from "@/lib/adaptar-revision-api";
+import { exigirRol, renovarYVolver } from "@/lib/rutas";
 import { CabeceraPagina } from "@/components/cabecera-pagina";
 import { DetalleRevisionPostulante } from "@/components/revision-maqueta/detalle-revision-postulante";
 
@@ -12,10 +14,23 @@ export default async function RevisionDocumentalPostulante({
 }: {
   readonly params: Promise<{ id: string }>;
 }) {
-  await exigirRol("SUPER_ADMIN", "SECRETARY", "EVALUATOR", "PUBLISHER");
+  await exigirRol("SUPER_ADMIN", "REVIEWER", "EVALUATOR");
   const { id } = await params;
-  const postulante = obtenerPostulanteRevision(id);
-  if (!postulante) notFound();
+
+  let expediente: ExpedienteDetalle;
+  try {
+    expediente = await llamarApi<ExpedienteDetalle>(`/internal/candidates/${id}`);
+  } catch (error) {
+    if (error instanceof NoAutorizado) renovarYVolver(`/revision-documental/${id}`);
+    if (error instanceof ErrorApi && error.status === 404) notFound();
+    throw error;
+  }
+
+  if (expediente.workflowStatus !== "DOCUMENT_REVIEW") {
+    notFound();
+  }
+
+  const postulante = postulanteDesdeExpediente(expediente);
 
   return (
     <>

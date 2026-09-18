@@ -15,6 +15,7 @@ export async function GET(
   const { id } = await params;
   const { respuesta, cookieSesionNueva } = await fetchAutenticado(
     `/internal/documents/${id}/content`,
+    { signal: AbortSignal.timeout(120_000) },
   );
 
   if (!respuesta) {
@@ -24,12 +25,14 @@ export async function GET(
     return new Response("Documento no disponible", { status: respuesta.status });
   }
 
+  const contentType = respuesta.headers.get("content-type") ?? "application/pdf";
   const salida = new NextResponse(respuesta.body, {
     status: 200,
     headers: {
-      "Content-Type": respuesta.headers.get("content-type") ?? "application/octet-stream",
+      "Content-Type": contentType.includes("pdf") ? contentType : "application/pdf",
       "Content-Disposition": respuesta.headers.get("content-disposition") ?? "inline",
       "Cache-Control": "no-store",
+      "X-Frame-Options": "SAMEORIGIN",
     },
   });
   return adjuntarCookieSesion(salida, cookieSesionNueva);

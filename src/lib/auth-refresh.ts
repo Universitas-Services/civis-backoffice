@@ -62,16 +62,41 @@ export function cabecerasAuthCookie(refreshCookie?: string | null): Record<strin
 let renovacionEnCurso: Promise<TokensRenovados | null> | null = null;
 
 /**
+ * Último refresh exitoso en este proceso. Evita REUSE_DETECTED cuando un proxy
+ * (PDF) ya rotó el refresh y otra petición concurrente aún lleva el viejo:
+ * la cookie del navegador no se propaga entre requests en vuelo.
+ */
+let ultimoRefreshOk: {
+  readonly refreshUsado: string;
+  readonly tokens: TokensRenovados;
+} | null = null;
+
+/**
  * Un solo POST /auth/refresh a la vez. Si accessToken es null, 401, o no hay
  * Set-Cookie nuevo, devuelve null (sin reutilizar el refresh anterior).
  */
 export async function renovarAccessConMutex(
   refreshCookie: string,
 ): Promise<TokensRenovados | null> {
+  if (ultimoRefreshOk?.refreshUsado === refreshCookie) {
+    return ultimoRefreshOk.tokens;
+  }
+  if (ultimoRefreshOk?.tokens.refreshCookie === refreshCookie) {
+    return ultimoRefreshOk.tokens;
+  }
+
   if (!renovacionEnCurso) {
-    renovacionEnCurso = ejecutarRefresh(refreshCookie).finally(() => {
-      renovacionEnCurso = null;
-    });
+    const usado = refreshCookie;
+    renovacionEnCurso = ejecutarRefresh(refreshCookie)
+      .then((tokens) => {
+        if (tokens) {
+          ultimoRefreshOk = { refreshUsado: usado, tokens };
+        }
+        return tokens;
+      })
+      .finally(() => {
+        renovacionEnCurso = null;
+      });
   }
   return renovacionEnCurso;
 }

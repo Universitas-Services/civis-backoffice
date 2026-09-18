@@ -1,17 +1,25 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, FileStack, FileText, Sparkles } from "lucide-react";
+import { ArrowLeft, FileStack, Sparkles } from "lucide-react";
 import {
   conteoDocsRevision,
-  type DocumentoRevisionMock,
-  type PostulanteRevisionMock,
-} from "@/lib/maqueta-revision-documental";
+  type DocumentoRevision,
+  type PostulanteRevision,
+} from "@/lib/adaptar-revision-api";
+import {
+  enviarAEvaluacion,
+  extraerConIa,
+  guardarRevision,
+  marcarDocumentoVerificado,
+} from "@/app/(panel)/revision-documental/acciones";
+import { esExtraibleConIa } from "@/contracts";
 import { InsigniaEstado } from "@/components/insignias";
 import { useToast } from "@/components/toast-provider";
 import { SidebarDocsRevision } from "./sidebar-docs-revision";
+import { VisorDocumentoRevision } from "./visor-documento-revision";
 import { FormularioCedulaIdentidad } from "./formulario-cedula-identidad";
 import { FormularioPartidaNacimiento } from "./formulario-partida-nacimiento";
 import { FormularioDjOtraNacionalidad } from "./formulario-dj-otra-nacionalidad";
@@ -67,7 +75,6 @@ import {
   esFormularioTituloEspecialidad,
   esFormularioTituloMaestria,
   esFormularioTituloPregrado,
-  rellenoIaParaSlot,
   usaBotonVerificado,
   validarFormularioRevision,
   valoresVaciosParaSlot,
@@ -79,18 +86,32 @@ import { marcarSidebarDocumentoAbierto } from "@/lib/sidebar-panel";
 const CAMPO =
   "mt-1 w-full rounded-md border border-toga-300 bg-white px-3 py-2 text-sm text-toga-900 placeholder:text-toga-400";
 
+function reviewDataAValores(
+  slotKey: string,
+  reviewData: Record<string, unknown> | null | undefined,
+): ValoresFormularioRevision {
+  const base = valoresVaciosParaSlot(slotKey);
+  if (!reviewData) return base;
+  return { ...base, ...reviewData } as ValoresFormularioRevision;
+}
+
 export function DetalleRevisionPostulante({
   postulante,
 }: {
-  readonly postulante: PostulanteRevisionMock;
+  readonly postulante: PostulanteRevision;
 }) {
   const toast = useToast();
   const router = useRouter();
+  const [pending, startTransition] = useTransition();
   const [activo, setActivo] = useState<string | undefined>();
   const [valores, setValores] = useState<Record<string, ValoresFormularioRevision>>({});
-  const [formulariosGuardados, setFormulariosGuardados] = useState<Set<string>>(
-    () => new Set(),
-  );
+  const [formulariosGuardados, setFormulariosGuardados] = useState<Set<string>>(() => {
+    const inicial = new Set<string>();
+    for (const d of postulante.documentos) {
+      if (d.verificationStatus === "VERIFIED") inicial.add(d.id);
+    }
+    return inicial;
+  });
   const [rellenandoIa, setRellenandoIa] = useState(false);
   const [confirmandoEnvio, setConfirmandoEnvio] = useState(false);
 
@@ -104,9 +125,9 @@ export function DetalleRevisionPostulante({
     return () => marcarSidebarDocumentoAbierto(false);
   }, [activo]);
 
-  function valoresDe(documento: DocumentoRevisionMock): ValoresFormularioRevision {
+  function valoresDe(documento: DocumentoRevision): ValoresFormularioRevision {
     if (valores[documento.id]) return valores[documento.id]!;
-    return valoresVaciosParaSlot(documento.slotKey);
+    return reviewDataAValores(documento.slotKey, documento.reviewData);
   }
 
   function seleccionar(id: string) {
@@ -115,7 +136,7 @@ export function DetalleRevisionPostulante({
     if (!documento || valores[id]) return;
     setValores((prev) => ({
       ...prev,
-      [id]: valoresVaciosParaSlot(documento.slotKey),
+      [id]: reviewDataAValores(documento.slotKey, documento.reviewData),
     }));
   }
 
@@ -126,24 +147,60 @@ export function DetalleRevisionPostulante({
     }));
   }
 
-  function marcarVerificado(docId: string) {
-    setFormulariosGuardados((prev) => new Set(prev).add(docId));
-    toast.exito("Documento marcado como verificado.");
+  async function persistirYMarcar(
+    documento: DocumentoRevision,
+    valoresDoc: ValoresFormularioRevision,
+    tambienVerificar: boolean,
+  ) {
+    const limpios = Object.fromEntries(
+      Object.entries(valoresDoc).filter(([, v]) => v !== undefined),
+    );
+    const guardado = await guardarRevision(documento.id, limpios);
+    if (!guardado.ok) {
+      toast.error(guardado.error ?? "No se pudo guardar.");
+      return false;
+    }
+    if (tambienVerificar) {
+      const verif = await marcarDocumentoVerificado(documento.id);
+      if (!verif.ok) {
+        toast.error(verif.error ?? "Se guardó, pero no se pudo marcar verificado.");
+        setFormulariosGuardados((prev) => new Set(prev).add(documento.id));
+        return false;
+      }
+    }
+    setFormulariosGuardados((prev) => new Set(prev).add(documento.id));
+    toast.exito(tambienVerificar ? "Documento guardado y verificado." : "Formulario guardado.");
+    return true;
   }
 
-  async function rellenarConIa(documento: DocumentoRevisionMock) {
+  function marcarVerificado(docId: string) {
+    const documento = postulante.documentos.find((d) => d.id === docId);
+    if (!documento) return;
+    const valoresDoc = valoresDe(documento);
+    startTransition(async () => {
+      await persistirYMarcar(documento, valoresDoc, usaBotonVerificado(documento.slotKey));
+    });
+  }
+
+  async function rellenarConIa(documento: DocumentoRevision) {
+    if (!esExtraibleConIa(documento.category)) return;
     setRellenandoIa(true);
     try {
-      await new Promise((r) => setTimeout(r, 500));
-      const relleno = rellenoIaParaSlot(documento.slotKey);
+      const r = await extraerConIa(documento.id);
+      if (!r.ok || !r.reviewData) {
+        toast.error(r.error ?? "No se pudo extraer. Complete a mano.");
+        return;
+      }
       setValores((prev) => ({
         ...prev,
-        [documento.id]: { ...(prev[documento.id] ?? {}), ...relleno },
+        [documento.id]: {
+          ...reviewDataAValores(documento.slotKey, documento.reviewData),
+          ...(prev[documento.id] ?? {}),
+          ...r.reviewData,
+        } as ValoresFormularioRevision,
       }));
       toast.exito(
-        usaBotonVerificado(documento.slotKey)
-          ? "Campos rellenados con IA. Revise y pulse Verificado para confirmar."
-          : "Campos rellenados con IA. Revise y pulse Guardar para confirmar.",
+        "Campos propuestos por IA. Revise, edite si hace falta y pulse Guardar o Verificado.",
       );
     } finally {
       setRellenandoIa(false);
@@ -152,11 +209,25 @@ export function DetalleRevisionPostulante({
 
   function enviarAlEvaluador() {
     if (!todosListos) return;
-    toast.exito(
-      `Expediente de ${postulante.nombre} ${postulante.apellido} enviado al evaluador.`,
-    );
-    setConfirmandoEnvio(false);
-    router.push("/revision-documental");
+    startTransition(async () => {
+      const r = await enviarAEvaluacion(postulante.id);
+      if (!r.ok) {
+        const mensaje =
+          r.codigo === 403
+            ? (r.error ??
+              "No se puede avanzar: el prefijo de cédula E está inhabilitado (art. 263.1 CRBV).")
+            : (r.error ?? "No se pudo enviar a evaluación.");
+        toast.error(mensaje);
+        setConfirmandoEnvio(false);
+        return;
+      }
+      toast.exito(
+        `Expediente de ${postulante.nombre} ${postulante.apellido} enviado a evaluación.`,
+      );
+      setConfirmandoEnvio(false);
+      router.push("/revision-documental");
+      router.refresh();
+    });
   }
 
   return (
@@ -176,9 +247,8 @@ export function DetalleRevisionPostulante({
               {postulante.nombre} {postulante.apellido}
             </h2>
             <p className="mt-1 text-sm text-toga-500">
-              Seleccione cada documento cargado, complete su formulario y
-              verifíquelo. El envío al evaluador se habilita cuando todos los
-              documentos de este expediente estén revisados.
+              Seleccione cada documento cargado, complete su formulario y verifíquelo. El envío al
+              evaluador se habilita cuando todos los documentos de este expediente estén revisados.
             </p>
           </div>
           <dl className="flex flex-wrap items-end gap-x-6 gap-y-2 text-sm">
@@ -215,13 +285,15 @@ export function DetalleRevisionPostulante({
               <button
                 type="button"
                 onClick={enviarAlEvaluador}
-                className="rounded-md bg-balanza-600 px-4 py-2 text-sm font-semibold text-white hover:bg-balanza-700"
+                disabled={pending}
+                className="rounded-md bg-balanza-600 px-4 py-2 text-sm font-semibold text-white hover:bg-balanza-700 disabled:opacity-60"
               >
-                Confirmar envío
+                {pending ? "Enviando…" : "Confirmar envío"}
               </button>
               <button
                 type="button"
                 onClick={() => setConfirmandoEnvio(false)}
+                disabled={pending}
                 className="rounded-md border border-toga-300 bg-white px-4 py-2 text-sm font-medium text-toga-700 hover:bg-toga-50"
               >
                 Cancelar
@@ -255,6 +327,7 @@ export function DetalleRevisionPostulante({
               valores={valoresDe(doc)}
               verificado={formulariosGuardados.has(doc.id)}
               rellenandoIa={rellenandoIa}
+              guardando={pending}
               onCampo={(key, value) => actualizarCampo(doc.id, key, value)}
               onVerificar={() => marcarVerificado(doc.id)}
               onRellenarIa={() => void rellenarConIa(doc)}
@@ -266,8 +339,8 @@ export function DetalleRevisionPostulante({
                 Seleccione un documento del listado
               </p>
               <p className="mt-1 max-w-sm text-xs text-toga-500">
-                Se mostrará el archivo cargado y el formulario correspondiente a
-                ese tipo de documento.
+                Se mostrará el archivo cargado y el formulario correspondiente a ese tipo de
+                documento.
               </p>
             </div>
           )}
@@ -289,19 +362,22 @@ function PanelVisualizacionYFormulario({
   valores,
   verificado,
   rellenandoIa,
+  guardando,
   onCampo,
   onVerificar,
   onRellenarIa,
 }: {
-  readonly doc: DocumentoRevisionMock;
+  readonly doc: DocumentoRevision;
   readonly valores: Readonly<ValoresFormularioRevision>;
   readonly verificado: boolean;
   readonly rellenandoIa: boolean;
+  readonly guardando: boolean;
   readonly onCampo: (key: string, value: string | boolean | null) => void;
   readonly onVerificar: () => void;
   readonly onRellenarIa: () => void;
 }) {
   const toast = useToast();
+  const mostrarIa = esExtraibleConIa(doc.category);
   const esCedula = esFormularioCedula(doc.slotKey);
   const esPartida = esFormularioPartida(doc.slotKey);
   const esDjOtra = esFormularioDjOtraNacionalidad(doc.slotKey);
@@ -371,16 +447,12 @@ function PanelVisualizacionYFormulario({
 
       <div className="grid gap-6 lg:grid-cols-2">
         <div>
-          <p className="mb-2 text-xs font-medium text-toga-600">{doc.titulo}</p>
-          <div className="flex min-h-[22rem] flex-col items-center justify-center rounded-md border border-dashed border-toga-300 bg-toga-50 px-4 py-8 text-center lg:sticky lg:top-4">
-            <FileText className="h-12 w-12 text-toga-300" aria-hidden="true" />
-            <p className="mt-3 text-sm font-medium text-toga-700">Documento cargado</p>
-            <p className="codigo mt-1 text-xs text-toga-500">{doc.nombreArchivo}</p>
-            <p className="cifra mt-0.5 text-xs text-toga-400">{doc.sizeKb} KB</p>
-            <p className="mt-3 max-w-[14rem] text-xs text-toga-400">
-              Aquí se mostrará la vista previa del archivo ya subido.
-            </p>
-          </div>
+          <VisorDocumentoRevision
+            documentId={doc.id}
+            nombreArchivo={doc.nombreArchivo}
+            sizeKb={doc.sizeKb}
+            titulo={doc.titulo}
+          />
         </div>
 
         <div>
@@ -547,30 +619,29 @@ function PanelVisualizacionYFormulario({
               onCampo={actualizarCampo}
             />
           ) : (
-            <FormularioGenericoStub
-              valores={valores}
-              errores={errores}
-              onCampo={actualizarCampo}
-            />
+            <FormularioGenericoStub valores={valores} errores={errores} onCampo={actualizarCampo} />
           )}
 
           <div className="mt-4 flex flex-wrap gap-2">
             <button
               type="button"
               onClick={intentarVerificar}
-              className="rounded-md bg-balanza-600 px-4 py-2 text-sm font-semibold text-white hover:bg-balanza-700"
+              disabled={guardando}
+              className="rounded-md bg-balanza-600 px-4 py-2 text-sm font-semibold text-white hover:bg-balanza-700 disabled:opacity-60"
             >
-              {botonVerificado ? "Verificado" : "Guardar"}
+              {guardando ? "Guardando…" : botonVerificado ? "Verificado" : "Guardar"}
             </button>
-            <button
-              type="button"
-              onClick={onRellenarIa}
-              disabled={rellenandoIa}
-              className="inline-flex items-center gap-1.5 rounded-md border border-toga-300 bg-white px-4 py-2 text-sm font-semibold text-toga-700 hover:bg-toga-50 disabled:opacity-50"
-            >
-              <Sparkles className="h-4 w-4" aria-hidden="true" />
-              {rellenandoIa ? "Rellenando…" : "Rellenar con IA"}
-            </button>
+            {mostrarIa && (
+              <button
+                type="button"
+                onClick={onRellenarIa}
+                disabled={rellenandoIa || guardando}
+                className="inline-flex items-center gap-1.5 rounded-md border border-toga-300 bg-white px-4 py-2 text-sm font-semibold text-toga-700 hover:bg-toga-50 disabled:opacity-50"
+              >
+                <Sparkles className="h-4 w-4" aria-hidden="true" />
+                {rellenandoIa ? "Rellenando…" : "Rellenar con IA"}
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -590,8 +661,8 @@ function FormularioGenericoStub({
   return (
     <div className="space-y-3">
       <p className="rounded-md border border-toga-100 bg-toga-50/80 px-3 py-2 text-xs text-toga-500">
-        Formulario provisional. Se sustituirá cuando se defina el de este tipo de
-        documento. Todos los campos son opcionales.
+        Formulario provisional. Se sustituirá cuando se defina el de este tipo de documento. Todos
+        los campos son opcionales.
       </p>
       <div>
         <label htmlFor="campo-notas" className="block text-xs font-medium text-toga-600">

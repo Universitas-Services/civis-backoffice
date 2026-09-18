@@ -65,6 +65,12 @@ const nextConfig: NextConfig = {
           ...securityHeaders,
         ],
       },
+      {
+        // Después del catch-all: en Next gana la última coincidencia.
+        // El visor PDF (iframe same-origin / blob) necesita poder enmarcar el proxy.
+        source: "/api/documentos/contenido/:path*",
+        headers: [{ key: "X-Frame-Options", value: "SAMEORIGIN" }],
+      },
     ];
   },
 };

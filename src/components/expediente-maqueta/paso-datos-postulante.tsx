@@ -29,13 +29,18 @@ export function PasoDatosPostulante({
   errores,
   onChange,
   onRegistrar,
+  registrando = false,
 }: {
   readonly valores: DatosPostulanteMaqueta;
   readonly errores: Partial<Record<keyof DatosPostulanteMaqueta, string>>;
   readonly onChange: (v: DatosPostulanteMaqueta) => void;
   readonly onRegistrar: () => void;
+  readonly registrando?: boolean;
 }) {
-  function actualizar<K extends keyof DatosPostulanteMaqueta>(campo: K, valor: DatosPostulanteMaqueta[K]) {
+  function actualizar<K extends keyof DatosPostulanteMaqueta>(
+    campo: K,
+    valor: DatosPostulanteMaqueta[K],
+  ) {
     onChange({ ...valores, [campo]: valor });
   }
 
@@ -69,7 +74,10 @@ export function PasoDatosPostulante({
             )}
           </div>
           <div>
-            <label htmlFor="apellido_postulante" className="block text-xs font-medium text-toga-600">
+            <label
+              htmlFor="apellido_postulante"
+              className="block text-xs font-medium text-toga-600"
+            >
               Apellido del postulante <span className="text-balanza-700">*</span>
             </label>
             <input
@@ -158,9 +166,10 @@ export function PasoDatosPostulante({
       <button
         type="button"
         onClick={onRegistrar}
-        className="rounded-md bg-balanza-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-balanza-700"
+        disabled={registrando}
+        className="rounded-md bg-balanza-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-balanza-700 disabled:opacity-60"
       >
-        Registrar expediente
+        {registrando ? "Registrando…" : "Registrar expediente"}
       </button>
     </div>
   );

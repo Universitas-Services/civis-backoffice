@@ -6,12 +6,13 @@
  */
 import { z } from "zod";
 
-export const ROLES = ["SUPER_ADMIN", "SECRETARY", "EVALUATOR", "PUBLISHER"] as const;
+export const ROLES = ["SUPER_ADMIN", "SECRETARY", "REVIEWER", "EVALUATOR", "PUBLISHER"] as const;
 export type Role = (typeof ROLES)[number];
 
 export const ROL_ETIQUETA: Record<Role, string> = {
   SUPER_ADMIN: "Administrador",
   SECRETARY: "Secretaría",
+  REVIEWER: "Revisión documental",
   EVALUATOR: "Evaluación",
   PUBLISHER: "Publicación",
 };
@@ -167,66 +168,64 @@ export const aprobarPublicacionSchema = z.object({
 
 // ─────────────────────────────────────────── expedientes
 
+/** Salas admitidas al crear expediente (contrato API vigente). */
 export const CHAMBERS = [
   "CONSTITUCIONAL",
   "POLITICO_ADMINISTRATIVA",
   "ELECTORAL",
   "CASACION_CIVIL",
   "CASACION_PENAL",
-  "PLENA",
-  "SOCIAL",
+  "CASACION_SOCIAL",
 ] as const;
 export type Chamber = (typeof CHAMBERS)[number];
 
-export const SALA_ETIQUETA: Record<Chamber, string> = {
+/** Etiquetas de sala; incluye valores legacy por si llegan en listados antiguos. */
+export const SALA_ETIQUETA: Record<string, string> = {
   CONSTITUCIONAL: "Constitucional",
   POLITICO_ADMINISTRATIVA: "Político-Administrativa",
   ELECTORAL: "Electoral",
   CASACION_CIVIL: "Casación Civil",
   CASACION_PENAL: "Casación Penal",
+  CASACION_SOCIAL: "Casación Social",
   PLENA: "Sala Plena",
   SOCIAL: "Sala Social",
 };
 
-export const DOCUMENT_CATEGORY = [
-  "CURRICULUM",
-  "ACADEMIC_TITLE",
-  "TEACHING_PROOF",
-  "PUBLICATION_PROOF",
-  "PROFESSIONAL_PROOF",
-  "IDENTITY",
-  "SWORN_STATEMENT",
-  "OTHER",
-] as const;
-export type DocumentCategory = (typeof DOCUMENT_CATEGORY)[number];
+export {
+  DOCUMENT_CATEGORY,
+  CATEGORIA_ETIQUETA,
+  type DocumentCategory,
+  BLOCK_LABEL,
+  BLOQUE_ETIQUETA,
+  BLOCK_IDS,
+  ORDEN_BLOQUES,
+  type BlockId,
+  RECAUDOS,
+  categoryDesdeSlotKey,
+  slotKeyDesdeCategory,
+  esExtraibleConIa,
+  recaudoPorSlotKey,
+  recaudoPorCategory,
+  esCategoryConocida,
+  ordenBloquesRevision,
+} from "./recaudos";
+import type { DocumentCategory } from "./recaudos";
 
-export const CATEGORIA_ETIQUETA: Record<DocumentCategory, string> = {
-  CURRICULUM: "Currículum",
-  ACADEMIC_TITLE: "Títulos académicos",
-  TEACHING_PROOF: "Constancias de docencia",
-  PUBLICATION_PROOF: "Publicaciones",
-  PROFESSIONAL_PROOF: "Trayectoria profesional",
-  IDENTITY: "Documento de identidad",
-  SWORN_STATEMENT: "Declaración jurada",
-  OTHER: "Otros soportes",
-};
-
-export const PREFIJOS_TELEFONO = [
-  "0412",
-  "0414",
-  "0416",
-  "0422",
-  "0424",
-  "0426",
-] as const;
+export const PREFIJOS_TELEFONO = ["0412", "0414", "0416", "0422", "0424", "0426"] as const;
 export type PrefijoTelefono = (typeof PREFIJOS_TELEFONO)[number];
 
+/** Alineado a civis-api: V / E / J, 6–9 dígitos. */
 export const nationalIdSchema = z
   .string()
   .trim()
   .toUpperCase()
-  .regex(/^V-\d{6,8}$/, "Formato esperado: V-12345678 (6 a 8 dígitos)")
-  .transform((v) => (v.includes("-") ? v : `V-${v.replace(/^V/, "")}`));
+  .regex(/^[VEJ]-?\d{6,9}$/, "Formato esperado: V-12345678 (también E o J; 6 a 9 dígitos)")
+  .transform((v) => {
+    const limpio = v.replace(/[^VEJ0-9]/gi, "").toUpperCase();
+    const prefijo = limpio[0] === "E" || limpio[0] === "J" || limpio[0] === "V" ? limpio[0] : "V";
+    const digitos = limpio.replace(/^[VEJ]/, "");
+    return `${prefijo}-${digitos}`;
+  });
 
 const nombrePersonaSchema = z
   .string()
@@ -241,10 +240,7 @@ const nombrePersonaSchema = z
 export const telefonoVeSchema = z
   .string()
   .trim()
-  .regex(
-    /^0(412|414|416|422|424|426) \d{7}$/,
-    "Formato esperado: 0424 1234567",
-  );
+  .regex(/^0(412|414|416|422|424|426) \d{7}$/, "Formato esperado: 0424 1234567");
 
 export const crearExpedienteSchema = z.object({
   nationalId: nationalIdSchema,
@@ -266,7 +262,7 @@ export const transicionSchema = z.object({
 export interface DocumentoExpediente {
   readonly id: string;
   readonly publicId: string;
-  readonly category: DocumentCategory;
+  readonly category: DocumentCategory | string;
   readonly originalName: string;
   readonly sizeBytes: number;
   readonly sha256: string;
@@ -275,6 +271,8 @@ export interface DocumentoExpediente {
   readonly classification: "PRIVATE" | "REDACTED" | "PUBLIC";
   readonly uploadedAt: string;
   readonly version: number;
+  /** Campos capturados en revisión documental (propuestos por IA o a mano). */
+  readonly reviewData?: Record<string, unknown> | null;
 }
 
 export interface ExpedienteListado {
@@ -282,7 +280,9 @@ export interface ExpedienteListado {
   readonly publicId: string;
   readonly firstName: string;
   readonly lastName: string;
-  readonly chamber: Chamber;
+  readonly nationalId: string;
+  /** Puede incluir valores legacy (PLENA, SOCIAL) en datos antiguos. */
+  readonly chamber: Chamber | string;
   readonly workflowStatus: WorkflowStatus;
   readonly publicationStatus: string;
   readonly receivedAt: string;
@@ -300,7 +300,6 @@ export interface ExpedienteListado {
 }
 
 export interface ExpedienteDetalle extends ExpedienteListado {
-  readonly nationalId: string;
   readonly email: string | null;
   readonly phone: string | null;
   readonly internalNotes: string | null;
@@ -466,7 +465,7 @@ export const publicarInformeSchema = z.object({
 export interface DocumentoEnRevision {
   readonly id: string;
   readonly publicId: string;
-  readonly category: DocumentCategory;
+  readonly category: DocumentCategory | string;
   readonly originalName: string;
   readonly sizeBytes: number;
   readonly sha256: string;
@@ -475,13 +474,14 @@ export interface DocumentoEnRevision {
   readonly classification: "PRIVATE" | "REDACTED" | "PUBLIC";
   readonly uploadedAt: string;
   readonly version: number;
+  readonly reviewData?: Record<string, unknown> | null;
   readonly submission: {
     readonly fileNumber: string;
     readonly candidate: {
       readonly id: string;
       readonly firstName: string;
       readonly lastName: string;
-      readonly chamber: Chamber;
+      readonly chamber: Chamber | string;
     };
   };
   readonly uploadedBy: { readonly fullName: string } | null;

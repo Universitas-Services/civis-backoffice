@@ -24,6 +24,7 @@ import { ZonaDocumentos, type DocumentoCargado } from "./zona-documentos";
 const PASOS = ["Identificación", "Documentos", "Revisión y envío"] as const;
 
 const VALORES_VACIOS: ValoresWizard = {
+  nationalIdPrefix: "V",
   nationalIdDigits: "",
   firstName: "",
   lastName: "",
@@ -39,7 +40,6 @@ const VALORES_VACIOS: ValoresWizard = {
 function filtrarNombre(valor: string): string {
   return valor.replace(/[^A-Za-zÁÉÍÓÚÜÑáéíóúüñ\s]/g, "").replace(/\s{2,}/g, " ");
 }
-
 
 /**
  * Barra de progreso del wizard.
@@ -145,15 +145,19 @@ export function Wizard() {
             </legend>
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
-                <label htmlFor="nationalIdDigits" className="block text-xs font-medium text-toga-600">
+                <label
+                  htmlFor="nationalIdDigits"
+                  className="block text-xs font-medium text-toga-600"
+                >
                   Cédula de identidad <span className="text-balanza-700">*</span>
                 </label>
                 <div className="mt-1 flex">
+                  <input type="hidden" name="nationalIdPrefix" value={valores.nationalIdPrefix} />
                   <span
                     className="inline-flex shrink-0 items-center rounded-l-md border border-r-0 border-toga-300 bg-toga-50 px-3 text-sm font-medium text-toga-700 codigo"
                     aria-hidden="true"
                   >
-                    V-
+                    {valores.nationalIdPrefix}-
                   </span>
                   <input
                     id="nationalIdDigits"
@@ -171,16 +175,16 @@ export function Wizard() {
                     aria-describedby={
                       estado.campos?.nationalIdDigits ? "nationalIdDigits-error" : undefined
                     }
-                    className={claseCampo(
-                      "nationalIdDigits",
-                      " codigo rounded-l-none !mt-0",
-                    )}
+                    className={claseCampo("nationalIdDigits", " codigo rounded-l-none !mt-0")}
                   />
                 </div>
                 <Error campo="nationalIdDigits" />
               </div>
               <div>
-                <label htmlFor="chamber-trigger" className="block text-xs font-medium text-toga-600">
+                <label
+                  htmlFor="chamber-trigger"
+                  className="block text-xs font-medium text-toga-600"
+                >
                   Sala a la que se postula <span className="text-balanza-700">*</span>
                 </label>
                 {/* Radix Select no envía name nativo: el hidden mantiene el POST. */}

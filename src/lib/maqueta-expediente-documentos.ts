@@ -1,26 +1,19 @@
 /**
- * Catálogo mock del formulario de nuevo expediente (maqueta UI).
- * No conecta con la API ni con CHAMBERS del contrato real.
+ * Catálogo UI del formulario de nuevo expediente.
+ * Las categorías API viven en `contracts/recaudos.ts`.
  */
 
-export const SALAS_MAQUETA = [
-  { value: "PLENA", label: "Sala Plena" },
-  { value: "CONSTITUCIONAL", label: "Sala Constitucional" },
-  { value: "POLITICO_ADMINISTRATIVA", label: "Sala Político Administrativa" },
-  { value: "ELECTORAL", label: "Sala Electoral" },
-  { value: "CASACION_CIVIL", label: "Sala de Casación Civil" },
-  { value: "CASACION_PENAL", label: "Sala de Casación Penal" },
-  { value: "CASACION_SOCIAL", label: "Sala de Casación Social" },
-] as const;
+import { CHAMBERS, SALA_ETIQUETA, recaudoPorSlotKey } from "@/contracts";
 
-export type SalaMaqueta = (typeof SALAS_MAQUETA)[number]["value"];
+export const SALAS_MAQUETA = CHAMBERS.map((value) => ({
+  value,
+  label: `Sala ${SALA_ETIQUETA[value] ?? value}`,
+})) as readonly { readonly value: (typeof CHAMBERS)[number]; readonly label: string }[];
+
+export type SalaMaqueta = (typeof CHAMBERS)[number];
 
 export type BloqueDocumentoId =
-  | "identidad"
-  | "honorabilidad"
-  | "formacion"
-  | "trayectoria"
-  | "incompatibilidades";
+  "identidad" | "honorabilidad" | "formacion" | "trayectoria" | "incompatibilidades";
 
 export type TrayectoriaOpcion = "A" | "B" | "C";
 
@@ -53,11 +46,11 @@ export interface DefinicionGrupoPar {
 export type DefinicionCatalogo = DefinicionSlotFijo | DefinicionGrupoPar;
 
 export const BLOQUE_ETIQUETA: Record<BloqueDocumentoId, string> = {
-  identidad: "Bloque de identidad y nacionalidad",
-  honorabilidad: "Bloque de honorabilidad e idoneidad ética",
-  formacion: "Bloque de formación académica",
-  trayectoria: "Bloque de trayectoria profesional (mínimo 15 años)",
-  incompatibilidades: "Bloque de incompatibilidades y declaraciones juradas",
+  identidad: "Identidad y nacionalidad",
+  honorabilidad: "Honorabilidad e idoneidad ética",
+  formacion: "Formación académica",
+  trayectoria: "Trayectoria profesional",
+  incompatibilidades: "Incompatibilidades y declaraciones juradas",
 };
 
 export const CATALOGO_DOCUMENTOS_MAQUETA: readonly DefinicionCatalogo[] = [
@@ -80,8 +73,7 @@ export const CATALOGO_DOCUMENTOS_MAQUETA: readonly DefinicionCatalogo[] = [
     id: "dj_no_otra_nacionalidad",
     bloque: "identidad",
     titulo: "Declaración jurada de no poseer otra nacionalidad",
-    ayuda:
-      "Adjunte PDF de la declaración jurada de no poseer otra nacionalidad del postulante",
+    ayuda: "Adjunte PDF de la declaración jurada de no poseer otra nacionalidad del postulante",
   },
   {
     kind: "fijo",
@@ -110,8 +102,7 @@ export const CATALOGO_DOCUMENTOS_MAQUETA: readonly DefinicionCatalogo[] = [
     kind: "fijo",
     id: "contraloria_inhabilitacion",
     bloque: "honorabilidad",
-    titulo:
-      "Certificación de Contraloría General de la República de no poseer inhabilitación",
+    titulo: "Certificación de Contraloría General de la República de no poseer inhabilitación",
     ayuda:
       "Adjunte PDF de la certificación de la Contraloría General de la República del postulante que acredite no registrar inhabilitación ni responsabilidad administrativa firme",
   },
@@ -127,6 +118,7 @@ export const CATALOGO_DOCUMENTOS_MAQUETA: readonly DefinicionCatalogo[] = [
     kind: "par_repetible",
     grupoId: "especializacion",
     bloque: "formacion",
+    opcional: true,
     tituloTitulo: "Fondo negro del título universitario de especialización en materia jurídica",
     ayudaTitulo:
       "Adjunte PDF del título de especialista en cualquier rama de la ciencia jurídica, expedido por institución acreditada y registrado",
@@ -134,13 +126,15 @@ export const CATALOGO_DOCUMENTOS_MAQUETA: readonly DefinicionCatalogo[] = [
       "Copia de la constancia de aprobación del trabajo especial de grado de la especialización",
     ayudaConstancia:
       "Adjunte PDF de la constancia o acta del jurado que certifique la aprobación del trabajo especial de grado",
-    notaPar: "Por cada título de especialización que se adjunta se debe tener la constancia de aprobación",
+    notaPar:
+      "Por cada título de especialización que se adjunta se debe tener la constancia de aprobación",
     etiquetaAnadir: "Añadir otro título de especialización",
   },
   {
     kind: "par_repetible",
     grupoId: "maestria",
     bloque: "formacion",
+    opcional: true,
     tituloTitulo: "Fondo negro del título universitario de maestría en ciencia jurídica",
     ayudaTitulo:
       "Adjunte PDF del título de maestría en especialidad jurídica otorgado por universidad acreditada, debidamente registrado",
@@ -155,13 +149,16 @@ export const CATALOGO_DOCUMENTOS_MAQUETA: readonly DefinicionCatalogo[] = [
     kind: "par_repetible",
     grupoId: "doctorado",
     bloque: "formacion",
-    tituloTitulo: "Fondo negro del título universitario de doctorado en derecho o ciencias jurídicas",
+    opcional: true,
+    tituloTitulo:
+      "Fondo negro del título universitario de doctorado en derecho o ciencias jurídicas",
     ayudaTitulo:
       "Adjunte PDF del título de doctor o doctora en derecho o área afín, otorgado por institución acreditada, registrado y protocolizado",
     tituloConstancia: "Copia de la constancia de aprobación de tesis doctoral",
     ayudaConstancia:
       "Adjunte PDF de la constancia o acta del jurado que certifique la aprobación de la tesis doctoral",
-    notaPar: "Por cada título de doctorado que se adjunta se debe tener la constancia de aprobación",
+    notaPar:
+      "Por cada título de doctorado que se adjunta se debe tener la constancia de aprobación",
     etiquetaAnadir: "Añadir otro título de doctorado",
   },
   {
@@ -178,7 +175,6 @@ export const CATALOGO_DOCUMENTOS_MAQUETA: readonly DefinicionCatalogo[] = [
     notaPar: "Por cada título extranjero consignar la convalidación del mismo",
     etiquetaAnadir: "Añadir otra convalidación de título",
   },
-  // Trayectoria A
   {
     kind: "fijo",
     id: "tray_a_inscripcion_colegio",
@@ -224,7 +220,6 @@ export const CATALOGO_DOCUMENTOS_MAQUETA: readonly DefinicionCatalogo[] = [
     ayuda:
       "Adjunte PDF del soporte que acredite un mínimo de quince años en el ejercicio de la abogacía",
   },
-  // Trayectoria B
   {
     kind: "fijo",
     id: "tray_b_cert_docente",
@@ -243,7 +238,6 @@ export const CATALOGO_DOCUMENTOS_MAQUETA: readonly DefinicionCatalogo[] = [
     ayuda:
       "Adjunte PDF del acta de jurado, veredicto o resolución de nombramiento por concurso de oposición",
   },
-  // Trayectoria C
   {
     kind: "fijo",
     id: "tray_c_cert_dem",
@@ -317,39 +311,42 @@ export function construirSlotsVisibles(): SlotInstancia[] {
 
   for (const def of CATALOGO_DOCUMENTOS_MAQUETA) {
     if (def.kind === "fijo") {
+      const recaudo = recaudoPorSlotKey(def.id);
       out.push({
         slotKey: def.id,
         bloque: def.bloque,
         titulo: def.titulo,
         ayuda: def.ayuda,
-        opcional: true,
-        multiple: false,
+        opcional: recaudo?.optional ?? Boolean(def.opcional),
+        multiple: recaudo?.multiple ?? false,
       });
       continue;
     }
 
+    const slotTitulo = `${def.grupoId}_titulo`;
+    const recaudoTitulo = recaudoPorSlotKey(slotTitulo);
     out.push({
-      slotKey: `${def.grupoId}_titulo`,
+      slotKey: slotTitulo,
       bloque: def.bloque,
       titulo: def.tituloTitulo.replace(/^\(Opcional\)\s*/i, ""),
       ayuda: def.ayudaTitulo,
-      opcional: true,
-      multiple: true,
+      opcional: recaudoTitulo?.optional ?? Boolean(def.opcional),
+      multiple: recaudoTitulo?.multiple ?? true,
       notaMultiple: def.notaPar,
       etiquetaAnadir: def.etiquetaAnadir,
       grupoPar: def.grupoId,
       rolPar: "titulo",
     });
-    // Especialización/maestría/doctorado: título + constancia (una fila cada uno).
-    // Convalidación: un solo tipo repetible.
     if (def.grupoId !== "convalidacion") {
+      const slotConstancia = `${def.grupoId}_constancia`;
+      const recaudoConstancia = recaudoPorSlotKey(slotConstancia);
       out.push({
-        slotKey: `${def.grupoId}_constancia`,
+        slotKey: slotConstancia,
         bloque: def.bloque,
         titulo: def.tituloConstancia,
         ayuda: def.ayudaConstancia,
-        opcional: true,
-        multiple: true,
+        opcional: recaudoConstancia?.optional ?? Boolean(def.opcional),
+        multiple: recaudoConstancia?.multiple ?? true,
         notaMultiple: def.notaPar,
         etiquetaAnadir: "Añadir otra constancia de aprobación",
         grupoPar: def.grupoId,

@@ -38,7 +38,7 @@ export function ZonaDocumentos({
   /** En el detalle del expediente la lista la pinta el servidor; aquí solo la zona de carga. */
   readonly mostrarLista?: boolean;
 }) {
-  const [categoria, setCategoria] = useState<DocumentCategory>("CURRICULUM");
+  const [categoria, setCategoria] = useState<DocumentCategory>("NATIONAL_ID");
   const [arrastrando, setArrastrando] = useState(false);
   const [subiendo, setSubiendo] = useState(false);
   const [errores, setErrores] = useState<string[]>([]);
@@ -52,8 +52,8 @@ export function ZonaDocumentos({
 
     for (const archivo of Array.from(archivos)) {
       const cuerpo = new FormData();
-      cuerpo.append("file", archivo);
       cuerpo.append("category", categoria);
+      cuerpo.append("file", archivo);
 
       try {
         const respuesta = await fetch(`/api/documentos/${submissionId}`, {
@@ -83,10 +83,7 @@ export function ZonaDocumentos({
         <label htmlFor="categoria-trigger" className="block text-xs font-medium text-toga-600">
           Tipo de documento que va a cargar
         </label>
-        <Select
-          value={categoria}
-          onValueChange={(v) => setCategoria(v as DocumentCategory)}
-        >
+        <Select value={categoria} onValueChange={(v) => setCategoria(v as DocumentCategory)}>
           <SelectTrigger id="categoria-trigger" className="mt-1 w-full sm:w-72">
             <SelectValue />
           </SelectTrigger>
@@ -147,7 +144,7 @@ export function ZonaDocumentos({
           <input
             ref={inputRef}
             type="file"
-            accept="application/pdf"
+            accept="application/pdf,.pdf"
             multiple
             className="sr-only"
             aria-label="Seleccionar documentos PDF"
@@ -156,7 +153,7 @@ export function ZonaDocumentos({
             }}
           />
           <p className="mt-3 text-xs text-toga-500">
-            Sólo PDF. Se comprueba el contenido del archivo, no su extensión.
+            Solo PDF. La API comprueba el contenido del archivo, no su extensión.
           </p>
         </div>
       </div>
@@ -188,7 +185,8 @@ export function ZonaDocumentos({
                     {d.originalName}
                   </span>
                   <span className="shrink-0 text-xs text-toga-500">
-                    {CATEGORIA_ETIQUETA[d.category]} · {Math.round(d.sizeBytes / 1024)} KB
+                    {CATEGORIA_ETIQUETA[d.category] ?? d.category} ·{" "}
+                    {Math.round(d.sizeBytes / 1024)} KB
                   </span>
                 </div>
               </li>

@@ -9,6 +9,12 @@ export type ArchivoGuardado = {
   readonly size: number;
 };
 
+function esPdf(file: File): boolean {
+  if (file.type === "application/pdf") return true;
+  // Algunos navegadores dejan type vacío; validar por extensión.
+  return /\.pdf$/i.test(file.name);
+}
+
 /** Card de un documento: seleccionar PDF y guardar de forma individual. */
 export function SlotDocumentoPdf({
   slotKey,
@@ -51,9 +57,7 @@ export function SlotDocumentoPdf({
   return (
     <div
       className={`rounded-lg border p-5 ${
-        tieneGuardados
-          ? "border-validado-700/30 bg-validado-50/40"
-          : "border-toga-200 bg-white"
+        tieneGuardados ? "border-validado-700/30 bg-validado-50/40" : "border-toga-200 bg-white"
       }`}
     >
       <div className="flex flex-wrap items-start justify-between gap-2">
@@ -71,9 +75,7 @@ export function SlotDocumentoPdf({
         </div>
         {tieneGuardados && (
           <span className="inline-flex items-center gap-1 rounded-full bg-validado-50 px-2 py-0.5 text-[0.7rem] font-medium text-validado-700 ring-1 ring-inset ring-validado-700/20">
-            {multiple && guardados.length > 1
-              ? `${guardados.length} guardados`
-              : "Guardado"}
+            {multiple && guardados.length > 1 ? `${guardados.length} guardados` : "Guardado"}
           </span>
         )}
       </div>
@@ -150,15 +152,17 @@ export function SlotDocumentoPdf({
         >
           <Upload className="h-6 w-6 text-toga-400" aria-hidden="true" />
           <span className="mt-2 text-sm font-medium text-toga-700">Seleccionar PDF</span>
-          <span className="mt-0.5 text-xs text-toga-500">Solo PDF</span>
+          <span className="mt-0.5 text-xs text-toga-500">
+            Solo PDF (la API valida el contenido del archivo)
+          </span>
           <input
             id={inputId}
             type="file"
-            accept="application/pdf"
+            accept="application/pdf,.pdf"
             className="sr-only"
             onChange={(e) => {
               const f = e.target.files?.[0] ?? null;
-              if (f && f.type !== "application/pdf") return;
+              if (f && !esPdf(f)) return;
               onPendiente(f);
               e.target.value = "";
             }}
@@ -168,9 +172,7 @@ export function SlotDocumentoPdf({
 
       {puedeAnadirOtro && (
         <div className="mt-4 space-y-2 border-t border-toga-100 pt-4">
-          {notaMultiple && (
-            <p className="text-xs leading-relaxed text-toga-500">{notaMultiple}</p>
-          )}
+          {notaMultiple && <p className="text-xs leading-relaxed text-toga-500">{notaMultiple}</p>}
           <label
             htmlFor={inputExtraId}
             className="inline-flex cursor-pointer items-center gap-1.5 rounded-md border border-toga-300 bg-white px-3 py-1.5 text-xs font-semibold text-toga-700 hover:bg-toga-100"
@@ -180,11 +182,11 @@ export function SlotDocumentoPdf({
             <input
               id={inputExtraId}
               type="file"
-              accept="application/pdf"
+              accept="application/pdf,.pdf"
               className="sr-only"
               onChange={(e) => {
                 const f = e.target.files?.[0] ?? null;
-                if (f && f.type !== "application/pdf") return;
+                if (f && !esPdf(f)) return;
                 onPendiente(f);
                 e.target.value = "";
               }}

@@ -70,7 +70,8 @@ export function SeccionDocumentosExpediente({
                     {d.originalName}
                   </span>
                   <span className="shrink-0 text-xs text-toga-500">
-                    {CATEGORIA_ETIQUETA[d.category]} · {Math.round(d.sizeBytes / 1024)} KB
+                    {(CATEGORIA_ETIQUETA as Record<string, string>)[d.category] ?? d.category} ·{" "}
+                    {Math.round(d.sizeBytes / 1024)} KB
                     {d.version > 1 && ` · versión ${d.version}`}
                   </span>
                 </div>

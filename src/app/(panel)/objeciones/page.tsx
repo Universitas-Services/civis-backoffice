@@ -85,7 +85,7 @@ export default async function Objeciones({
                 <FichaObjecion
                   objecion={o}
                   causa={CAUSAL_ETIQUETA[o.category] ?? o.category}
-                  sala={SALA_ETIQUETA[o.candidate.chamber]}
+                  sala={SALA_ETIQUETA[o.candidate.chamber] ?? o.candidate.chamber}
                   usuarioId={usuario.id}
                 />
               </li>
