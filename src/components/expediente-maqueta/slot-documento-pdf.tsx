@@ -3,19 +3,19 @@
 import type { LucideIcon } from "lucide-react";
 import { FileText, Plus, Trash2, Upload } from "lucide-react";
 
+import {
+  ACCEPT_ARCHIVO_DOCUMENTO,
+  esArchivoDocumentoPermitido,
+  TEXTO_FORMATOS_DOCUMENTO,
+} from "@/lib/archivo-documento";
+
 export type ArchivoGuardado = {
   readonly id: string;
   readonly name: string;
   readonly size: number;
 };
 
-function esPdf(file: File): boolean {
-  if (file.type === "application/pdf") return true;
-  // Algunos navegadores dejan type vacío; validar por extensión.
-  return /\.pdf$/i.test(file.name);
-}
-
-/** Card de un documento: seleccionar PDF y guardar de forma individual. */
+/** Card de un documento: seleccionar PDF/imagen y guardar de forma individual. */
 export function SlotDocumentoPdf({
   slotKey,
   titulo,
@@ -151,18 +151,18 @@ export function SlotDocumentoPdf({
           className="mt-4 flex cursor-pointer flex-col items-center justify-center rounded-md border-2 border-dashed border-toga-300 bg-toga-50 px-4 py-8 text-center transition-colors hover:border-balanza-500 hover:bg-balanza-50/30"
         >
           <Upload className="h-6 w-6 text-toga-400" aria-hidden="true" />
-          <span className="mt-2 text-sm font-medium text-toga-700">Seleccionar PDF</span>
-          <span className="mt-0.5 text-xs text-toga-500">
-            Solo PDF (la API valida el contenido del archivo)
+          <span className="mt-2 text-sm font-medium text-toga-700">
+            Seleccionar PDF o imagen
           </span>
+          <span className="mt-0.5 text-xs text-toga-500">{TEXTO_FORMATOS_DOCUMENTO}</span>
           <input
             id={inputId}
             type="file"
-            accept="application/pdf,.pdf"
+            accept={ACCEPT_ARCHIVO_DOCUMENTO}
             className="sr-only"
             onChange={(e) => {
               const f = e.target.files?.[0] ?? null;
-              if (f && !esPdf(f)) return;
+              if (f && !esArchivoDocumentoPermitido(f)) return;
               onPendiente(f);
               e.target.value = "";
             }}
@@ -182,11 +182,11 @@ export function SlotDocumentoPdf({
             <input
               id={inputExtraId}
               type="file"
-              accept="application/pdf,.pdf"
+              accept={ACCEPT_ARCHIVO_DOCUMENTO}
               className="sr-only"
               onChange={(e) => {
                 const f = e.target.files?.[0] ?? null;
-                if (f && !esPdf(f)) return;
+                if (f && !esArchivoDocumentoPermitido(f)) return;
                 onPendiente(f);
                 e.target.value = "";
               }}

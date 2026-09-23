@@ -47,6 +47,8 @@ import { FormularioDjNoMilitancia } from "./formulario-dj-no-militancia";
 import { FormularioDjNoParentesco } from "./formulario-dj-no-parentesco";
 import { FormularioActaMatrimonio } from "./formulario-acta-matrimonio";
 import { FormularioDjNoContratacion } from "./formulario-dj-no-contratacion";
+import { FormularioSintesisCurricular } from "./formulario-sintesis-curricular";
+import { FormularioOtroDocumento } from "./formulario-otro-documento";
 import {
   esFormularioActaConcursoDocente,
   esFormularioActaMatrimonio,
@@ -66,8 +68,10 @@ import {
   esFormularioDjOtraNacionalidad,
   esFormularioInscripcionColegio,
   esFormularioInscripcionInpreabogado,
+  esFormularioOtroDocumento,
   esFormularioPartida,
   esFormularioPruebaEjercicioLibre,
+  esFormularioSintesisCurricular,
   esFormularioSolvenciaColegio,
   esFormularioSolvenciaDeontologica,
   esFormularioSolvenciaInpreabogado,
@@ -78,11 +82,12 @@ import {
   usaBotonVerificado,
   validarFormularioRevision,
   valoresVaciosParaSlot,
+  KEY_NOTA_ADVERTENCIAS,
   type ErroresFormularioRevision,
   type ValoresFormularioRevision,
 } from "./campos-formulario-revision";
 import { marcarSidebarDocumentoAbierto } from "@/lib/sidebar-panel";
-
+import { extractIaYaUsado, marcarExtractIaUsado } from "@/lib/ia-cupo-sesion";
 const CAMPO =
   "mt-1 w-full rounded-md border border-toga-300 bg-white px-3 py-2 text-sm text-toga-900 placeholder:text-toga-400";
 
@@ -92,7 +97,15 @@ function reviewDataAValores(
 ): ValoresFormularioRevision {
   const base = valoresVaciosParaSlot(slotKey);
   if (!reviewData) return base;
-  return { ...base, ...reviewData } as ValoresFormularioRevision;
+  const { advertencia, ...resto } = reviewData;
+  // El extractor puede enviar `advertencia` (singular); el formulario usa `advertencias`.
+  const advertencias =
+    resto.advertencias !== undefined && resto.advertencias !== null
+      ? resto.advertencias
+      : advertencia !== undefined
+        ? advertencia
+        : base.advertencias;
+  return { ...base, ...resto, advertencias } as ValoresFormularioRevision;
 }
 
 export function DetalleRevisionPostulante({
@@ -114,6 +127,7 @@ export function DetalleRevisionPostulante({
   });
   const [rellenandoIa, setRellenandoIa] = useState(false);
   const [confirmandoEnvio, setConfirmandoEnvio] = useState(false);
+  const [extractUsados, setExtractUsados] = useState<Set<string>>(() => new Set());
 
   const doc = postulante.documentos.find((d) => d.id === activo);
   const { total } = conteoDocsRevision(postulante);
@@ -125,6 +139,14 @@ export function DetalleRevisionPostulante({
     return () => marcarSidebarDocumentoAbierto(false);
   }, [activo]);
 
+  // Sincronizar cupos de extract IA ya gastados en esta sesión.
+  useEffect(() => {
+    const usados = new Set<string>();
+    for (const d of postulante.documentos) {
+      if (extractIaYaUsado(d.id)) usados.add(d.id);
+    }
+    setExtractUsados(usados);
+  }, [postulante.documentos]);
   function valoresDe(documento: DocumentoRevision): ValoresFormularioRevision {
     if (valores[documento.id]) return valores[documento.id]!;
     return reviewDataAValores(documento.slotKey, documento.reviewData);
@@ -184,6 +206,10 @@ export function DetalleRevisionPostulante({
 
   async function rellenarConIa(documento: DocumentoRevision) {
     if (!esExtraibleConIa(documento.category)) return;
+    if (extractIaYaUsado(documento.id) || extractUsados.has(documento.id)) {
+      toast.error("La extracción con IA ya se usó en esta sesión para este documento.");
+      return;
+    }
     setRellenandoIa(true);
     try {
       const r = await extraerConIa(documento.id);
@@ -191,12 +217,14 @@ export function DetalleRevisionPostulante({
         toast.error(r.error ?? "No se pudo extraer. Complete a mano.");
         return;
       }
+      marcarExtractIaUsado(documento.id);
+      setExtractUsados((prev) => new Set(prev).add(documento.id));
       setValores((prev) => ({
         ...prev,
         [documento.id]: {
           ...reviewDataAValores(documento.slotKey, documento.reviewData),
           ...(prev[documento.id] ?? {}),
-          ...r.reviewData,
+          ...reviewDataAValores(documento.slotKey, r.reviewData),
         } as ValoresFormularioRevision,
       }));
       toast.exito(
@@ -327,12 +355,12 @@ export function DetalleRevisionPostulante({
               valores={valoresDe(doc)}
               verificado={formulariosGuardados.has(doc.id)}
               rellenandoIa={rellenandoIa}
+              extractIaUsado={extractUsados.has(doc.id)}
               guardando={pending}
               onCampo={(key, value) => actualizarCampo(doc.id, key, value)}
               onVerificar={() => marcarVerificado(doc.id)}
               onRellenarIa={() => void rellenarConIa(doc)}
-            />
-          ) : (
+            />          ) : (
             <div className="flex flex-col items-center justify-center px-4 py-14 text-center">
               <FileStack className="h-10 w-10 text-toga-300" aria-hidden="true" />
               <p className="mt-3 text-sm font-medium text-toga-700">
@@ -362,6 +390,7 @@ function PanelVisualizacionYFormulario({
   valores,
   verificado,
   rellenandoIa,
+  extractIaUsado,
   guardando,
   onCampo,
   onVerificar,
@@ -371,6 +400,7 @@ function PanelVisualizacionYFormulario({
   readonly valores: Readonly<ValoresFormularioRevision>;
   readonly verificado: boolean;
   readonly rellenandoIa: boolean;
+  readonly extractIaUsado: boolean;
   readonly guardando: boolean;
   readonly onCampo: (key: string, value: string | boolean | null) => void;
   readonly onVerificar: () => void;
@@ -405,6 +435,8 @@ function PanelVisualizacionYFormulario({
   const esDjNoParentesco = esFormularioDjNoParentesco(doc.slotKey);
   const esActaMatrimonio = esFormularioActaMatrimonio(doc.slotKey);
   const esDjNoContratacion = esFormularioDjNoContratacion(doc.slotKey);
+  const esSintesis = esFormularioSintesisCurricular(doc.slotKey);
+  const esOtro = esFormularioOtroDocumento(doc.slotKey);
   const botonVerificado = usaBotonVerificado(doc.slotKey);
   const [errores, setErrores] = useState<ErroresFormularioRevision>({});
 
@@ -618,9 +650,27 @@ function PanelVisualizacionYFormulario({
               errores={errores}
               onCampo={actualizarCampo}
             />
+          ) : esSintesis ? (
+            <FormularioSintesisCurricular
+              valores={valores}
+              errores={errores}
+              onCampo={actualizarCampo}
+            />
+          ) : esOtro ? (
+            <FormularioOtroDocumento
+              valores={valores}
+              errores={errores}
+              onCampo={actualizarCampo}
+            />
           ) : (
             <FormularioGenericoStub valores={valores} errores={errores} onCampo={actualizarCampo} />
           )}
+
+          <CampoNotaAdvertencias
+            valores={valores}
+            errores={errores}
+            onCampo={actualizarCampo}
+          />
 
           <div className="mt-4 flex flex-wrap gap-2">
             <button
@@ -632,27 +682,74 @@ function PanelVisualizacionYFormulario({
               {guardando ? "Guardando…" : botonVerificado ? "Verificado" : "Guardar"}
             </button>
             {mostrarIa && (
-              <button
-                type="button"
-                onClick={onRellenarIa}
-                disabled={rellenandoIa || guardando}
-                className="inline-flex items-center gap-1.5 rounded-md border border-toga-300 bg-white px-4 py-2 text-sm font-semibold text-toga-700 hover:bg-toga-50 disabled:opacity-50"
-              >
-                <Sparkles className="h-4 w-4" aria-hidden="true" />
-                {rellenandoIa ? "Rellenando…" : "Rellenar con IA"}
-              </button>
-            )}
-          </div>
+              <div className="flex flex-col gap-1">
+                <button
+                  type="button"
+                  onClick={onRellenarIa}
+                  disabled={rellenandoIa || guardando || extractIaUsado}
+                  title={
+                    extractIaUsado
+                      ? "Extracción ya usada en esta sesión"
+                      : "Proponer campos con IA (una vez por sesión)"
+                  }
+                  className="inline-flex items-center gap-1.5 rounded-md border border-toga-300 bg-white px-4 py-2 text-sm font-semibold text-toga-700 hover:bg-toga-50 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  <Sparkles className="h-4 w-4" aria-hidden="true" />
+                  {rellenandoIa
+                    ? "Rellenando…"
+                    : extractIaUsado
+                      ? "IA ya usada"
+                      : "Rellenar con IA"}
+                </button>
+                {extractIaUsado && (
+                  <p className="text-[0.65rem] text-toga-500">
+                    Extracción ya usada en esta sesión.
+                  </p>
+                )}
+              </div>
+            )}          </div>
         </div>
       </div>
     </div>
   );
 }
 
-function FormularioGenericoStub({
+function CampoNotaAdvertencias({
   valores,
   errores = {},
   onCampo,
+}: {
+  readonly valores: Readonly<ValoresFormularioRevision>;
+  readonly errores?: Readonly<ErroresFormularioRevision>;
+  readonly onCampo: (key: string, value: string | boolean | null) => void;
+}) {
+  const err = errores[KEY_NOTA_ADVERTENCIAS];
+  const valor = String(valores[KEY_NOTA_ADVERTENCIAS] ?? "");
+
+  return (
+    <div className="mt-4 border-t border-toga-100 pt-4">
+      <label htmlFor="campo-nota-advertencias" className="block text-xs font-medium text-toga-600">
+        Nota
+      </label>
+      <textarea
+        id="campo-nota-advertencias"
+        rows={3}
+        value={valor}
+        onChange={(e) => onCampo(KEY_NOTA_ADVERTENCIAS, e.target.value || null)}
+        placeholder="Observaciones del documento (también las rellena el extractor)"
+        className={`${CAMPO} min-h-[4.5rem] resize-y${err ? " campo-con-error" : ""}`}
+        aria-invalid={Boolean(err)}
+        autoComplete="off"
+      />
+      {err && <p className="mensaje-error-campo">{err}</p>}
+    </div>
+  );
+}
+
+function FormularioGenericoStub({
+  valores: _valores,
+  errores: _errores = {},
+  onCampo: _onCampo,
 }: {
   readonly valores: Readonly<ValoresFormularioRevision>;
   readonly errores?: Readonly<ErroresFormularioRevision>;
@@ -664,21 +761,6 @@ function FormularioGenericoStub({
         Formulario provisional. Se sustituirá cuando se defina el de este tipo de documento. Todos
         los campos son opcionales.
       </p>
-      <div>
-        <label htmlFor="campo-notas" className="block text-xs font-medium text-toga-600">
-          Notas de revisión
-        </label>
-        <input
-          id="campo-notas"
-          type="text"
-          value={String(valores.notas ?? "")}
-          onChange={(e) => onCampo("notas", e.target.value)}
-          className={`${CAMPO}${errores.notas ? " campo-con-error" : ""}`}
-          aria-invalid={Boolean(errores.notas)}
-          autoComplete="off"
-        />
-        {errores.notas && <p className="mensaje-error-campo">{errores.notas}</p>}
-      </div>
     </div>
   );
 }

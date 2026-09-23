@@ -31,7 +31,6 @@ export function PasoCargaDocumentos({
   const [guardando, setGuardando] = useState(false);
   const [enRevision, setEnRevision] = useState(false);
   const [confirmandoRevision, setConfirmandoRevision] = useState(false);
-  const [avisoObligatorios, setAvisoObligatorios] = useState(false);
 
   const slots = useMemo(() => construirSlotsVisibles(), []);
   const slotActivo = slots.find((s) => s.slotKey === activo);
@@ -48,10 +47,6 @@ export function PasoCargaDocumentos({
     }
     return set;
   }, [guardados]);
-
-  const obligatoriosFaltantes = useMemo(() => {
-    return slots.filter((s) => !s.opcional && !slotsConGuardados.has(s.slotKey));
-  }, [slots, slotsConGuardados]);
 
   function seleccionar(slotKey: string) {
     if (enRevision || enviandoRevision) return;
@@ -124,11 +119,6 @@ export function PasoCargaDocumentos({
   }
 
   function pedirConfirmacionEnvio() {
-    if (obligatoriosFaltantes.length > 0 && !avisoObligatorios) {
-      setAvisoObligatorios(true);
-      setConfirmandoRevision(true);
-      return;
-    }
     setConfirmandoRevision(true);
   }
 
@@ -205,7 +195,7 @@ export function PasoCargaDocumentos({
                 <p className="mt-1 max-w-sm text-xs text-toga-500">
                   {enRevision
                     ? "No se admiten más cargas ni cambios."
-                    : "Al elegir un ítem se abre aquí la tarjeta para adjuntar el PDF y guardarlo."}
+                    : "Al elegir un ítem se abre aquí la tarjeta para adjuntar el PDF o la imagen y guardarlo."}
                 </p>
               </div>
             )}
@@ -218,19 +208,6 @@ export function PasoCargaDocumentos({
               </p>
             ) : confirmandoRevision ? (
               <div className="space-y-3">
-                {obligatoriosFaltantes.length > 0 && (
-                  <p className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
-                    Faltan {obligatoriosFaltantes.length} recaudo
-                    {obligatoriosFaltantes.length === 1 ? "" : "s"} obligatorio
-                    {obligatoriosFaltantes.length === 1 ? "" : "s"} (p. ej.{" "}
-                    {obligatoriosFaltantes
-                      .slice(0, 3)
-                      .map((s) => s.titulo)
-                      .join("; ")}
-                    {obligatoriosFaltantes.length > 3 ? "…" : ""}). La API permite enviar igual;
-                    confirme solo si es intencional.
-                  </p>
-                )}
                 <p className="text-sm text-toga-700">
                   ¿Confirma enviar a revisión el expediente de{" "}
                   <span className="font-semibold">
@@ -249,10 +226,7 @@ export function PasoCargaDocumentos({
                   </button>
                   <button
                     type="button"
-                    onClick={() => {
-                      setConfirmandoRevision(false);
-                      setAvisoObligatorios(false);
-                    }}
+                    onClick={() => setConfirmandoRevision(false)}
                     disabled={enviandoRevision}
                     className="rounded-md border border-toga-300 bg-white px-4 py-2 text-sm font-medium text-toga-700 hover:bg-toga-50"
                   >
@@ -261,12 +235,7 @@ export function PasoCargaDocumentos({
                 </div>
               </div>
             ) : (
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <p className="text-xs text-toga-500">
-                  {obligatoriosFaltantes.length > 0
-                    ? `${obligatoriosFaltantes.length} obligatorio${obligatoriosFaltantes.length === 1 ? "" : "s"} pendiente${obligatoriosFaltantes.length === 1 ? "" : "s"}.`
-                    : "Recaudos obligatorios completos. Puede enviar a revisión."}
-                </p>
+              <div className="flex flex-wrap items-center justify-end gap-3">
                 <button
                   type="button"
                   onClick={pedirConfirmacionEnvio}

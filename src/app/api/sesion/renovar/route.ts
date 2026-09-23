@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { COOKIE_SESION, origenPanel } from "@/lib/config";
+import { COOKIE_RECIEN_RENOVADA, COOKIE_SESION, origenPanel } from "@/lib/config";
 import { renovarSesionTras401 } from "@/lib/auth-refresh";
 import { cerrarSesion, cifrarSesion, leerSesion, OPCIONES_COOKIE } from "@/lib/sesion";
 
@@ -52,5 +52,14 @@ export async function GET(request: Request): Promise<NextResponse> {
 
   const salida = NextResponse.redirect(new URL(volver, base));
   salida.cookies.set(COOKIE_SESION, cookie, OPCIONES_COOKIE);
+  // Si al volver la página sigue en 401, renovarYVolver ve esta marca y
+  // corta el bucle hacia login (en vez de ERR_TOO_MANY_REDIRECTS).
+  salida.cookies.set(COOKIE_RECIEN_RENOVADA, "1", {
+    httpOnly: true,
+    secure: OPCIONES_COOKIE.secure,
+    sameSite: OPCIONES_COOKIE.sameSite,
+    path: "/",
+    maxAge: 90,
+  });
   return salida;
 }

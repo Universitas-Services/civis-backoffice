@@ -6,16 +6,36 @@
  */
 import { z } from "zod";
 
-export const ROLES = ["SUPER_ADMIN", "SECRETARY", "REVIEWER", "EVALUATOR", "PUBLISHER"] as const;
+/** Roles del panel — espejo de civis-api `ROLES` (sin PUBLISHER; con ADMIN). */
+export const ROLES = ["SUPER_ADMIN", "ADMIN", "SECRETARY", "REVIEWER", "EVALUATOR"] as const;
 export type Role = (typeof ROLES)[number];
 
+/** Roles operativos que un ADMIN puede crear/asignar (no ADMIN ni SUPER_ADMIN). */
+export const ROLES_MENORES = ["SECRETARY", "REVIEWER", "EVALUATOR"] as const;
+export type RoleMenor = (typeof ROLES_MENORES)[number];
+
 export const ROL_ETIQUETA: Record<Role, string> = {
-  SUPER_ADMIN: "Administrador",
+  SUPER_ADMIN: "Super administrador",
+  ADMIN: "Administrador",
   SECRETARY: "Secretaría",
   REVIEWER: "Revisión documental",
   EVALUATOR: "Evaluación",
-  PUBLISHER: "Publicación",
 };
+
+/** Etiqueta segura si llega un rol desconocido (datos legacy). */
+export function etiquetaRol(rol: string): string {
+  return (ROL_ETIQUETA as Record<string, string>)[rol] ?? rol;
+}
+
+/**
+ * Roles que el actor puede marcar al crear/editar usuarios.
+ * SUPER_ADMIN → todos; ADMIN → solo menores; resto → ninguno.
+ */
+export function rolesAsignablesPara(rolesActor: readonly Role[]): readonly Role[] {
+  if (rolesActor.includes("SUPER_ADMIN")) return ROLES;
+  if (rolesActor.includes("ADMIN")) return ROLES_MENORES;
+  return [];
+}
 
 export const WORKFLOW_STATUS = [
   "DRAFT",

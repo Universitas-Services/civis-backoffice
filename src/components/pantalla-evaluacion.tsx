@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { CriterioBaremo, Evaluacion, ExpedienteDetalle } from "@/contracts";
@@ -11,6 +11,7 @@ import {
   guardarPuntajes,
 } from "@/app/(panel)/evaluacion/[candidateId]/acciones";
 import { useToast } from "@/components/toast-provider";
+import { marcarSidebarDocumentoAbierto } from "@/lib/sidebar-panel";
 import { InsigniaBanda } from "./insignias";
 import { VisorPdf } from "./visor-pdf";
 
@@ -51,6 +52,11 @@ export function PantallaEvaluacion({
   const router = useRouter();
   const [pendiente, iniciar] = useTransition();
   const toast = useToast();
+
+  useEffect(() => {
+    marcarSidebarDocumentoAbierto(true);
+    return () => marcarSidebarDocumentoAbierto(false);
+  }, []);
 
   const iniciales = useMemo(() => {
     const mapa = new Map<string, ValorCriterio>();
@@ -146,8 +152,8 @@ export function PantallaEvaluacion({
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="min-w-0">
             <nav aria-label="Ruta" className="text-xs text-toga-500">
-              <Link href="/evaluacion" className="hover:text-toga-900">
-                Evaluación
+              <Link href="/baremo" className="hover:text-toga-900">
+                Baremo
               </Link>
               <span className="mx-1.5" aria-hidden="true">
                 /

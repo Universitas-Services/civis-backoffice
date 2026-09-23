@@ -9,6 +9,7 @@ export const BLOCK_IDS = [
   "formacion",
   "trayectoria",
   "incompatibilidades",
+  "otro",
 ] as const;
 export type BlockId = (typeof BLOCK_IDS)[number];
 
@@ -19,6 +20,7 @@ export const BLOCK_LABEL: Record<BlockId, string> = {
   formacion: "Formación académica",
   trayectoria: "Trayectoria profesional",
   incompatibilidades: "Incompatibilidades y declaraciones juradas",
+  otro: "Otro",
 };
 
 /** Alias usado por sidebars existentes. */
@@ -30,13 +32,15 @@ export const ORDEN_BLOQUES: readonly BlockId[] = [
   "formacion",
   "trayectoria",
   "incompatibilidades",
+  "otro",
 ];
 
-/** Categorías API: 28 recaudos + OTHER. */
+/** Categorías API: recaudos + OTHER (+ CURRICULUM_VITAE en front; requiere enum en API). */
 export const DOCUMENT_CATEGORY = [
   "BIRTH_CERTIFICATE",
   "NATIONAL_ID",
   "SWORN_SINGLE_NATIONALITY",
+  "CURRICULUM_VITAE",
   "HONORABILITY_LETTER",
   "MENTAL_CAPACITY_CERT",
   "CRIMINAL_RECORD",
@@ -101,6 +105,15 @@ export const RECAUDOS: readonly RecaudoDef[] = [
     slotKey: "dj_no_otra_nacionalidad",
     bloque: "identidad",
     etiqueta: "Declaración jurada de no poseer otra nacionalidad",
+    optional: false,
+    multiple: false,
+    extraibleConIa: false,
+  },
+  {
+    category: "CURRICULUM_VITAE",
+    slotKey: "sintesis_curricular",
+    bloque: "identidad",
+    etiqueta: "Copia de la síntesis curricular actualizada",
     optional: false,
     multiple: false,
     extraibleConIa: false,
@@ -332,8 +345,8 @@ export const RECAUDOS: readonly RecaudoDef[] = [
   },
   {
     category: "OTHER",
-    slotKey: null,
-    bloque: "incompatibilidades",
+    slotKey: "otro_documento",
+    bloque: "otro",
     etiqueta: "Otro documento",
     optional: true,
     multiple: true,

@@ -5,6 +5,13 @@ import type { Role, Sesion } from "@/contracts";
  *
  * Sin imports de sesión/servidor: la barra lateral es Client Component.
  * La autorización real la hace la API; esto sólo filtra el menú.
+ *
+ * Matriz UX (más estricta que algunos @Roles de la API):
+ * - Crear expediente: SUPER_ADMIN + SECRETARY
+ * - Revisión documental: SUPER_ADMIN + REVIEWER
+ * - Evaluación / Objeciones: SUPER_ADMIN + EVALUATOR
+ * - Baremo: SUPER_ADMIN + ADMIN + EVALUATOR
+ * - PUBLICACIONES / ranking publicar / informes generar: SUPER_ADMIN + ADMIN
  */
 export const SECCIONES: readonly {
   readonly href: string;
@@ -14,28 +21,41 @@ export const SECCIONES: readonly {
   {
     href: "/dashboard",
     texto: "Panel",
-    roles: ["SUPER_ADMIN", "SECRETARY", "REVIEWER", "EVALUATOR", "PUBLISHER"],
+    roles: ["SUPER_ADMIN", "ADMIN", "SECRETARY", "EVALUATOR"],
   },
   {
     href: "/expedientes",
     texto: "Expedientes",
-    roles: ["SUPER_ADMIN", "SECRETARY", "REVIEWER", "EVALUATOR", "PUBLISHER"],
+    roles: ["SUPER_ADMIN", "ADMIN", "SECRETARY", "REVIEWER", "EVALUATOR"],
   },
   {
     href: "/revision-documental",
     texto: "Revisión documental",
-    roles: ["SUPER_ADMIN", "REVIEWER", "EVALUATOR"],
+    roles: ["SUPER_ADMIN", "REVIEWER"],
   },
   { href: "/evaluacion", texto: "Evaluación", roles: ["SUPER_ADMIN", "EVALUATOR"] },
+  {
+    href: "/baremo",
+    texto: "Baremo",
+    roles: ["SUPER_ADMIN", "ADMIN", "EVALUATOR"],
+  },
   { href: "/objeciones", texto: "Objeciones", roles: ["SUPER_ADMIN", "EVALUATOR"] },
-  { href: "/ranking", texto: "Ranking interno", roles: ["SUPER_ADMIN", "EVALUATOR", "PUBLISHER"] },
-  { href: "/publicaciones", texto: "Cola de publicación", roles: ["SUPER_ADMIN", "PUBLISHER"] },
+  {
+    href: "/ranking",
+    texto: "Ranking interno",
+    roles: ["SUPER_ADMIN", "ADMIN", "EVALUATOR"],
+  },
+  {
+    href: "/publicaciones",
+    texto: "Cola de publicación",
+    roles: ["SUPER_ADMIN", "ADMIN"],
+  },
   {
     href: "/informes",
     texto: "Informes",
-    roles: ["SUPER_ADMIN", "PUBLISHER", "EVALUATOR"],
+    roles: ["SUPER_ADMIN", "ADMIN", "EVALUATOR"],
   },
-  { href: "/usuarios", texto: "Usuarios y roles", roles: ["SUPER_ADMIN"] },
+  { href: "/usuarios", texto: "Usuarios y roles", roles: ["SUPER_ADMIN", "ADMIN"] },
   { href: "/auditoria", texto: "Bitácora", roles: ["SUPER_ADMIN"] },
 ];
 

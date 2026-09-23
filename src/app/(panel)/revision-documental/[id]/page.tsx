@@ -14,7 +14,7 @@ export default async function RevisionDocumentalPostulante({
 }: {
   readonly params: Promise<{ id: string }>;
 }) {
-  await exigirRol("SUPER_ADMIN", "REVIEWER", "EVALUATOR");
+  await exigirRol("SUPER_ADMIN", "REVIEWER");
   const { id } = await params;
 
   let expediente: ExpedienteDetalle;

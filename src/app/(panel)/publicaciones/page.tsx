@@ -15,7 +15,7 @@ const TIPO: Record<string, string> = {
 };
 
 export default async function Publicaciones() {
-  const usuario = await exigirRol("SUPER_ADMIN", "PUBLISHER");
+  const usuario = await exigirRol("SUPER_ADMIN", "ADMIN");
 
   let cola: SnapshotEnCola[];
   try {

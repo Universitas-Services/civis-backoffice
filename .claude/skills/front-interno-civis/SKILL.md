@@ -30,13 +30,23 @@ administración. No es un sitio de consulta: es donde se opera el proceso.
 
 ## Navegación y roles
 
-`components/barra-lateral.tsx` filtra las secciones por rol. Al añadir una
-sección nueva, declara sus roles ahí **y** asegúrate de que el endpoint
-correspondiente tenga su `@Roles()` en la API. Si sólo lo haces en un sitio,
-lo has hecho mal.
+`lib/secciones-nav.ts` filtra las secciones por rol (la barra lateral lo
+consume). Al añadir una sección nueva, declara sus roles ahí **y** asegúrate
+de que el endpoint correspondiente tenga su `@Roles()` en la API. Si sólo lo
+haces en un sitio, lo has hecho mal.
 
-Roles: `SUPER_ADMIN`, `SECRETARY`, `EVALUATOR`, `PUBLISHER`. Una persona puede
-tener varios; la bitácora registra cuál se usó en cada acción.
+Roles (espejo de civis-api): `SUPER_ADMIN`, `ADMIN`, `SECRETARY`, `REVIEWER`,
+`EVALUATOR`. Una persona puede tener varios; la bitácora registra cuál se usó
+en cada acción.
+
+Matriz UX del panel (más estricta que algunos `@Roles` de la API):
+
+- Crear expediente: `SUPER_ADMIN` + `SECRETARY`
+- Revisión documental: `SUPER_ADMIN` + `REVIEWER`
+- Evaluación / Objeciones: `SUPER_ADMIN` + `EVALUATOR`
+- Publicaciones / publicar ranking / generar informes: `SUPER_ADMIN` + `ADMIN`
+- Usuarios: `SUPER_ADMIN` + `ADMIN` (ADMIN solo asigna roles menores)
+- Bitácora: solo `SUPER_ADMIN`
 
 ## Reglas que la interfaz nunca debe contradecir
 

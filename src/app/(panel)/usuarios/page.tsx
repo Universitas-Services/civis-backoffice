@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import type { UsuarioDirectorio } from "@/contracts";
-import { ROL_ETIQUETA } from "@/contracts";
+import { etiquetaRol } from "@/contracts";
 import { llamarApi, NoAutorizado } from "@/lib/api";
 import { exigirRol, renovarYVolver } from "@/lib/rutas";
 import { CabeceraPagina } from "@/components/cabecera-pagina";
@@ -9,7 +9,7 @@ import { CrearUsuario, EditorRoles, InterruptorUsuario } from "@/components/gest
 export const metadata: Metadata = { title: "Usuarios y roles" };
 
 export default async function Usuarios() {
-  const usuario = await exigirRol("SUPER_ADMIN");
+  const usuario = await exigirRol("SUPER_ADMIN", "ADMIN");
 
   let usuarios: readonly UsuarioDirectorio[];
   try {
@@ -27,7 +27,7 @@ export default async function Usuarios() {
       />
 
       <div className="space-y-8 px-5 py-6 sm:px-8">
-        <CrearUsuario />
+        <CrearUsuario rolesActor={usuario.roles} />
 
         <section aria-labelledby="directorio">
           <h2 id="directorio" className="text-base font-semibold text-toga-900">
@@ -40,10 +40,16 @@ export default async function Usuarios() {
                 <p className="font-medium text-toga-900">{u.fullName}</p>
                 <p className="break-all text-xs text-toga-500">{u.email}</p>
                 <p className="mt-2 text-xs text-toga-600">
-                  {u.roles.map((r) => ROL_ETIQUETA[r]).join(" + ")}
+                  {u.roles.map((r) => etiquetaRol(r)).join(" + ")}
                 </p>
                 <div className="mt-2">
-                  <EditorRoles id={u.id} nombre={u.fullName} rolesActuales={u.roles} />
+                  <EditorRoles
+                    id={u.id}
+                    nombre={u.fullName}
+                    rolesActuales={u.roles}
+                    rolesActor={usuario.roles}
+                    esUnoMismo={u.id === usuario.id}
+                  />
                 </div>
                 <div className="mt-3">
                   <InterruptorUsuario
@@ -93,10 +99,16 @@ export default async function Usuarios() {
                     <td className="px-4 py-3 text-toga-600">{u.email}</td>
                     <td className="px-4 py-3 text-toga-600">
                       <span className="block">
-                        {u.roles.map((r) => ROL_ETIQUETA[r]).join(" + ")}
+                        {u.roles.map((r) => etiquetaRol(r)).join(" + ")}
                       </span>
                       <span className="mt-1 block">
-                        <EditorRoles id={u.id} nombre={u.fullName} rolesActuales={u.roles} />
+                        <EditorRoles
+                          id={u.id}
+                          nombre={u.fullName}
+                          rolesActuales={u.roles}
+                          rolesActor={usuario.roles}
+                          esUnoMismo={u.id === usuario.id}
+                        />
                       </span>
                     </td>
                     <td className="px-4 py-3 text-xs text-toga-500">

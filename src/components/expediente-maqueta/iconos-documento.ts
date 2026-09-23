@@ -45,6 +45,8 @@ export function iconoParaSlot(slot: SlotInstancia): LucideIcon {
   if (k.includes("dem") || k.includes("judicial") || k.includes("funcionarial")) return Landmark;
   if (k.includes("militancia")) return Users;
   if (k.includes("parentesco") || k.includes("matrimonio")) return UserRound;
+  if (k.includes("sintesis") || k.includes("curricular")) return FileBadge;
+  if (k.includes("otro_documento") || k === "otro_documento") return FileText;
   if (k.includes("contratacion")) return FileText;
 
   switch (slot.bloque) {
@@ -58,6 +60,8 @@ export function iconoParaSlot(slot: SlotInstancia): LucideIcon {
       return Briefcase;
     case "incompatibilidades":
       return Scale;
+    case "otro":
+      return FileText;
     default:
       return FileText;
   }

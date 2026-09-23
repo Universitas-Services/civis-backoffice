@@ -23,7 +23,7 @@ export default async function RevisionDocumental({
 }: {
   readonly searchParams: Promise<{ buscar?: string; page?: string }>;
 }) {
-  await exigirRol("SUPER_ADMIN", "REVIEWER", "EVALUATOR");
+  await exigirRol("SUPER_ADMIN", "REVIEWER");
   const params = await searchParams;
   const page = Math.max(1, Number(params.page) || 1);
 

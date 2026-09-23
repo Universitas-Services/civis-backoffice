@@ -264,6 +264,17 @@ function IconoSeccion({ href, className }: { readonly href: string; readonly cla
           />
         </svg>
       );
+    case "/baremo":
+      return (
+        <Image
+          src="/brand/logo-horiz-blanco.png"
+          alt=""
+          width={80}
+          height={20}
+          className={`${className ?? ""} h-5 w-auto max-w-[4.5rem] object-contain object-left`}
+          aria-hidden="true"
+        />
+      );
     case "/objeciones":
       return (
         <svg {...props}>

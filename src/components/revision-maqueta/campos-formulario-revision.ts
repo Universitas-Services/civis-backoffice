@@ -4,8 +4,9 @@
  *
  * Por cada formulario de revisión:
  * 1. Campos visibles del documento (opcionales; vacío si no se pueden leer).
- * 2. Tres campos de IA comunes, invisibles en el front:
- *    es_documento, calidad_legibilidad, advertencias.
+ * 2. Campo visible común «Nota» ← key `advertencias` (extractor IA / edición manual).
+ * 3. Dos campos de IA invisibles en el front:
+ *    es_documento, calidad_legibilidad.
  *    (es_documento: semántica según el tipo de documento; misma key en todos.)
  * No hay banner de expediente en los formularios de documento.
  *
@@ -23,12 +24,11 @@ export type MetadatosInvisiblesRevision = {
 
 export type ValoresFormularioRevision = Record<string, string | boolean | null>;
 
-/** Campos de IA comunes a todos los formularios (no se muestran en el front). */
-export const KEYS_INVISIBLES = [
-  "es_documento",
-  "calidad_legibilidad",
-  "advertencias",
-] as const;
+/** Campos de IA comunes que no se muestran (salvo `advertencias` → Nota visible). */
+export const KEYS_INVISIBLES = ["es_documento", "calidad_legibilidad"] as const;
+
+/** Key del campo visible «Nota» (relleno por el extractor como advertencias). */
+export const KEY_NOTA_ADVERTENCIAS = "advertencias" as const;
 
 /** Campos visibles del formulario de cédula. */
 export const KEYS_CEDULA_VISIBLES = [
@@ -616,6 +616,44 @@ export const KEYS_DJ_NO_CONTRATACION_VISIBLES = [
 export type KeyDjNoContratacionVisible =
   (typeof KEYS_DJ_NO_CONTRATACION_VISIBLES)[number];
 
+export const KEY_PREFIJO_CEDULA_SINTESIS = "prefijo_cedula_sintesis";
+export const KEY_PREFIJO_INPRE_SINTESIS = "prefijo_inpre_sintesis";
+
+/** Campos visibles: síntesis curricular. */
+export const KEYS_SINTESIS_CURRICULAR_VISIBLES = [
+  "nombre_postulante_sintesis",
+  "apellido_postulante_sintesis",
+  "estadocivil_postulante_sintesis",
+  "cedula_postulante_sintesis",
+  "inpreabogado_postulante_sintesis",
+  "correo_postulante_sintesis",
+  "ocupacion_postulante_sintesis",
+  "telefono_postulante_sintesis",
+  "estado_ubicacion_sintesis",
+  "municipio_ubicacion_sintesis",
+  "ciudad_ubicacion_sintesis",
+  "direccion_trabajo_sintesis",
+  "direccion_habitacion_sintesis",
+] as const;
+
+export type KeySintesisCurricularVisible =
+  (typeof KEYS_SINTESIS_CURRICULAR_VISIBLES)[number];
+
+export const KEY_PREFIJO_CEDULA_OTRO = "prefijo_cedula_otro";
+export const KEY_PREFIJO_INPRE_OTRO = "prefijo_inpre_otro";
+
+/** Campos visibles: otro documento. */
+export const KEYS_OTRO_DOCUMENTO_VISIBLES = [
+  "nombre_postulante_otro",
+  "apellido_postulante_otro",
+  "estadocivil_postulante_otro",
+  "cedula_postulante_otro",
+  "inpreabogado_postulante_otro",
+  "descripcion_documento_otro",
+] as const;
+
+export type KeyOtroDocumentoVisible = (typeof KEYS_OTRO_DOCUMENTO_VISIBLES)[number];
+
 /** Vacío permitido; si hay valor, aplica el schema de formato. */
 function opcionalEscrito<T extends z.ZodType>(schema: T) {
   return z.union([z.literal(""), schema]);
@@ -675,6 +713,19 @@ const textoLargo = z
   .trim()
   .min(2, "Mínimo 2 caracteres")
   .max(4000, "Máximo 4000 caracteres");
+
+const correoElectronico = z
+  .string()
+  .trim()
+  .email("Correo inválido")
+  .max(160, "Máximo 160 caracteres");
+
+const telefonoContacto = z
+  .string()
+  .trim()
+  .min(7, "Mínimo 7 caracteres")
+  .max(30, "Máximo 30 caracteres")
+  .regex(/^[0-9+\-\s()]+$/, "Sólo números y signos de teléfono");
 
 const codigoVerificacion = z
   .string()
@@ -1210,6 +1261,39 @@ export const formularioDjNoContratacionSchema = z.object({
   numero_folio_nocontratacion: opcionalEscrito(numericoActa),
   numero_tomo_nocontratacion: opcionalEscrito(numericoActa),
   fecha_otorgamiento_nocontratacion: opcionalEscrito(fechaIso),
+  ...metadatosInvisiblesSchema,
+});
+
+/** Síntesis curricular: todos opcionales. */
+export const formularioSintesisCurricularSchema = z.object({
+  [KEY_PREFIJO_CEDULA_SINTESIS]: prefijoVe,
+  [KEY_PREFIJO_INPRE_SINTESIS]: prefijoVe,
+  nombre_postulante_sintesis: opcionalEscrito(letrasEspacios),
+  apellido_postulante_sintesis: opcionalEscrito(letrasEspacios),
+  estadocivil_postulante_sintesis: opcionalEscrito(letrasEspacios),
+  cedula_postulante_sintesis: opcionalEscrito(digitosCedula),
+  inpreabogado_postulante_sintesis: opcionalEscrito(numericoActa),
+  correo_postulante_sintesis: opcionalEscrito(correoElectronico),
+  ocupacion_postulante_sintesis: opcionalEscrito(textoInstitucion),
+  telefono_postulante_sintesis: opcionalEscrito(telefonoContacto),
+  estado_ubicacion_sintesis: opcionalEscrito(letrasEspacios),
+  municipio_ubicacion_sintesis: opcionalEscrito(letrasEspacios),
+  ciudad_ubicacion_sintesis: opcionalEscrito(letrasEspacios),
+  direccion_trabajo_sintesis: opcionalEscrito(textoInstitucion),
+  direccion_habitacion_sintesis: opcionalEscrito(textoInstitucion),
+  ...metadatosInvisiblesSchema,
+});
+
+/** Otro documento: todos opcionales. */
+export const formularioOtroDocumentoSchema = z.object({
+  [KEY_PREFIJO_CEDULA_OTRO]: prefijoVe,
+  [KEY_PREFIJO_INPRE_OTRO]: prefijoVe,
+  nombre_postulante_otro: opcionalEscrito(letrasEspacios),
+  apellido_postulante_otro: opcionalEscrito(letrasEspacios),
+  estadocivil_postulante_otro: opcionalEscrito(letrasEspacios),
+  cedula_postulante_otro: opcionalEscrito(digitosCedula),
+  inpreabogado_postulante_otro: opcionalEscrito(numericoActa),
+  descripcion_documento_otro: opcionalEscrito(textoLargo),
   ...metadatosInvisiblesSchema,
 });
 
@@ -2015,6 +2099,45 @@ function normalizarParaDjNoContratacion(
   };
 }
 
+function normalizarParaSintesisCurricular(
+  valores: Readonly<ValoresFormularioRevision>,
+): Record<string, unknown> {
+  return {
+    [KEY_PREFIJO_CEDULA_SINTESIS]: str(valores[KEY_PREFIJO_CEDULA_SINTESIS]),
+    [KEY_PREFIJO_INPRE_SINTESIS]: str(valores[KEY_PREFIJO_INPRE_SINTESIS]),
+    nombre_postulante_sintesis: str(valores.nombre_postulante_sintesis),
+    apellido_postulante_sintesis: str(valores.apellido_postulante_sintesis),
+    estadocivil_postulante_sintesis: str(valores.estadocivil_postulante_sintesis),
+    cedula_postulante_sintesis: str(valores.cedula_postulante_sintesis),
+    inpreabogado_postulante_sintesis: str(valores.inpreabogado_postulante_sintesis),
+    correo_postulante_sintesis: str(valores.correo_postulante_sintesis),
+    ocupacion_postulante_sintesis: str(valores.ocupacion_postulante_sintesis),
+    telefono_postulante_sintesis: str(valores.telefono_postulante_sintesis),
+    estado_ubicacion_sintesis: str(valores.estado_ubicacion_sintesis),
+    municipio_ubicacion_sintesis: str(valores.municipio_ubicacion_sintesis),
+    ciudad_ubicacion_sintesis: str(valores.ciudad_ubicacion_sintesis),
+    direccion_trabajo_sintesis: str(valores.direccion_trabajo_sintesis),
+    direccion_habitacion_sintesis: str(valores.direccion_habitacion_sintesis),
+    ...metaDesdeValores(valores),
+  };
+}
+
+function normalizarParaOtroDocumento(
+  valores: Readonly<ValoresFormularioRevision>,
+): Record<string, unknown> {
+  return {
+    [KEY_PREFIJO_CEDULA_OTRO]: str(valores[KEY_PREFIJO_CEDULA_OTRO]),
+    [KEY_PREFIJO_INPRE_OTRO]: str(valores[KEY_PREFIJO_INPRE_OTRO]),
+    nombre_postulante_otro: str(valores.nombre_postulante_otro),
+    apellido_postulante_otro: str(valores.apellido_postulante_otro),
+    estadocivil_postulante_otro: str(valores.estadocivil_postulante_otro),
+    cedula_postulante_otro: str(valores.cedula_postulante_otro),
+    inpreabogado_postulante_otro: str(valores.inpreabogado_postulante_otro),
+    descripcion_documento_otro: str(valores.descripcion_documento_otro),
+    ...metaDesdeValores(valores),
+  };
+}
+
 export function validarFormularioCedula(
   valores: Readonly<ValoresFormularioRevision>,
 ): ErroresFormularioRevision {
@@ -2246,6 +2369,24 @@ export function validarFormularioDjNoContratacion(
   return r.success ? {} : erroresDesdeZod(r.error);
 }
 
+export function validarFormularioSintesisCurricular(
+  valores: Readonly<ValoresFormularioRevision>,
+): ErroresFormularioRevision {
+  const r = formularioSintesisCurricularSchema.safeParse(
+    normalizarParaSintesisCurricular(valores),
+  );
+  return r.success ? {} : erroresDesdeZod(r.error);
+}
+
+export function validarFormularioOtroDocumento(
+  valores: Readonly<ValoresFormularioRevision>,
+): ErroresFormularioRevision {
+  const r = formularioOtroDocumentoSchema.safeParse(
+    normalizarParaOtroDocumento(valores),
+  );
+  return r.success ? {} : erroresDesdeZod(r.error);
+}
+
 export function validarFormularioGenerico(
   valores: Readonly<ValoresFormularioRevision>,
 ): ErroresFormularioRevision {
@@ -2336,6 +2477,12 @@ export function validarFormularioRevision(
   }
   if (esFormularioDjNoContratacion(slotKey)) {
     return validarFormularioDjNoContratacion(valores);
+  }
+  if (esFormularioSintesisCurricular(slotKey)) {
+    return validarFormularioSintesisCurricular(valores);
+  }
+  if (esFormularioOtroDocumento(slotKey)) {
+    return validarFormularioOtroDocumento(valores);
   }
   return validarFormularioGenerico(valores);
 }
@@ -2907,6 +3054,45 @@ export function valoresVaciosDjNoContratacion(): ValoresFormularioRevision {
   };
 }
 
+export function valoresVaciosSintesisCurricular(): ValoresFormularioRevision {
+  return {
+    [KEY_PREFIJO_CEDULA_SINTESIS]: "V",
+    [KEY_PREFIJO_INPRE_SINTESIS]: "V",
+    nombre_postulante_sintesis: "",
+    apellido_postulante_sintesis: "",
+    estadocivil_postulante_sintesis: "",
+    cedula_postulante_sintesis: "",
+    inpreabogado_postulante_sintesis: "",
+    correo_postulante_sintesis: "",
+    ocupacion_postulante_sintesis: "",
+    telefono_postulante_sintesis: "",
+    estado_ubicacion_sintesis: "",
+    municipio_ubicacion_sintesis: "",
+    ciudad_ubicacion_sintesis: "",
+    direccion_trabajo_sintesis: "",
+    direccion_habitacion_sintesis: "",
+    es_documento: null,
+    calidad_legibilidad: null,
+    advertencias: null,
+  };
+}
+
+export function valoresVaciosOtroDocumento(): ValoresFormularioRevision {
+  return {
+    [KEY_PREFIJO_CEDULA_OTRO]: "V",
+    [KEY_PREFIJO_INPRE_OTRO]: "V",
+    nombre_postulante_otro: "",
+    apellido_postulante_otro: "",
+    estadocivil_postulante_otro: "",
+    cedula_postulante_otro: "",
+    inpreabogado_postulante_otro: "",
+    descripcion_documento_otro: "",
+    es_documento: null,
+    calidad_legibilidad: null,
+    advertencias: null,
+  };
+}
+
 export function valoresVaciosParaSlot(slotKey: string): ValoresFormularioRevision {
   if (esFormularioCedula(slotKey)) return valoresVaciosCedula();
   if (esFormularioPartida(slotKey)) return valoresVaciosPartida();
@@ -2966,6 +3152,12 @@ export function valoresVaciosParaSlot(slotKey: string): ValoresFormularioRevisio
   }
   if (esFormularioDjNoContratacion(slotKey)) {
     return valoresVaciosDjNoContratacion();
+  }
+  if (esFormularioSintesisCurricular(slotKey)) {
+    return valoresVaciosSintesisCurricular();
+  }
+  if (esFormularioOtroDocumento(slotKey)) {
+    return valoresVaciosOtroDocumento();
   }
   return {
     notas: "",
@@ -3722,6 +3914,14 @@ export function esFormularioDjNoContratacion(slotKey: string): boolean {
   return slotKey === "dj_no_contratacion";
 }
 
+export function esFormularioSintesisCurricular(slotKey: string): boolean {
+  return slotKey === "sintesis_curricular";
+}
+
+export function esFormularioOtroDocumento(slotKey: string): boolean {
+  return slotKey === "otro_documento";
+}
+
 export function usaBotonVerificado(slotKey: string): boolean {
   return (
     esFormularioCedula(slotKey) ||
@@ -3750,6 +3950,8 @@ export function usaBotonVerificado(slotKey: string): boolean {
     esFormularioDjNoMilitancia(slotKey) ||
     esFormularioDjNoParentesco(slotKey) ||
     esFormularioActaMatrimonio(slotKey) ||
-    esFormularioDjNoContratacion(slotKey)
+    esFormularioDjNoContratacion(slotKey) ||
+    esFormularioSintesisCurricular(slotKey) ||
+    esFormularioOtroDocumento(slotKey)
   );
 }

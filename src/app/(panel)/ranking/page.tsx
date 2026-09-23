@@ -14,7 +14,7 @@ const BANDAS: Record<string, { texto: string; clases: string; simbolo: string }>
 };
 
 export default async function RankingInterno() {
-  const usuario = await exigirRol("SUPER_ADMIN", "EVALUATOR", "PUBLISHER");
+  const usuario = await exigirRol("SUPER_ADMIN", "EVALUATOR", "ADMIN");
   let ranking: ResultadoRanking;
   try {
     ranking = await llamarApi<ResultadoRanking>("/internal/ranking");
@@ -39,7 +39,7 @@ export default async function RankingInterno() {
 
       <div className="mt-6">
         <AccionesRanking
-          puedePublicar={usuario.roles.some((r) => r === "SUPER_ADMIN" || r === "PUBLISHER")}
+          puedePublicar={usuario.roles.some((r) => r === "SUPER_ADMIN" || r === "ADMIN")}
         />
       </div>
 

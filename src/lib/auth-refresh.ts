@@ -74,14 +74,35 @@ let ultimoRefreshOk: {
 /**
  * Un solo POST /auth/refresh a la vez. Si accessToken es null, 401, o no hay
  * Set-Cookie nuevo, devuelve null (sin reutilizar el refresh anterior).
+ *
+ * `accessQueFallo`: si el access cacheado es exactamente el que acaba de
+ * recibir 401, no lo devolvemos otra vez (evitaría un bucle renovar→página).
  */
 export async function renovarAccessConMutex(
   refreshCookie: string,
+  accessQueFallo?: string | null,
 ): Promise<TokensRenovados | null> {
-  if (ultimoRefreshOk?.refreshUsado === refreshCookie) {
+  // Access cacheado ya rechazado: invalidar para no reenviar el mismo JWT.
+  if (
+    ultimoRefreshOk &&
+    accessQueFallo &&
+    ultimoRefreshOk.tokens.accessToken === accessQueFallo
+  ) {
+    ultimoRefreshOk = null;
+  }
+
+  if (
+    ultimoRefreshOk &&
+    ultimoRefreshOk.refreshUsado === refreshCookie &&
+    (!accessQueFallo || ultimoRefreshOk.tokens.accessToken !== accessQueFallo)
+  ) {
     return ultimoRefreshOk.tokens;
   }
-  if (ultimoRefreshOk?.tokens.refreshCookie === refreshCookie) {
+  if (
+    ultimoRefreshOk &&
+    ultimoRefreshOk.tokens.refreshCookie === refreshCookie &&
+    (!accessQueFallo || ultimoRefreshOk.tokens.accessToken !== accessQueFallo)
+  ) {
     return ultimoRefreshOk.tokens;
   }
 
@@ -128,7 +149,7 @@ export async function renovarSesionTras401(
   }
 
   const refreshAUsar = actual?.refreshCookie ?? refreshAlFallar;
-  const tokens = await renovarAccessConMutex(refreshAUsar);
+  const tokens = await renovarAccessConMutex(refreshAUsar, accessQueFallo);
 
   if (tokens) {
     return tokens;

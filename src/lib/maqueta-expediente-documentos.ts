@@ -13,7 +13,12 @@ export const SALAS_MAQUETA = CHAMBERS.map((value) => ({
 export type SalaMaqueta = (typeof CHAMBERS)[number];
 
 export type BloqueDocumentoId =
-  "identidad" | "honorabilidad" | "formacion" | "trayectoria" | "incompatibilidades";
+  | "identidad"
+  | "honorabilidad"
+  | "formacion"
+  | "trayectoria"
+  | "incompatibilidades"
+  | "otro";
 
 export type TrayectoriaOpcion = "A" | "B" | "C";
 
@@ -51,6 +56,7 @@ export const BLOQUE_ETIQUETA: Record<BloqueDocumentoId, string> = {
   formacion: "Formación académica",
   trayectoria: "Trayectoria profesional",
   incompatibilidades: "Incompatibilidades y declaraciones juradas",
+  otro: "Otro",
 };
 
 export const CATALOGO_DOCUMENTOS_MAQUETA: readonly DefinicionCatalogo[] = [
@@ -59,21 +65,28 @@ export const CATALOGO_DOCUMENTOS_MAQUETA: readonly DefinicionCatalogo[] = [
     id: "partida_nacimiento",
     bloque: "identidad",
     titulo: "Copia certificada partida de nacimiento",
-    ayuda: "Adjunte PDF de la partida de nacimiento del postulante",
+    ayuda: "Adjunte PDF o imagen de la partida de nacimiento del postulante",
   },
   {
     kind: "fijo",
     id: "cedula_identidad",
     bloque: "identidad",
     titulo: "Copia de la cédula de identidad vigente",
-    ayuda: "Adjunte PDF de la cédula de identidad vigente del postulante",
+    ayuda: "Adjunte PDF o imagen de la cédula de identidad vigente del postulante",
   },
   {
     kind: "fijo",
     id: "dj_no_otra_nacionalidad",
     bloque: "identidad",
     titulo: "Declaración jurada de no poseer otra nacionalidad",
-    ayuda: "Adjunte PDF de la declaración jurada de no poseer otra nacionalidad del postulante",
+    ayuda: "Adjunte PDF o imagen de la declaración jurada de no poseer otra nacionalidad del postulante",
+  },
+  {
+    kind: "fijo",
+    id: "sintesis_curricular",
+    bloque: "identidad",
+    titulo: "Copia de la síntesis curricular actualizada",
+    ayuda: "Adjunte PDF o imagen de la síntesis curricular (currículum vitae actualizado) del postulante",
   },
   {
     kind: "fijo",
@@ -81,7 +94,7 @@ export const CATALOGO_DOCUMENTOS_MAQUETA: readonly DefinicionCatalogo[] = [
     bloque: "honorabilidad",
     titulo: "Solvencia moral o carta deontológica",
     ayuda:
-      "Adjunte PDF de la carta deontológica del postulante emitida por un colegio de abogados, universidad u organización profesional afín",
+      "Adjunte PDF o imagen de la carta deontológica del postulante emitida por un colegio de abogados, universidad u organización profesional afín",
   },
   {
     kind: "fijo",
@@ -89,14 +102,14 @@ export const CATALOGO_DOCUMENTOS_MAQUETA: readonly DefinicionCatalogo[] = [
     bloque: "honorabilidad",
     titulo: "Certificación médica de capacidad mental",
     ayuda:
-      "Adjunte PDF de la certificación médica o psicológica de capacidad mental del postulante expedida por un especialista",
+      "Adjunte PDF o imagen de la certificación médica o psicológica de capacidad mental del postulante expedida por un especialista",
   },
   {
     kind: "fijo",
     id: "antecedentes_penales",
     bloque: "honorabilidad",
     titulo: "Certificado de antecedentes penales",
-    ayuda: "Adjunte PDF del certificado de antecedentes penales vigente del postulante",
+    ayuda: "Adjunte PDF o imagen del certificado de antecedentes penales vigente del postulante",
   },
   {
     kind: "fijo",
@@ -104,7 +117,7 @@ export const CATALOGO_DOCUMENTOS_MAQUETA: readonly DefinicionCatalogo[] = [
     bloque: "honorabilidad",
     titulo: "Certificación de Contraloría General de la República de no poseer inhabilitación",
     ayuda:
-      "Adjunte PDF de la certificación de la Contraloría General de la República del postulante que acredite no registrar inhabilitación ni responsabilidad administrativa firme",
+      "Adjunte PDF o imagen de la certificación de la Contraloría General de la República del postulante que acredite no registrar inhabilitación ni responsabilidad administrativa firme",
   },
   {
     kind: "fijo",
@@ -112,7 +125,7 @@ export const CATALOGO_DOCUMENTOS_MAQUETA: readonly DefinicionCatalogo[] = [
     bloque: "formacion",
     titulo: "Fondo negro del título universitario de abogado",
     ayuda:
-      "Adjunte PDF del título universitario de pregrado de abogado o licenciado en derecho de la República del postulante, debidamente protocolizado y registrado ante la oficina principal de registro público correspondiente, que acredite la titulación e idoneidad profesional de base exigida por la ley",
+      "Adjunte PDF o imagen del título universitario de pregrado de abogado o licenciado en derecho de la República del postulante, debidamente protocolizado y registrado ante la oficina principal de registro público correspondiente, que acredite la titulación e idoneidad profesional de base exigida por la ley",
   },
   {
     kind: "par_repetible",
@@ -121,11 +134,11 @@ export const CATALOGO_DOCUMENTOS_MAQUETA: readonly DefinicionCatalogo[] = [
     opcional: true,
     tituloTitulo: "Fondo negro del título universitario de especialización en materia jurídica",
     ayudaTitulo:
-      "Adjunte PDF del título de especialista en cualquier rama de la ciencia jurídica, expedido por institución acreditada y registrado",
+      "Adjunte PDF o imagen del título de especialista en cualquier rama de la ciencia jurídica, expedido por institución acreditada y registrado",
     tituloConstancia:
       "Copia de la constancia de aprobación del trabajo especial de grado de la especialización",
     ayudaConstancia:
-      "Adjunte PDF de la constancia o acta del jurado que certifique la aprobación del trabajo especial de grado",
+      "Adjunte PDF o imagen de la constancia o acta del jurado que certifique la aprobación del trabajo especial de grado",
     notaPar:
       "Por cada título de especialización que se adjunta se debe tener la constancia de aprobación",
     etiquetaAnadir: "Añadir otro título de especialización",
@@ -137,11 +150,11 @@ export const CATALOGO_DOCUMENTOS_MAQUETA: readonly DefinicionCatalogo[] = [
     opcional: true,
     tituloTitulo: "Fondo negro del título universitario de maestría en ciencia jurídica",
     ayudaTitulo:
-      "Adjunte PDF del título de maestría en especialidad jurídica otorgado por universidad acreditada, debidamente registrado",
+      "Adjunte PDF o imagen del título de maestría en especialidad jurídica otorgado por universidad acreditada, debidamente registrado",
     tituloConstancia:
       "Copia de la constancia de aprobación del trabajo especial de grado de la maestría",
     ayudaConstancia:
-      "Adjunte PDF de la constancia o acta del jurado que certifique la aprobación del trabajo especial de grado",
+      "Adjunte PDF o imagen de la constancia o acta del jurado que certifique la aprobación del trabajo especial de grado",
     notaPar: "Por cada título de maestría que se adjunta se debe tener la constancia de aprobación",
     etiquetaAnadir: "Añadir otro título de maestría",
   },
@@ -153,10 +166,10 @@ export const CATALOGO_DOCUMENTOS_MAQUETA: readonly DefinicionCatalogo[] = [
     tituloTitulo:
       "Fondo negro del título universitario de doctorado en derecho o ciencias jurídicas",
     ayudaTitulo:
-      "Adjunte PDF del título de doctor o doctora en derecho o área afín, otorgado por institución acreditada, registrado y protocolizado",
+      "Adjunte PDF o imagen del título de doctor o doctora en derecho o área afín, otorgado por institución acreditada, registrado y protocolizado",
     tituloConstancia: "Copia de la constancia de aprobación de tesis doctoral",
     ayudaConstancia:
-      "Adjunte PDF de la constancia o acta del jurado que certifique la aprobación de la tesis doctoral",
+      "Adjunte PDF o imagen de la constancia o acta del jurado que certifique la aprobación de la tesis doctoral",
     notaPar:
       "Por cada título de doctorado que se adjunta se debe tener la constancia de aprobación",
     etiquetaAnadir: "Añadir otro título de doctorado",
@@ -168,10 +181,10 @@ export const CATALOGO_DOCUMENTOS_MAQUETA: readonly DefinicionCatalogo[] = [
     opcional: true,
     tituloTitulo: "Copia del certificado de revalidación o convalidación de título extranjero",
     ayudaTitulo:
-      "Adjunte PDF de la resolución o certificado de revalidación o convalidación del título extranjero (aplica a pregrado, especialización, maestría o doctorado del exterior)",
+      "Adjunte PDF o imagen de la resolución o certificado de revalidación o convalidación del título extranjero (aplica a pregrado, especialización, maestría o doctorado del exterior)",
     tituloConstancia: "Documento de apoyo de la convalidación",
     ayudaConstancia:
-      "Si aplica, adjunte PDF adicional vinculado a esta convalidación (apostilla, registro, etc.)",
+      "Si aplica, Adjunte PDF o imagen adicional vinculado a esta convalidación (apostilla, registro, etc.)",
     notaPar: "Por cada título extranjero consignar la convalidación del mismo",
     etiquetaAnadir: "Añadir otra convalidación de título",
   },
@@ -182,7 +195,7 @@ export const CATALOGO_DOCUMENTOS_MAQUETA: readonly DefinicionCatalogo[] = [
     trayectoria: "A",
     titulo: "Certificación de inscripción en el colegio de abogados",
     ayuda:
-      "Adjunte PDF de la certificación de inscripción oficial expedida por el colegio de abogados de su adscripción territorial",
+      "Adjunte PDF o imagen de la certificación de inscripción oficial expedida por el colegio de abogados de su adscripción territorial",
   },
   {
     kind: "fijo",
@@ -191,7 +204,7 @@ export const CATALOGO_DOCUMENTOS_MAQUETA: readonly DefinicionCatalogo[] = [
     trayectoria: "A",
     titulo: "Certificación de solvencia del colegio de abogados",
     ayuda:
-      "Adjunte PDF de la constancia de colegiación activa y solvencia vigente expedida por la junta directiva del colegio",
+      "Adjunte PDF o imagen de la constancia de colegiación activa y solvencia vigente expedida por la junta directiva del colegio",
   },
   {
     kind: "fijo",
@@ -200,7 +213,7 @@ export const CATALOGO_DOCUMENTOS_MAQUETA: readonly DefinicionCatalogo[] = [
     trayectoria: "A",
     titulo: "Certificación de inscripción en el INPREABOGADO",
     ayuda:
-      "Adjunte PDF de la constancia de inscripción expedida por el Instituto de Previsión Social del Abogado",
+      "Adjunte PDF o imagen de la constancia de inscripción expedida por el Instituto de Previsión Social del Abogado",
   },
   {
     kind: "fijo",
@@ -209,7 +222,7 @@ export const CATALOGO_DOCUMENTOS_MAQUETA: readonly DefinicionCatalogo[] = [
     trayectoria: "A",
     titulo: "Constancia de solvencia del INPREABOGADO",
     ayuda:
-      "Adjunte PDF de la constancia o certificado de solvencia vigente del Instituto de Previsión Social del Abogado",
+      "Adjunte PDF o imagen de la constancia o certificado de solvencia vigente del Instituto de Previsión Social del Abogado",
   },
   {
     kind: "fijo",
@@ -218,7 +231,7 @@ export const CATALOGO_DOCUMENTOS_MAQUETA: readonly DefinicionCatalogo[] = [
     trayectoria: "A",
     titulo: "Copia de prueba documental que acredite quince (15) años de ejercicio libre",
     ayuda:
-      "Adjunte PDF del soporte que acredite un mínimo de quince años en el ejercicio de la abogacía",
+      "Adjunte PDF o imagen del soporte que acredite un mínimo de quince años en el ejercicio de la abogacía",
   },
   {
     kind: "fijo",
@@ -227,7 +240,7 @@ export const CATALOGO_DOCUMENTOS_MAQUETA: readonly DefinicionCatalogo[] = [
     trayectoria: "B",
     titulo: "Certificación oficial de servicio docente y categoría",
     ayuda:
-      "Adjunte PDF de la constancia institucional donde conste cátedra, antigüedad (mínimo 15 años) y categoría docente",
+      "Adjunte PDF o imagen de la constancia institucional donde conste cátedra, antigüedad (mínimo 15 años) y categoría docente",
   },
   {
     kind: "fijo",
@@ -236,7 +249,7 @@ export const CATALOGO_DOCUMENTOS_MAQUETA: readonly DefinicionCatalogo[] = [
     trayectoria: "B",
     titulo: "Copia de las actas de concurso público de oposición docente",
     ayuda:
-      "Adjunte PDF del acta de jurado, veredicto o resolución de nombramiento por concurso de oposición",
+      "Adjunte PDF o imagen del acta de jurado, veredicto o resolución de nombramiento por concurso de oposición",
   },
   {
     kind: "fijo",
@@ -245,7 +258,7 @@ export const CATALOGO_DOCUMENTOS_MAQUETA: readonly DefinicionCatalogo[] = [
     trayectoria: "C",
     titulo: "Certificación formal de carrera judicial (DEM)",
     ayuda:
-      "Adjunte PDF de la constancia de servicio de la DEM o órgano competente, con trayectoria no menor a quince años",
+      "Adjunte PDF o imagen de la constancia de servicio de la DEM o órgano competente, con trayectoria no menor a quince años",
   },
   {
     kind: "fijo",
@@ -254,7 +267,7 @@ export const CATALOGO_DOCUMENTOS_MAQUETA: readonly DefinicionCatalogo[] = [
     trayectoria: "C",
     titulo: "Certificación formal de carrera funcionarial",
     ayuda:
-      "Adjunte PDF de la certificación formal de carrera funcionarial que acredite la trayectoria en el servicio público",
+      "Adjunte PDF o imagen de la certificación formal de carrera funcionarial que acredite la trayectoria en el servicio público",
   },
   {
     kind: "fijo",
@@ -262,7 +275,7 @@ export const CATALOGO_DOCUMENTOS_MAQUETA: readonly DefinicionCatalogo[] = [
     bloque: "incompatibilidades",
     titulo: "Declaración jurada de no militancia político partidista",
     ayuda:
-      "Adjunte PDF de la declaración jurada autenticada o constancia de renuncia formal de no ejercer activismo político partidista",
+      "Adjunte PDF o imagen de la declaración jurada autenticada o constancia de renuncia formal de no ejercer activismo político partidista",
   },
   {
     kind: "fijo",
@@ -270,7 +283,7 @@ export const CATALOGO_DOCUMENTOS_MAQUETA: readonly DefinicionCatalogo[] = [
     bloque: "incompatibilidades",
     titulo: "Declaración jurada de ausencia de incompatibilidad por parentesco y vínculo conyugal",
     ayuda:
-      "Adjunte PDF de la declaración jurada de no poseer parentesco ni vínculo conyugal con magistrados activos del TSJ",
+      "Adjunte PDF o imagen de la declaración jurada de no poseer parentesco ni vínculo conyugal con magistrados activos del TSJ",
   },
   {
     kind: "fijo",
@@ -279,7 +292,7 @@ export const CATALOGO_DOCUMENTOS_MAQUETA: readonly DefinicionCatalogo[] = [
     opcional: true,
     titulo: "Copia certificada de acta de matrimonio si posee",
     ayuda:
-      "Adjunte PDF de la copia certificada del acta de matrimonio o constancia de unión estable de hecho",
+      "Adjunte PDF o imagen de la copia certificada del acta de matrimonio o constancia de unión estable de hecho",
   },
   {
     kind: "fijo",
@@ -287,7 +300,16 @@ export const CATALOGO_DOCUMENTOS_MAQUETA: readonly DefinicionCatalogo[] = [
     bloque: "incompatibilidades",
     titulo: "Declaración jurada de no contratación con el Estado y conflictos de interés",
     ayuda:
-      "Adjunte PDF de la declaración jurada de no ser propietario, socio ni representante de personas jurídicas con contratos vigentes con la administración pública",
+      "Adjunte PDF o imagen de la declaración jurada de no ser propietario, socio ni representante de personas jurídicas con contratos vigentes con la administración pública",
+  },
+  {
+    kind: "fijo",
+    id: "otro_documento",
+    bloque: "otro",
+    opcional: true,
+    titulo: "Otro documento",
+    ayuda:
+      "Adjunte PDF o imagen de cualquier documento adicional consignado. Puede cargar varios archivos.",
   },
 ] as const;
 
@@ -312,13 +334,20 @@ export function construirSlotsVisibles(): SlotInstancia[] {
   for (const def of CATALOGO_DOCUMENTOS_MAQUETA) {
     if (def.kind === "fijo") {
       const recaudo = recaudoPorSlotKey(def.id);
+      const multiple = recaudo?.multiple ?? false;
       out.push({
         slotKey: def.id,
         bloque: def.bloque,
         titulo: def.titulo,
         ayuda: def.ayuda,
         opcional: recaudo?.optional ?? Boolean(def.opcional),
-        multiple: recaudo?.multiple ?? false,
+        multiple,
+        ...(multiple
+          ? {
+              notaMultiple: "Puede adjuntar varios PDF de este tipo.",
+              etiquetaAnadir: "Añadir otro documento",
+            }
+          : {}),
       });
       continue;
     }

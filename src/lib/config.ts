@@ -8,6 +8,9 @@ export const API_INTERNA =
 
 export const COOKIE_SESION = process.env.SESSION_COOKIE_NAME ?? "cp_bo_session";
 
+/** Cookie breve tras /api/sesion/renovar: evita bucle si el 401 persiste. */
+export const COOKIE_RECIEN_RENOVADA = "cp_bo_recien_renovada";
+
 /** Nombre de la cookie HttpOnly de refresh que emite la API (path /api/v1/auth). */
 export const COOKIE_REFRESH_API = process.env.API_REFRESH_COOKIE_NAME ?? "cp_refresh";
 

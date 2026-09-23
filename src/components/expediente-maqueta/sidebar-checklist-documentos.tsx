@@ -16,6 +16,7 @@ const ORDEN_BLOQUES: BloqueDocumentoId[] = [
   "formacion",
   "trayectoria",
   "incompatibilidades",
+  "otro",
 ];
 
 export function SidebarChecklistDocumentos({

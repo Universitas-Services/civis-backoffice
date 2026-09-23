@@ -2,7 +2,7 @@
 
 import { useActionState, useEffect, useState, useTransition } from "react";
 import type { Role } from "@/contracts";
-import { ROLES, ROL_ETIQUETA } from "@/contracts";
+import { etiquetaRol, rolesAsignablesPara } from "@/contracts";
 import {
   cambiarEstado,
   cambiarRoles,
@@ -12,10 +12,15 @@ import {
 import { useToast } from "@/components/toast-provider";
 import { useToastDesdeEstado } from "@/hooks/use-toast-desde-estado";
 
-export function CrearUsuario() {
+export function CrearUsuario({
+  rolesActor,
+}: {
+  readonly rolesActor: readonly Role[];
+}) {
   const [abierto, setAbierto] = useState(false);
   const [estado, accion] = useActionState<EstadoUsuarios, FormData>(crearUsuario, {});
   useToastDesdeEstado(estado);
+  const rolesDisponibles = rolesAsignablesPara(rolesActor);
 
   return (
     <section aria-labelledby="crear">
@@ -78,24 +83,31 @@ export function CrearUsuario() {
 
           <fieldset className="mt-4">
             <legend className="text-xs font-medium text-toga-600">
-              Roles <span className="text-balanza-700">*</span>
+              Rol <span className="text-balanza-700">*</span>
             </legend>
+            <p className="mt-1 text-xs text-toga-500">Solo un rol por usuario al crearlo.</p>
             <div className="mt-2 flex flex-wrap gap-2">
-              {ROLES.map((r) => (
+              {rolesDisponibles.map((r) => (
                 <label
                   key={r}
                   className="flex cursor-pointer items-center gap-2 rounded-md border border-toga-200 px-3 py-2 text-sm hover:bg-toga-50"
                 >
-                  <input type="checkbox" name="roles" value={r} />
-                  {ROL_ETIQUETA[r]}
+                  <input type="radio" name="roles" value={r} required />
+                  {etiquetaRol(r)}
                 </label>
               ))}
             </div>
+            {rolesDisponibles.length === 0 && (
+              <p className="mt-2 text-xs text-toga-500">
+                Su cuenta no puede asignar roles.
+              </p>
+            )}
           </fieldset>
 
           <button
             type="submit"
-            className="mt-5 rounded-md bg-balanza-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-balanza-700"
+            disabled={rolesDisponibles.length === 0}
+            className="mt-5 rounded-md bg-balanza-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-balanza-700 disabled:opacity-60"
           >
             Crear usuario
           </button>
@@ -211,10 +223,14 @@ export function EditorRoles({
   id,
   nombre,
   rolesActuales,
+  rolesActor,
+  esUnoMismo,
 }: {
   readonly id: string;
   readonly nombre: string;
   readonly rolesActuales: readonly Role[];
+  readonly rolesActor: readonly Role[];
+  readonly esUnoMismo: boolean;
 }) {
   const [abierto, setAbierto] = useState(false);
   const [estado, accion] = useActionState<EstadoUsuarios, FormData>(
@@ -222,10 +238,31 @@ export function EditorRoles({
     {},
   );
   useToastDesdeEstado(estado);
+  const rolesDisponibles = rolesAsignablesPara(rolesActor);
+  const esSuper = rolesActor.includes("SUPER_ADMIN");
+  const objetivoElevado = rolesActuales.some((r) => r === "SUPER_ADMIN" || r === "ADMIN");
+  // ADMIN no gestiona cuentas SUPER_ADMIN ni otras ADMIN.
+  const puedeEditar = esSuper || !objetivoElevado;
 
   useEffect(() => {
     if (estado.exito) setAbierto(false);
   }, [estado.exito]);
+
+  if (esUnoMismo) {
+    return (
+      <span className="text-xs text-toga-400" title="No puede cambiar los roles de su propia cuenta">
+        Su cuenta
+      </span>
+    );
+  }
+
+  if (!puedeEditar) {
+    return (
+      <span className="text-xs text-toga-400" title="Solo Universitas puede modificar esta cuenta">
+        —
+      </span>
+    );
+  }
 
   if (!abierto) {
     return (
@@ -244,46 +281,46 @@ export function EditorRoles({
       <p className="text-xs font-medium text-toga-900">Roles de {nombre}</p>
 
       <form action={accion} className="mt-2 space-y-2">
-          <div className="flex flex-wrap gap-1.5">
-            {ROLES.map((r) => (
-              <label
-                key={r}
-                className="flex cursor-pointer items-center gap-1.5 rounded-md border border-toga-200 px-2 py-1 text-xs hover:bg-toga-50"
-              >
-                <input
-                  type="checkbox"
-                  name="roles"
-                  value={r}
-                  defaultChecked={rolesActuales.includes(r)}
-                />
-                {ROL_ETIQUETA[r]}
-              </label>
-            ))}
-          </div>
-          <textarea
-            name="reason"
-            rows={2}
-            required
-            minLength={10}
-            placeholder="Motivo del cambio (obligatorio)"
-            className="w-full rounded-md border border-toga-300 px-2 py-1.5 text-xs"
-          />
-          <div className="flex gap-2">
-            <button
-              type="submit"
-              className="rounded-md bg-balanza-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-balanza-700"
+        <div className="flex flex-wrap gap-1.5">
+          {rolesDisponibles.map((r) => (
+            <label
+              key={r}
+              className="flex cursor-pointer items-center gap-1.5 rounded-md border border-toga-200 px-2 py-1 text-xs hover:bg-toga-50"
             >
-              Guardar
-            </button>
-            <button
-              type="button"
-              onClick={() => setAbierto(false)}
-              className="rounded-md border border-toga-300 px-3 py-1.5 text-xs font-semibold text-toga-700 hover:bg-toga-100"
-            >
-              Cancelar
-            </button>
-          </div>
-        </form>
+              <input
+                type="checkbox"
+                name="roles"
+                value={r}
+                defaultChecked={rolesActuales.includes(r)}
+              />
+              {etiquetaRol(r)}
+            </label>
+          ))}
+        </div>
+        <textarea
+          name="reason"
+          rows={2}
+          required
+          minLength={10}
+          placeholder="Motivo del cambio (obligatorio)"
+          className="w-full rounded-md border border-toga-300 px-2 py-1.5 text-xs"
+        />
+        <div className="flex gap-2">
+          <button
+            type="submit"
+            className="rounded-md bg-balanza-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-balanza-700"
+          >
+            Guardar
+          </button>
+          <button
+            type="button"
+            onClick={() => setAbierto(false)}
+            className="rounded-md border border-toga-300 px-3 py-1.5 text-xs font-semibold text-toga-700 hover:bg-toga-100"
+          >
+            Cancelar
+          </button>
+        </div>
+      </form>
     </div>
   );
 }

@@ -1,10 +1,13 @@
 import type { Metadata } from "next";
 import { CabeceraPagina } from "@/components/cabecera-pagina";
 import { FormularioNuevoExpedienteMaqueta } from "@/components/expediente-maqueta/formulario-nuevo-expediente";
+import { exigirRol } from "@/lib/rutas";
 
 export const metadata: Metadata = { title: "Nuevo expediente" };
 
-export default function NuevoExpediente() {
+export default async function NuevoExpediente() {
+  await exigirRol("SUPER_ADMIN", "SECRETARY");
+
   return (
     <>
       <CabeceraPagina
