@@ -43,6 +43,7 @@ export const WORKFLOW_STATUS = [
   "READY_FOR_EVALUATION",
   "EVALUATION_IN_PROGRESS",
   "EVALUATED",
+  "DISQUALIFIED",
   "OBJECTION_PERIOD",
   "FINAL_REVIEW",
   "FINALIZED",
@@ -56,6 +57,7 @@ export const ESTADO_ETIQUETA: Record<WorkflowStatus, string> = {
   READY_FOR_EVALUATION: "Lista para evaluar",
   EVALUATION_IN_PROGRESS: "En evaluación",
   EVALUATED: "Evaluada",
+  DISQUALIFIED: "Descalificado",
   OBJECTION_PERIOD: "Período de objeciones",
   FINAL_REVIEW: "Revisión final",
   FINALIZED: "Finalizada",
@@ -111,6 +113,10 @@ export interface EntradaRanking {
   readonly position: number | null;
   readonly tied: boolean;
   readonly rubricVersion: string;
+  /** Identificador interno. Sirve para enviar al ranking público. */
+  readonly candidateId?: string;
+  /** El perfil ya está en el sitio público. */
+  readonly published?: boolean;
 }
 
 export interface ResultadoRanking {
@@ -196,6 +202,7 @@ export const CHAMBERS = [
   "CASACION_CIVIL",
   "CASACION_PENAL",
   "CASACION_SOCIAL",
+  "PLENA",
 ] as const;
 export type Chamber = (typeof CHAMBERS)[number];
 
@@ -207,7 +214,7 @@ export const SALA_ETIQUETA: Record<string, string> = {
   CASACION_CIVIL: "Casación Civil",
   CASACION_PENAL: "Casación Penal",
   CASACION_SOCIAL: "Casación Social",
-  PLENA: "Sala Plena",
+  PLENA: "Plena",
   SOCIAL: "Sala Social",
 };
 
@@ -291,6 +298,8 @@ export interface DocumentoExpediente {
   readonly classification: "PRIVATE" | "REDACTED" | "PUBLIC";
   readonly uploadedAt: string;
   readonly version: number;
+  /** Id del documento que este archivo sustituyó. La versión citada deja de mostrarse. */
+  readonly replacesId?: string | null;
   /** Campos capturados en revisión documental (propuestos por IA o a mano). */
   readonly reviewData?: Record<string, unknown> | null;
 }
@@ -301,7 +310,7 @@ export interface ExpedienteListado {
   readonly firstName: string;
   readonly lastName: string;
   readonly nationalId: string;
-  /** Puede incluir valores legacy (PLENA, SOCIAL) en datos antiguos. */
+  /** Puede incluir el valor legacy SOCIAL en datos antiguos. */
   readonly chamber: Chamber | string;
   readonly workflowStatus: WorkflowStatus;
   readonly publicationStatus: string;
@@ -411,6 +420,23 @@ export const CAUSAL_ETIQUETA: Record<string, string> = {
   FALSE_CREDENTIAL: "Credencial falsa",
   INSUFFICIENT_EXPERIENCE: "Experiencia insuficiente",
   OTHER: "Otra causal",
+};
+
+export const CAUSA_DENUNCIA_ETIQUETA: Record<string, string> = {
+  EXCLUSIVE_NATIONALITY: "Falta de nacionalidad originaria exclusiva",
+  LACK_OF_HONOR: "Carencia de reconocida honorabilidad y conducta ética",
+  INSUFFICIENT_CAREER: "Insuficiencia en la trayectoria profesional (menos de 15 años)",
+  MISSING_TITULAR_PROFESSOR: "Falta de rango de profesor titular",
+  MISSING_JUDICIAL_RANK: "Falta de jerarquía judicial mínima",
+  MISSING_POSTGRADUATE: "Carencia de formación de posgrado",
+  POLITICAL_MILITANCY: "Militancia política activa o proselitismo",
+  STATE_CONTRACTS: "Conflicto de interés por contrataciones con el Estado",
+  KINSHIP_HIGH_OFFICIALS: "Parentesco con altos funcionarios",
+  INCOMPATIBLE_MARRIAGE: "Unión conyugal incompatible",
+  KINSHIP_NOMINATION_COMMITTEE: "Parentesco con el Comité de Postulaciones",
+  FIRM_SANCTION: "Inhabilitación o sanción firme",
+  PROVEN_MENTAL_INCAPACITY: "Incapacidad mental comprobada",
+  OTHER: "Otro",
 };
 
 export interface ObjecionBandeja {
@@ -619,3 +645,13 @@ export interface ObjecionDetalle extends Omit<ObjecionBandeja, "_count"> {
     readonly requestedBy: { readonly fullName: string } | null;
   }[];
 }
+
+export {
+  baremoSchema,
+  type BaremoInput,
+  type BaremoListado,
+  type BaremoDetalle,
+  type BaremoCriterioDetalle,
+  type BaremoRangoDetalle,
+  puntosBaremo,
+} from "./baremo-dinamico";

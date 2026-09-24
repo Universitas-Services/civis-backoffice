@@ -1,13 +1,13 @@
-import type { DocumentCategory, DocumentoExpediente } from "@/contracts";
+import { SALA_ETIQUETA, type DocumentCategory, type DocumentoExpediente } from "@/contracts";
 
-/** Ids estables del checklist de elegibilidad (Paso 1). */
+/** Claves del checklist de elegibilidad (Paso 1), alineadas a la API. */
 export const BLOQUE_ELEGIBILIDAD_IDS = [
-  "identidad_nacionalidad",
-  "honorabilidad_salud",
-  "titulacion_abogado",
-  "formacion_posgrado",
-  "trayectoria_15",
-  "incompatibilidades",
+  "NATIONALITY",
+  "ETHICS_MENTAL",
+  "LAW_DEGREE",
+  "POSTGRADUATE",
+  "EXPERIENCE_15Y",
+  "NO_INCOMPATIBILITIES",
 ] as const;
 
 export type BloqueElegibilidadId = (typeof BLOQUE_ELEGIBILIDAD_IDS)[number];
@@ -107,7 +107,7 @@ export const PESTANAS_VISOR: readonly PestanaVisor[] = [
 
 export const BLOQUES_ELEGIBILIDAD: readonly BloqueElegibilidad[] = [
   {
-    id: "identidad_nacionalidad",
+    id: "NATIONALITY",
     orden: 1,
     tituloCorto: "Nacionalidad y ciudadanía",
     criterio:
@@ -117,7 +117,7 @@ export const BLOQUES_ELEGIBILIDAD: readonly BloqueElegibilidad[] = [
     categorias: ["BIRTH_CERTIFICATE", "NATIONAL_ID", "SWORN_SINGLE_NATIONALITY"],
   },
   {
-    id: "honorabilidad_salud",
+    id: "ETHICS_MENTAL",
     orden: 2,
     tituloCorto: "Capacidades éticas y salud mental",
     criterio:
@@ -127,7 +127,7 @@ export const BLOQUES_ELEGIBILIDAD: readonly BloqueElegibilidad[] = [
     categorias: ["MENTAL_CAPACITY_CERT", "HONORABILITY_LETTER"],
   },
   {
-    id: "titulacion_abogado",
+    id: "LAW_DEGREE",
     orden: 3,
     tituloCorto: "Título de abogado/a",
     criterio:
@@ -143,7 +143,7 @@ export const BLOQUES_ELEGIBILIDAD: readonly BloqueElegibilidad[] = [
     ],
   },
   {
-    id: "formacion_posgrado",
+    id: "POSTGRADUATE",
     orden: 4,
     tituloCorto: "Título de posgrado jurídico",
     criterio:
@@ -158,7 +158,7 @@ export const BLOQUES_ELEGIBILIDAD: readonly BloqueElegibilidad[] = [
     ],
   },
   {
-    id: "trayectoria_15",
+    id: "EXPERIENCE_15Y",
     orden: 5,
     tituloCorto: "Umbral mínimo de 15 años",
     criterio:
@@ -174,7 +174,7 @@ export const BLOQUES_ELEGIBILIDAD: readonly BloqueElegibilidad[] = [
     ],
   },
   {
-    id: "incompatibilidades",
+    id: "NO_INCOMPATIBILITIES",
     orden: 6,
     tituloCorto: "Ausencia de incompatibilidades",
     criterio:
@@ -193,15 +193,15 @@ export const BLOQUES_ELEGIBILIDAD: readonly BloqueElegibilidad[] = [
 ];
 
 export const CAUSAL_INELEGIBILIDAD_IDS = [
-  "nacionalidad",
-  "honorabilidad",
-  "titulo_abogado",
-  "posgrado",
-  "trayectoria_15",
-  "militancia",
-  "parentesco",
-  "contratacion",
-  "cgr_penal",
+  "CAUSAL_1",
+  "CAUSAL_2",
+  "CAUSAL_3",
+  "CAUSAL_4",
+  "CAUSAL_5",
+  "CAUSAL_6",
+  "CAUSAL_7",
+  "CAUSAL_8",
+  "CAUSAL_9",
 ] as const;
 
 export type CausalInelegibilidadId = (typeof CAUSAL_INELEGIBILIDAD_IDS)[number];
@@ -214,53 +214,53 @@ export type CausalInelegibilidad = {
 
 export const CAUSALES_INELEGIBILIDAD: readonly CausalInelegibilidad[] = [
   {
-    id: "nacionalidad",
+    id: "CAUSAL_1",
     orden: 1,
     texto:
       "Incumplimiento de nacionalidad venezolana por nacimiento o doble nacionalidad (Art. 263.1 CRBV / Art. 41 CRBV).",
   },
   {
-    id: "honorabilidad",
+    id: "CAUSAL_2",
     orden: 2,
     texto:
       "Ausencia de reconocida honorabilidad / falta de solvencia mental o ética acreditada (Art. 263.2 CRBV / Art. 37.1 LOTSJ).",
   },
   {
-    id: "titulo_abogado",
+    id: "CAUSAL_3",
     orden: 3,
     texto:
       "Falta de título de abogado/a o ausencia de protocolización registral SAREN (Art. 263.3 CRBV / Art. 37.2 LOTSJ).",
   },
   {
-    id: "posgrado",
+    id: "CAUSAL_4",
     orden: 4,
     texto:
       "Inexistencia de título de posgrado en ciencias jurídicas acreditado (Art. 263.3 CRBV / Art. 37.8 LOTSJ).",
   },
   {
-    id: "trayectoria_15",
+    id: "CAUSAL_5",
     orden: 5,
     texto:
       "Insuficiencia en el umbral de trayectoria (menos de 15 años acumulados) en ejercicio libre, docencia o judicatura (Art. 263.3 CRBV).",
   },
   {
-    id: "militancia",
+    id: "CAUSAL_6",
     orden: 6,
     texto: "Incompatibilidad por militancia político-partidista activa (Art. 37.5 LOTSJ).",
   },
   {
-    id: "parentesco",
+    id: "CAUSAL_7",
     orden: 7,
     texto:
       "Incompatibilidad por parentesco o vínculo conyugal con magistrados o altos funcionarios del Poder Público (Art. 37.6 LOTSJ / Art. 256 CRBV).",
   },
   {
-    id: "contratacion",
+    id: "CAUSAL_8",
     orden: 8,
     texto: "Contratación vigente de obras/servicios con el Estado (Art. 37.7 LOTSJ).",
   },
   {
-    id: "cgr_penal",
+    id: "CAUSAL_9",
     orden: 9,
     texto:
       "Inhabilitación administrativa de la CGR o sanción penal firme (Art. 37.4 LOTSJ).",
@@ -298,17 +298,75 @@ export type DecisionElegibilidad = {
 
 export function checklistVacio(): ChecklistElegibilidad {
   return {
-    identidad_nacionalidad: false,
-    honorabilidad_salud: false,
-    titulacion_abogado: false,
-    formacion_posgrado: false,
-    trayectoria_15: false,
-    incompatibilidades: false,
+    NATIONALITY: false,
+    ETHICS_MENTAL: false,
+    LAW_DEGREE: false,
+    POSTGRADUATE: false,
+    EXPERIENCE_15Y: false,
+    NO_INCOMPATIBILITIES: false,
   };
 }
 
 export function checklistCompleto(c: ChecklistElegibilidad): boolean {
   return BLOQUE_ELEGIBILIDAD_IDS.every((id) => c[id] === true);
+}
+
+export type FichaElegibilidadApi = {
+  readonly decision: string;
+  readonly decidedAt: string;
+  readonly decidedBy: string | null;
+  readonly motivation: string;
+  readonly checklist: readonly { readonly key: string; readonly marcado: boolean }[];
+  readonly causales: readonly { readonly key: string }[];
+};
+
+/** Adapta la ficha de la API al modelo que muestra la bandeja de inelegibles. */
+export function decisionDesdeFichaApi(
+  candidato: {
+    readonly id: string;
+    readonly firstName: string;
+    readonly lastName: string;
+    readonly nationalId: string;
+    readonly chamber: string;
+    readonly receivedAt: string;
+    readonly submissions: readonly { readonly fileNumber: string }[];
+  },
+  ficha: FichaElegibilidadApi | null,
+): DecisionElegibilidad {
+  const checklist = checklistVacio();
+  for (const item of ficha?.checklist ?? []) {
+    if ((BLOQUE_ELEGIBILIDAD_IDS as readonly string[]).includes(item.key)) {
+      checklist[item.key as BloqueElegibilidadId] = item.marcado;
+    }
+  }
+  const causales = (ficha?.causales ?? [])
+    .map((c) => c.key)
+    .filter((clave): clave is CausalInelegibilidadId =>
+      (CAUSAL_INELEGIBILIDAD_IDS as readonly string[]).includes(clave),
+    );
+  const fecha = ficha?.decidedAt ?? candidato.receivedAt;
+  const resumen: ResumenExpedienteElegibilidad = {
+    fileNumber: candidato.submissions[0]?.fileNumber ?? "—",
+    postulanteNombre: `${candidato.firstName} ${candidato.lastName}`,
+    nationalId: candidato.nationalId,
+    salaLabel: SALA_ETIQUETA[candidato.chamber] ?? candidato.chamber,
+    evaluadorNombre: ficha?.decidedBy ?? "—",
+    evaluadorId: "",
+  };
+  return {
+    candidateId: candidato.id,
+    resultado: "INELEGIBLE",
+    checklist,
+    motivo: ficha?.motivation ?? "",
+    resumen,
+    actualizadoEn: fecha,
+    ficha: {
+      ...resumen,
+      causales,
+      motivo: ficha?.motivation ?? "",
+      fechaIso: fecha,
+    },
+  };
 }
 
 export function documentosPorPestana(
@@ -335,48 +393,4 @@ export function alertasDesdeDocumentos(
     out.push({ titulo: d.originalName, texto });
   }
   return out;
-}
-
-const STORAGE_KEY = "civis_elegibilidad_v1";
-
-function leerMapa(): Record<string, DecisionElegibilidad> {
-  if (typeof window === "undefined") return {};
-  try {
-    const crudo = sessionStorage.getItem(STORAGE_KEY);
-    if (!crudo) return {};
-    return JSON.parse(crudo) as Record<string, DecisionElegibilidad>;
-  } catch {
-    return {};
-  }
-}
-
-function escribirMapa(mapa: Record<string, DecisionElegibilidad>) {
-  if (typeof window === "undefined") return;
-  sessionStorage.setItem(STORAGE_KEY, JSON.stringify(mapa));
-}
-
-export function leerDecision(candidateId: string): DecisionElegibilidad | null {
-  return leerMapa()[candidateId] ?? null;
-}
-
-export function guardarDecision(decision: DecisionElegibilidad): void {
-  const mapa = leerMapa();
-  mapa[decision.candidateId] = decision;
-  escribirMapa(mapa);
-}
-
-export function listarDecisiones(): readonly DecisionElegibilidad[] {
-  return Object.values(leerMapa());
-}
-
-export function listarElegibles(): readonly DecisionElegibilidad[] {
-  return listarDecisiones().filter((d) => d.resultado === "ELEGIBLE");
-}
-
-export function listarInelegibles(): readonly DecisionElegibilidad[] {
-  return listarDecisiones().filter((d) => d.resultado === "INELEGIBLE");
-}
-
-export function esElegible(candidateId: string): boolean {
-  return leerDecision(candidateId)?.resultado === "ELEGIBLE";
 }

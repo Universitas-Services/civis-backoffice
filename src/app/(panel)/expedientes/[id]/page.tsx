@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
-import { History, Lock, Scale } from "lucide-react";
+import { Lock, Scale } from "lucide-react";
 import type { ExpedienteDetalle } from "@/contracts";
 import { SALA_ETIQUETA } from "@/contracts";
 import { ErrorApi, llamarApi, NoAutorizado } from "@/lib/api";
@@ -15,6 +15,7 @@ import {
   Puntaje,
 } from "@/components/insignias";
 import { SeccionDocumentosExpediente } from "@/components/seccion-documentos-expediente";
+import { HojaHistorialExpediente, type EventoHistorial } from "@/components/historial-expediente";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export const metadata: Metadata = { title: "Expediente" };
@@ -37,15 +38,25 @@ export default async function DetalleExpediente({
     throw error;
   }
 
+  let historial: EventoHistorial[] = [];
+  try {
+    historial = await llamarApi<EventoHistorial[]>(`/internal/candidates/${id}/history`);
+  } catch (error) {
+    if (error instanceof NoAutorizado) renovarYVolver("/expedientes");
+  }
+
   const expediente = e.submissions[0];
   const evaluacion = e.evaluations[0];
   const puedeEvaluar =
     tieneRol(usuario, "SUPER_ADMIN", "EVALUATOR") &&
     ["READY_FOR_EVALUATION", "EVALUATION_IN_PROGRESS"].includes(e.workflowStatus);
 
+  const esSuperAdmin = tieneRol(usuario, "SUPER_ADMIN");
   const puedeCargar =
-    tieneRol(usuario, "SUPER_ADMIN", "SECRETARY") &&
-    ["DRAFT", "DOCUMENT_REVIEW"].includes(e.workflowStatus);
+    (esSuperAdmin && ["DRAFT", "DOCUMENT_REVIEW"].includes(e.workflowStatus)) ||
+    (tieneRol(usuario, "SECRETARY") && !esSuperAdmin && e.workflowStatus === "DRAFT");
+  const secretariaEnRevision =
+    tieneRol(usuario, "SECRETARY") && !esSuperAdmin && e.workflowStatus === "DOCUMENT_REVIEW";
 
   return (
     <>
@@ -120,15 +131,7 @@ export default async function DetalleExpediente({
         }
         acciones={
           <div className="flex flex-wrap items-center gap-3">
-            {tieneRol(usuario, "SUPER_ADMIN") && (
-              <Link
-                href={`/auditoria/entidad/Candidate/${e.id}`}
-                className="inline-flex items-center gap-2 rounded-md border border-toga-300 px-4 py-2.5 text-sm font-medium text-toga-700 hover:border-toga-400"
-              >
-                <History className="h-4 w-4" aria-hidden="true" />
-                Ver historial
-              </Link>
-            )}
+            <HojaHistorialExpediente eventos={historial} />
             {puedeEvaluar && (
               <Link
                 href={`/evaluacion/${e.id}`}
@@ -150,6 +153,7 @@ export default async function DetalleExpediente({
           workflowStatus={e.workflowStatus}
           documentos={expediente?.documents ?? []}
           puedeCargar={puedeCargar}
+          avisoRevision={secretariaEnRevision}
         />
 
         {evaluacion && (

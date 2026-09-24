@@ -4,6 +4,7 @@ import type { ResumenDashboard } from "@/contracts";
 import { renovarYVolver } from "@/lib/rutas";
 import { llamarApi, NoAutorizado } from "@/lib/api";
 import { usuarioActual } from "@/lib/sesion";
+import { rutaInicio } from "@/lib/secciones-nav";
 import { redirect } from "next/navigation";
 import { GraficosDashboard } from "@/components/graficos-dashboard";
 
@@ -41,6 +42,9 @@ function Tarjeta({
 export default async function Dashboard() {
   const usuario = await usuarioActual();
   if (!usuario) redirect("/login");
+  if (!usuario.roles.some((r) => ["SUPER_ADMIN", "ADMIN", "SECRETARY", "EVALUATOR"].includes(r))) {
+    redirect(rutaInicio(usuario.roles));
+  }
 
   let resumen: ResumenDashboard | null = null;
 

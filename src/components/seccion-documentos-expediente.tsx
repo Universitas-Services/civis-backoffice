@@ -4,7 +4,6 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { FileStack, FileText } from "lucide-react";
 import {
-  CATEGORIA_ETIQUETA,
   categoryDesdeSlotKey,
   slotKeyDesdeCategory,
   type DocumentoExpediente,
@@ -12,14 +11,15 @@ import {
 } from "@/contracts";
 import { enviarARevision } from "@/app/(panel)/expedientes/nuevo/acciones";
 import { useToast } from "@/components/toast-provider";
-import { InsigniaAnalisis, InsigniaClasificacion } from "@/components/insignias";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { VisorDocumentoRevision } from "@/components/revision-maqueta/visor-documento-revision";
 import { SidebarChecklistDocumentos } from "@/components/expediente-maqueta/sidebar-checklist-documentos";
 import {
   SlotDocumentoPdf,
   type ArchivoGuardado,
 } from "@/components/expediente-maqueta/slot-documento-pdf";
 import { iconoParaSlot } from "@/components/expediente-maqueta/iconos-documento";
+import { documentosVigentes } from "@/lib/documentos-vigentes";
 import { construirSlotsVisibles } from "@/lib/maqueta-expediente-documentos";
 import { marcarSidebarDocumentoAbierto } from "@/lib/sidebar-panel";
 
@@ -27,7 +27,7 @@ function sembrarGuardados(
   documentos: readonly DocumentoExpediente[],
 ): Record<string, ArchivoGuardado[]> {
   const out: Record<string, ArchivoGuardado[]> = {};
-  for (const d of documentos) {
+  for (const d of documentosVigentes(documentos)) {
     const slotKey = slotKeyDesdeCategory(d.category) ?? String(d.category).toLowerCase();
     const item: ArchivoGuardado = {
       id: d.id,
@@ -40,8 +40,9 @@ function sembrarGuardados(
 }
 
 /**
- * Documentos del expediente en el detalle: checklist + slot (como en nuevo)
- * cuando se puede cargar; lista simple en solo lectura.
+ * Documentos del expediente en el detalle.
+ * Con carga: checklist y tarjeta para adjuntar. En solo lectura: el mismo
+ * checklist y el visor del archivo vigente, sin acciones de modificación.
  */
 export function SeccionDocumentosExpediente({
   candidateId,
@@ -49,12 +50,15 @@ export function SeccionDocumentosExpediente({
   workflowStatus,
   documentos,
   puedeCargar,
+  avisoRevision = false,
 }: {
   readonly candidateId: string;
   readonly submissionId: string | null;
   readonly workflowStatus: WorkflowStatus;
   readonly documentos: readonly DocumentoExpediente[];
   readonly puedeCargar: boolean;
+  /** Secretaría no carga mientras el expediente está en revisión documental. */
+  readonly avisoRevision?: boolean;
 }) {
   const router = useRouter();
   const toast = useToast();
@@ -66,7 +70,9 @@ export function SeccionDocumentosExpediente({
     sembrarGuardados(documentos),
   );
   const [activo, setActivo] = useState<string | undefined>();
+  const [archivoActivoId, setArchivoActivoId] = useState<string | undefined>();
   const [guardando, setGuardando] = useState(false);
+  const [sustituyendoId, setSustituyendoId] = useState<string | null>(null);
   const [enviandoRevision, setEnviandoRevision] = useState(false);
   const [confirmandoRevision, setConfirmandoRevision] = useState(false);
 
@@ -78,10 +84,9 @@ export function SeccionDocumentosExpediente({
   }, [documentos]);
 
   useEffect(() => {
-    if (!puedeCargar) return;
     marcarSidebarDocumentoAbierto(Boolean(activo));
     return () => marcarSidebarDocumentoAbierto(false);
-  }, [activo, puedeCargar]);
+  }, [activo]);
 
   const slotsConGuardados = useMemo(() => {
     const set = new Set<string>();
@@ -94,6 +99,7 @@ export function SeccionDocumentosExpediente({
   function seleccionar(slotKey: string) {
     if (enviandoRevision) return;
     setActivo(slotKey);
+    setArchivoActivoId(guardados[slotKey]?.[0]?.id);
   }
 
   function setPendiente(slotKey: string, file: File | null) {
@@ -153,12 +159,38 @@ export function SeccionDocumentosExpediente({
     }
   }
 
-  function quitarGuardado(slotKey: string, id: string) {
-    if (enviandoRevision) return;
-    setGuardados((prev) => ({
-      ...prev,
-      [slotKey]: (prev[slotKey] ?? []).filter((g) => g.id !== id),
-    }));
+  async function sustituirDocumento(slotKey: string, id: string, file: File) {
+    const slot = slots.find((s) => s.slotKey === slotKey);
+    if (!slot || !submissionId || enviandoRevision || sustituyendoId) return;
+    const category = categoryDesdeSlotKey(slotKey);
+    if (!category) {
+      toast.error("Tipo de documento no reconocido.");
+      return;
+    }
+
+    setSustituyendoId(id);
+    try {
+      const cuerpo = new FormData();
+      cuerpo.append("category", category);
+      cuerpo.append("replaces", id);
+      cuerpo.append("file", file);
+
+      const respuesta = await fetch(`/api/documentos/${submissionId}`, {
+        method: "POST",
+        body: cuerpo,
+      });
+      const datosResp = (await respuesta.json()) as { id?: string; message?: string };
+      if (!respuesta.ok || !datosResp.id) {
+        toast.error(datosResp.message ?? "No se pudo sustituir el documento.");
+        return;
+      }
+      toast.exito(`Documento sustituido: ${slot.titulo}`);
+      router.refresh();
+    } catch {
+      toast.error("Fallo de conexión al sustituir el documento.");
+    } finally {
+      setSustituyendoId(null);
+    }
   }
 
   function pedirConfirmacionEnvio() {
@@ -183,6 +215,10 @@ export function SeccionDocumentosExpediente({
   }
 
   if (!puedeCargar) {
+    const archivosSlot = slotActivo ? (guardados[slotActivo.slotKey] ?? []) : [];
+    const archivoVisible =
+      archivosSlot.find((archivo) => archivo.id === archivoActivoId) ?? archivosSlot[0];
+
     return (
       <Card>
         <CardHeader>
@@ -190,34 +226,83 @@ export function SeccionDocumentosExpediente({
             <FileText className="h-4 w-4 text-toga-500" aria-hidden="true" />
             Documentos del expediente
           </CardTitle>
+          <CardDescription>
+            Consulte los recaudos cargados. Esta etapa no admite nuevas cargas ni sustituciones.
+          </CardDescription>
         </CardHeader>
         <CardContent>
-          {documentos.length === 0 ? (
-            <p className="rounded-lg border border-dashed border-toga-300 bg-toga-50 p-8 text-center text-sm text-toga-500">
-              Este expediente todavía no tiene documentos cargados.
+          {avisoRevision && (
+            <p className="mb-4 rounded-md border border-balanza-600/25 bg-balanza-50 px-3 py-2 text-sm text-toga-800">
+              El expediente está en revisión documental. Solo el revisor puede actualizar
+              documentos. Secretaría retoma la carga cuando el expediente vuelva a borrador.
             </p>
-          ) : (
-            <ul className="space-y-3">
-              {documentos.map((d) => (
-                <li key={d.id} className="rounded-lg border border-toga-200 bg-toga-50/50 p-4">
-                  <div className="flex flex-wrap items-baseline justify-between gap-2">
-                    <span className="min-w-0 truncate font-medium text-toga-900">
-                      {d.originalName}
-                    </span>
-                    <span className="shrink-0 text-xs text-toga-500">
-                      {(CATEGORIA_ETIQUETA as Record<string, string>)[d.category] ?? d.category} ·{" "}
-                      {Math.round(d.sizeBytes / 1024)} KB
-                      {d.version > 1 && ` · versión ${d.version}`}
-                    </span>
-                  </div>
-                  <div className="mt-2.5 flex flex-wrap gap-2">
-                    <InsigniaClasificacion valor={d.classification} />
-                    <InsigniaAnalisis valor={d.scanStatus} />
-                  </div>
-                </li>
-              ))}
-            </ul>
           )}
+          <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(16rem,20rem)]">
+            <div className="rounded-lg border border-toga-200 bg-white p-5 sm:p-6">
+              {slotActivo && archivoVisible ? (
+                <div className="space-y-4">
+                  <div>
+                    <h3 className="text-sm font-semibold text-toga-900">{slotActivo.titulo}</h3>
+                    <p className="mt-1 text-xs leading-relaxed text-toga-500">{slotActivo.ayuda}</p>
+                  </div>
+                  {archivosSlot.length > 1 && (
+                    <div className="flex flex-wrap gap-2" role="tablist" aria-label="Archivos del recaudo">
+                      {archivosSlot.map((archivo) => {
+                        const elegido = archivo.id === archivoVisible.id;
+                        return (
+                          <button
+                            key={archivo.id}
+                            type="button"
+                            role="tab"
+                            aria-selected={elegido}
+                            onClick={() => setArchivoActivoId(archivo.id)}
+                            className={`max-w-full truncate rounded-md border px-3 py-1.5 text-xs font-medium ${
+                              elegido
+                                ? "border-balanza-600 bg-balanza-50 text-toga-900"
+                                : "border-toga-300 bg-white text-toga-600 hover:bg-toga-50"
+                            }`}
+                          >
+                            {archivo.name}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                  <VisorDocumentoRevision
+                    documentId={archivoVisible.id}
+                    nombreArchivo={archivoVisible.name}
+                    sizeKb={Math.max(1, Math.round(archivoVisible.size / 1024))}
+                    titulo={slotActivo.titulo}
+                  />
+                </div>
+              ) : slotActivo ? (
+                <div className="flex flex-col items-center justify-center px-4 py-14 text-center">
+                  <FileStack className="h-10 w-10 text-toga-300" aria-hidden="true" />
+                  <p className="mt-3 text-sm font-medium text-toga-700">{slotActivo.titulo}</p>
+                  <p className="mt-1 max-w-sm text-xs text-toga-500">
+                    Este recaudo no tiene un archivo cargado.
+                  </p>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center px-4 py-14 text-center">
+                  <FileStack className="h-10 w-10 text-toga-300" aria-hidden="true" />
+                  <p className="mt-3 text-sm font-medium text-toga-700">
+                    Seleccione un documento del listado
+                  </p>
+                  <p className="mt-1 max-w-sm text-xs text-toga-500">
+                    Al elegir un recaudo se abre aquí el archivo vigente.
+                  </p>
+                </div>
+              )}
+            </div>
+            <SidebarChecklistDocumentos
+              slots={slots}
+              guardados={slotsConGuardados}
+              activo={activo}
+              bloqueado={false}
+              onSeleccionar={seleccionar}
+            />
+          </div>
         </CardContent>
       </Card>
     );
@@ -265,7 +350,8 @@ export function SeccionDocumentosExpediente({
                   guardando={guardando}
                   onPendiente={(f) => setPendiente(slotActivo.slotKey, f)}
                   onGuardar={() => void guardarDocumento(slotActivo.slotKey)}
-                  onQuitarGuardado={(id) => quitarGuardado(slotActivo.slotKey, id)}
+                  onSustituir={(id, file) => void sustituirDocumento(slotActivo.slotKey, id, file)}
+                  sustituyendoId={sustituyendoId}
                 />
               ) : (
                 <div className="flex flex-col items-center justify-center px-4 py-14 text-center">

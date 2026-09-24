@@ -6,6 +6,7 @@ import {
   recaudoPorCategory,
   slotKeyDesdeCategory,
 } from "@/contracts";
+import { documentosVigentes } from "@/lib/documentos-vigentes";
 import type { BloqueDocumentoId } from "@/lib/maqueta-expediente-documentos";
 
 export type EstadoVerificacionDoc = "UNVERIFIED" | "VERIFIED" | "REJECTED";
@@ -43,6 +44,7 @@ export interface PostulanteRevision {
   readonly cedula: string;
   readonly sala: string;
   readonly salaLabel: string;
+  readonly submissionId: string;
   readonly documentos: readonly DocumentoRevision[];
 }
 
@@ -62,7 +64,7 @@ function etiquetaSala(chamber: string): string {
 }
 
 function documentosDesdeDetalle(e: ExpedienteDetalle): DocumentoRevision[] {
-  const docs = e.submissions.flatMap((s) => s.documents);
+  const docs = documentosVigentes(e.submissions.flatMap((s) => s.documents));
   return docs.map((d) => {
     const recaudo = esCategoryConocida(d.category) ? recaudoPorCategory(d.category) : undefined;
     const slotKey = slotKeyDesdeCategory(d.category) ?? d.category.toLowerCase();
@@ -91,6 +93,7 @@ export function postulanteDesdeExpediente(e: ExpedienteDetalle): PostulanteRevis
     cedula: e.nationalId,
     sala: String(e.chamber),
     salaLabel: etiquetaSala(String(e.chamber)),
+    submissionId: submission?.id ?? "",
     documentos: documentosDesdeDetalle(e),
   };
 }

@@ -35,7 +35,7 @@ export const ORDEN_BLOQUES: readonly BlockId[] = [
   "otro",
 ];
 
-/** Categorías API: recaudos + OTHER (+ CURRICULUM_VITAE en front; requiere enum en API). */
+/** Categorías API de recaudo, incluida síntesis curricular, convalidación y otro documento. */
 export const DOCUMENT_CATEGORY = [
   "BIRTH_CERTIFICATE",
   "NATIONAL_ID",
@@ -107,7 +107,7 @@ export const RECAUDOS: readonly RecaudoDef[] = [
     etiqueta: "Declaración jurada de no poseer otra nacionalidad",
     optional: false,
     multiple: false,
-    extraibleConIa: false,
+    extraibleConIa: true,
   },
   {
     category: "CURRICULUM_VITAE",
@@ -116,7 +116,7 @@ export const RECAUDOS: readonly RecaudoDef[] = [
     etiqueta: "Copia de la síntesis curricular actualizada",
     optional: false,
     multiple: false,
-    extraibleConIa: false,
+    extraibleConIa: true,
   },
   {
     category: "HONORABILITY_LETTER",
@@ -134,7 +134,7 @@ export const RECAUDOS: readonly RecaudoDef[] = [
     etiqueta: "Certificación médica de capacidad mental",
     optional: false,
     multiple: false,
-    extraibleConIa: false,
+    extraibleConIa: true,
   },
   {
     category: "CRIMINAL_RECORD",
@@ -143,7 +143,7 @@ export const RECAUDOS: readonly RecaudoDef[] = [
     etiqueta: "Certificado de antecedentes penales",
     optional: false,
     multiple: false,
-    extraibleConIa: false,
+    extraibleConIa: true,
   },
   {
     category: "COMPTROLLER_CLEARANCE",
@@ -152,7 +152,7 @@ export const RECAUDOS: readonly RecaudoDef[] = [
     etiqueta: "Certificación de la Contraloría (no inhabilitación)",
     optional: false,
     multiple: false,
-    extraibleConIa: false,
+    extraibleConIa: true,
   },
   {
     category: "LAW_DEGREE",
@@ -161,7 +161,7 @@ export const RECAUDOS: readonly RecaudoDef[] = [
     etiqueta: "Título universitario de abogado",
     optional: false,
     multiple: false,
-    extraibleConIa: false,
+    extraibleConIa: true,
   },
   {
     category: "SPECIALIZATION_DEGREE",
@@ -170,7 +170,7 @@ export const RECAUDOS: readonly RecaudoDef[] = [
     etiqueta: "Título de especialización jurídica",
     optional: true,
     multiple: true,
-    extraibleConIa: false,
+    extraibleConIa: true,
   },
   {
     category: "SPECIALIZATION_APPROVAL",
@@ -179,7 +179,7 @@ export const RECAUDOS: readonly RecaudoDef[] = [
     etiqueta: "Constancia de aprobación de la especialización",
     optional: true,
     multiple: true,
-    extraibleConIa: false,
+    extraibleConIa: true,
   },
   {
     category: "MASTER_DEGREE",
@@ -188,7 +188,7 @@ export const RECAUDOS: readonly RecaudoDef[] = [
     etiqueta: "Título de maestría en ciencia jurídica",
     optional: true,
     multiple: true,
-    extraibleConIa: false,
+    extraibleConIa: true,
   },
   {
     category: "MASTER_APPROVAL",
@@ -197,7 +197,7 @@ export const RECAUDOS: readonly RecaudoDef[] = [
     etiqueta: "Constancia de aprobación de la maestría",
     optional: true,
     multiple: true,
-    extraibleConIa: false,
+    extraibleConIa: true,
   },
   {
     category: "DOCTORATE_DEGREE",
@@ -206,7 +206,7 @@ export const RECAUDOS: readonly RecaudoDef[] = [
     etiqueta: "Título de doctorado en derecho",
     optional: true,
     multiple: true,
-    extraibleConIa: false,
+    extraibleConIa: true,
   },
   {
     category: "DOCTORATE_APPROVAL",
@@ -215,7 +215,7 @@ export const RECAUDOS: readonly RecaudoDef[] = [
     etiqueta: "Constancia de aprobación de la tesis doctoral",
     optional: true,
     multiple: true,
-    extraibleConIa: false,
+    extraibleConIa: true,
   },
   {
     category: "FOREIGN_DEGREE_VALIDATION",
@@ -224,7 +224,7 @@ export const RECAUDOS: readonly RecaudoDef[] = [
     etiqueta: "Convalidación de título extranjero",
     optional: true,
     multiple: true,
-    extraibleConIa: false,
+    extraibleConIa: true,
   },
   {
     category: "BAR_ASSOCIATION_REGISTRATION",
@@ -233,7 +233,7 @@ export const RECAUDOS: readonly RecaudoDef[] = [
     etiqueta: "Inscripción en el colegio de abogados",
     optional: true,
     multiple: false,
-    extraibleConIa: false,
+    extraibleConIa: true,
   },
   {
     category: "BAR_ASSOCIATION_SOLVENCY",
@@ -242,7 +242,7 @@ export const RECAUDOS: readonly RecaudoDef[] = [
     etiqueta: "Solvencia del colegio de abogados",
     optional: true,
     multiple: false,
-    extraibleConIa: false,
+    extraibleConIa: true,
   },
   {
     category: "INPREABOGADO_REGISTRATION",
@@ -251,7 +251,7 @@ export const RECAUDOS: readonly RecaudoDef[] = [
     etiqueta: "Inscripción en INPREABOGADO",
     optional: true,
     multiple: false,
-    extraibleConIa: false,
+    extraibleConIa: true,
   },
   {
     category: "INPREABOGADO_SOLVENCY",
@@ -260,7 +260,7 @@ export const RECAUDOS: readonly RecaudoDef[] = [
     etiqueta: "Solvencia de INPREABOGADO",
     optional: true,
     multiple: false,
-    extraibleConIa: false,
+    extraibleConIa: true,
   },
   {
     category: "FREE_PRACTICE_PROOF",
@@ -269,7 +269,7 @@ export const RECAUDOS: readonly RecaudoDef[] = [
     etiqueta: "Prueba de 15 años de ejercicio libre de la profesión",
     optional: true,
     multiple: true,
-    extraibleConIa: false,
+    extraibleConIa: true,
   },
   {
     category: "TEACHING_SERVICE_CERT",
@@ -278,7 +278,7 @@ export const RECAUDOS: readonly RecaudoDef[] = [
     etiqueta: "Certificación de servicio docente y categoría",
     optional: true,
     multiple: false,
-    extraibleConIa: false,
+    extraibleConIa: true,
   },
   {
     category: "TEACHING_CONTEST_RECORD",
@@ -287,7 +287,7 @@ export const RECAUDOS: readonly RecaudoDef[] = [
     etiqueta: "Actas de concurso público de oposición docente",
     optional: true,
     multiple: true,
-    extraibleConIa: false,
+    extraibleConIa: true,
   },
   {
     category: "JUDICIAL_CAREER_CERT",
@@ -296,7 +296,7 @@ export const RECAUDOS: readonly RecaudoDef[] = [
     etiqueta: "Certificación de carrera judicial (DEM)",
     optional: true,
     multiple: false,
-    extraibleConIa: false,
+    extraibleConIa: true,
   },
   {
     category: "PUBLIC_ADMIN_CAREER_CERT",
@@ -305,7 +305,7 @@ export const RECAUDOS: readonly RecaudoDef[] = [
     etiqueta: "Certificación de carrera funcionarial jurídica",
     optional: true,
     multiple: false,
-    extraibleConIa: false,
+    extraibleConIa: true,
   },
   {
     category: "SWORN_NO_PARTY_MILITANCY",
@@ -314,7 +314,7 @@ export const RECAUDOS: readonly RecaudoDef[] = [
     etiqueta: "Declaración jurada de no militancia político-partidista",
     optional: false,
     multiple: false,
-    extraibleConIa: false,
+    extraibleConIa: true,
   },
   {
     category: "SWORN_NO_KINSHIP",
@@ -323,7 +323,7 @@ export const RECAUDOS: readonly RecaudoDef[] = [
     etiqueta: "Declaración jurada de ausencia de parentesco o vínculo conyugal",
     optional: false,
     multiple: false,
-    extraibleConIa: false,
+    extraibleConIa: true,
   },
   {
     category: "MARRIAGE_CERTIFICATE",
@@ -332,7 +332,7 @@ export const RECAUDOS: readonly RecaudoDef[] = [
     etiqueta: "Acta de matrimonio o unión estable",
     optional: true,
     multiple: false,
-    extraibleConIa: false,
+    extraibleConIa: true,
   },
   {
     category: "SWORN_NO_STATE_CONTRACTS",
@@ -341,7 +341,7 @@ export const RECAUDOS: readonly RecaudoDef[] = [
     etiqueta: "Declaración jurada de no contratación con el Estado",
     optional: false,
     multiple: false,
-    extraibleConIa: false,
+    extraibleConIa: true,
   },
   {
     category: "OTHER",
@@ -350,7 +350,7 @@ export const RECAUDOS: readonly RecaudoDef[] = [
     etiqueta: "Otro documento",
     optional: true,
     multiple: true,
-    extraibleConIa: false,
+    extraibleConIa: true,
   },
 ] as const;
 

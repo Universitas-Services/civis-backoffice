@@ -177,3 +177,32 @@ export async function enviarAEvaluacion(
     return { ok: false, error: "No se pudo enviar a evaluación" };
   }
 }
+
+/** DOCUMENT_REVIEW → DRAFT, con el motivo que verá secretaría. */
+export async function devolverASecretaria(
+  candidateId: string,
+  reason: string,
+): Promise<{ ok: boolean; error?: string }> {
+  const motivo = reason.trim();
+  if (motivo.length < 10) {
+    return { ok: false, error: "Indique el motivo (mínimo 10 caracteres)" };
+  }
+  if (motivo.length > 1000) {
+    return { ok: false, error: "El motivo no puede superar 1000 caracteres" };
+  }
+  try {
+    await llamarApiAccion(`/internal/candidates/${candidateId}/transition`, {
+      method: "POST",
+      body: { target: "DRAFT", reason: motivo },
+    });
+    revalidatePath("/revision-documental");
+    revalidatePath("/expedientes");
+    revalidatePath(`/expedientes/${candidateId}`);
+    return { ok: true };
+  } catch (error) {
+    return {
+      ok: false,
+      error: error instanceof ErrorApi ? error.message : "No se pudo devolver a secretaría",
+    };
+  }
+}

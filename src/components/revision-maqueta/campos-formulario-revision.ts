@@ -46,8 +46,7 @@ export type KeyCedulaVisible = (typeof KEYS_CEDULA_VISIBLES)[number];
 export const KEY_PREFIJO_CEDULA = "prefijo_cedula";
 export const KEY_PREFIJO_CEDULA_PADRE = "prefijo_cedula_padre";
 export const KEY_PREFIJO_CEDULA_MADRE = "prefijo_cedula_madre";
-export const KEY_PREFIJO_CEDULA_DECLARANTE_OTRA =
-  "prefijo_cedula_declarante_otranacionalidad";
+export const KEY_PREFIJO_CEDULA_DECLARANTE_OTRA = "prefijo_cedula_declarante_otranacionalidad";
 
 /** Campos visibles del formulario de partida de nacimiento. */
 export const KEYS_PARTIDA_VISIBLES = [
@@ -84,8 +83,7 @@ export const KEYS_DJ_OTRA_NACIONALIDAD_VISIBLES = [
   "fechaotorgamiento_otranacionalidad",
 ] as const;
 
-export type KeyDjOtraNacionalidadVisible =
-  (typeof KEYS_DJ_OTRA_NACIONALIDAD_VISIBLES)[number];
+export type KeyDjOtraNacionalidadVisible = (typeof KEYS_DJ_OTRA_NACIONALIDAD_VISIBLES)[number];
 
 /** Campos visibles: solvencia moral y deontológica. */
 export const KEYS_SOLVENCIA_DEONTOLOGICA_VISIBLES = [
@@ -105,13 +103,10 @@ export const KEYS_SOLVENCIA_DEONTOLOGICA_VISIBLES = [
   "fecha_expedicion_deontologica",
 ] as const;
 
-export type KeySolvenciaDeontologicaVisible =
-  (typeof KEYS_SOLVENCIA_DEONTOLOGICA_VISIBLES)[number];
+export type KeySolvenciaDeontologicaVisible = (typeof KEYS_SOLVENCIA_DEONTOLOGICA_VISIBLES)[number];
 
-export const KEY_PREFIJO_CEDULA_PROFESIONAL_SALUD =
-  "prefijo_cedula_profesional_salud";
-export const KEY_PREFIJO_CEDULA_POSTULANTE_SALUD =
-  "prefijo_cedula_postulante_salud";
+export const KEY_PREFIJO_CEDULA_PROFESIONAL_SALUD = "prefijo_cedula_profesional_salud";
+export const KEY_PREFIJO_CEDULA_POSTULANTE_SALUD = "prefijo_cedula_postulante_salud";
 
 /** Campos visibles: certificación médica / capacidad mental. */
 export const KEYS_CERT_MEDICA_MENTAL_VISIBLES = [
@@ -126,11 +121,9 @@ export const KEYS_CERT_MEDICA_MENTAL_VISIBLES = [
   "fecha_expedicion_salud",
 ] as const;
 
-export type KeyCertMedicaMentalVisible =
-  (typeof KEYS_CERT_MEDICA_MENTAL_VISIBLES)[number];
+export type KeyCertMedicaMentalVisible = (typeof KEYS_CERT_MEDICA_MENTAL_VISIBLES)[number];
 
-export const KEY_PREFIJO_CEDULA_POSTULANTE_PENALES =
-  "prefijo_cedula_postulante_penales";
+export const KEY_PREFIJO_CEDULA_POSTULANTE_PENALES = "prefijo_cedula_postulante_penales";
 
 /** Campos visibles: certificado de antecedentes penales. */
 export const KEYS_ANTECEDENTES_PENALES_VISIBLES = [
@@ -146,8 +139,7 @@ export const KEYS_ANTECEDENTES_PENALES_VISIBLES = [
   "fecha_suscripcion_penales",
 ] as const;
 
-export type KeyAntecedentesPenalesVisible =
-  (typeof KEYS_ANTECEDENTES_PENALES_VISIBLES)[number];
+export type KeyAntecedentesPenalesVisible = (typeof KEYS_ANTECEDENTES_PENALES_VISIBLES)[number];
 
 export const KEY_PREFIJO_CEDULA_POSTULANTE_CGR = "prefijo_cedula_postulante_cgr";
 
@@ -167,8 +159,7 @@ export const KEYS_CONTRALORIA_CGR_VISIBLES = [
 
 export type KeyContraloriaCgrVisible = (typeof KEYS_CONTRALORIA_CGR_VISIBLES)[number];
 
-export const KEY_PREFIJO_CEDULA_POSTULANTE_PREGRADO =
-  "prefijo_cedula_postulante_pregrado";
+export const KEY_PREFIJO_CEDULA_POSTULANTE_PREGRADO = "prefijo_cedula_postulante_pregrado";
 
 /** Campos visibles: título de pregrado de abogado. */
 export const KEYS_TITULO_PREGRADO_VISIBLES = [
@@ -190,8 +181,7 @@ export const KEYS_TITULO_PREGRADO_VISIBLES = [
 
 export type KeyTituloPregradoVisible = (typeof KEYS_TITULO_PREGRADO_VISIBLES)[number];
 
-export const KEY_PREFIJO_CEDULA_POSTULANTE_ESPECIALIDAD =
-  "prefijo_cedula_postulante_especialidad";
+export const KEY_PREFIJO_CEDULA_POSTULANTE_ESPECIALIDAD = "prefijo_cedula_postulante_especialidad";
 
 /** Campos visibles: título de especialización jurídica. */
 export const KEYS_TITULO_ESPECIALIDAD_VISIBLES = [
@@ -211,11 +201,9 @@ export const KEYS_TITULO_ESPECIALIDAD_VISIBLES = [
   "fecha_protocolizacion_especialidad",
 ] as const;
 
-export type KeyTituloEspecialidadVisible =
-  (typeof KEYS_TITULO_ESPECIALIDAD_VISIBLES)[number];
+export type KeyTituloEspecialidadVisible = (typeof KEYS_TITULO_ESPECIALIDAD_VISIBLES)[number];
 
-export const KEY_PREFIJO_CEDULA_POSTULANTE_TEG =
-  "prefijo_cedula_postulante_teg";
+export const KEY_PREFIJO_CEDULA_POSTULANTE_TEG = "prefijo_cedula_postulante_teg";
 
 /** Campos visibles: constancia aprobación TEG especialización. */
 export const KEYS_CONSTANCIA_TEG_VISIBLES = [
@@ -232,8 +220,7 @@ export const KEYS_CONSTANCIA_TEG_VISIBLES = [
 
 export type KeyConstanciaTegVisible = (typeof KEYS_CONSTANCIA_TEG_VISIBLES)[number];
 
-export const KEY_PREFIJO_CEDULA_POSTULANTE_MAESTRIA =
-  "prefijo_cedula_postulante_maestria";
+export const KEY_PREFIJO_CEDULA_POSTULANTE_MAESTRIA = "prefijo_cedula_postulante_maestria";
 
 /** Campos visibles: título de maestría jurídica. */
 export const KEYS_TITULO_MAESTRIA_VISIBLES = [
@@ -271,11 +258,9 @@ export const KEYS_CONSTANCIA_MAESTRIA_VISIBLES = [
   "fecha_defensa_maestria",
 ] as const;
 
-export type KeyConstanciaMaestriaVisible =
-  (typeof KEYS_CONSTANCIA_MAESTRIA_VISIBLES)[number];
+export type KeyConstanciaMaestriaVisible = (typeof KEYS_CONSTANCIA_MAESTRIA_VISIBLES)[number];
 
-export const KEY_PREFIJO_CEDULA_POSTULANTE_DOCTORADO =
-  "prefijo_cedula_postulante_doctorado";
+export const KEY_PREFIJO_CEDULA_POSTULANTE_DOCTORADO = "prefijo_cedula_postulante_doctorado";
 
 /** Campos visibles: título de doctorado en derecho / ciencias jurídicas. */
 export const KEYS_TITULO_DOCTORADO_VISIBLES = [
@@ -295,8 +280,7 @@ export const KEYS_TITULO_DOCTORADO_VISIBLES = [
   "fecha_protocolizacion_doctorado",
 ] as const;
 
-export type KeyTituloDoctoradoVisible =
-  (typeof KEYS_TITULO_DOCTORADO_VISIBLES)[number];
+export type KeyTituloDoctoradoVisible = (typeof KEYS_TITULO_DOCTORADO_VISIBLES)[number];
 
 export const KEY_PREFIJO_CEDULA_POSTULANTE_TESIS_DOCTORADO =
   "prefijo_cedula_postulante_tesis_doctorado";
@@ -314,12 +298,10 @@ export const KEYS_CONSTANCIA_DOCTORADO_VISIBLES = [
   "fecha_defensa_doctorado",
 ] as const;
 
-export type KeyConstanciaDoctoradoVisible =
-  (typeof KEYS_CONSTANCIA_DOCTORADO_VISIBLES)[number];
+export type KeyConstanciaDoctoradoVisible = (typeof KEYS_CONSTANCIA_DOCTORADO_VISIBLES)[number];
 
 export const KEY_PREFIJO_CEDULA_FIRMANTE_GREMIO = "prefijo_cedula_firmante_gremio";
-export const KEY_PREFIJO_CEDULA_POSTULANTE_GREMIO =
-  "prefijo_cedula_postulante_gremio";
+export const KEY_PREFIJO_CEDULA_POSTULANTE_GREMIO = "prefijo_cedula_postulante_gremio";
 
 /** Campos visibles: certificación inscripción colegio de abogados. */
 export const KEYS_INSCRIPCION_COLEGIO_VISIBLES = [
@@ -338,11 +320,9 @@ export const KEYS_INSCRIPCION_COLEGIO_VISIBLES = [
   "fecha_expedicion_gremio",
 ] as const;
 
-export type KeyInscripcionColegioVisible =
-  (typeof KEYS_INSCRIPCION_COLEGIO_VISIBLES)[number];
+export type KeyInscripcionColegioVisible = (typeof KEYS_INSCRIPCION_COLEGIO_VISIBLES)[number];
 
-export const KEY_PREFIJO_CEDULA_QUIENSUSCRIBE_SOLVENCIA =
-  "prefijo_cedula_quiensuscribe_solvencia";
+export const KEY_PREFIJO_CEDULA_QUIENSUSCRIBE_SOLVENCIA = "prefijo_cedula_quiensuscribe_solvencia";
 export const KEY_PREFIJO_CEDULA_POSTULANTE_SOLVENCIA_COLEGIO =
   "prefijo_cedula_postulante_solvencia_colegio";
 
@@ -364,13 +344,11 @@ export const KEYS_SOLVENCIA_COLEGIO_VISIBLES = [
   "periodo_vigencia_solvencia",
 ] as const;
 
-export type KeySolvenciaColegioVisible =
-  (typeof KEYS_SOLVENCIA_COLEGIO_VISIBLES)[number];
+export type KeySolvenciaColegioVisible = (typeof KEYS_SOLVENCIA_COLEGIO_VISIBLES)[number];
 
 export const KEY_PREFIJO_CEDULA_QUIENSUSCRIBE_INPREABOGADO =
   "prefijo_cedula_quiensuscribe_inpreabogado";
-export const KEY_PREFIJO_CEDULA_POSTULANTE_INPREABOGADO =
-  "prefijo_cedula_postulante_inpreabogado";
+export const KEY_PREFIJO_CEDULA_POSTULANTE_INPREABOGADO = "prefijo_cedula_postulante_inpreabogado";
 
 /** Campos visibles: inscripción INPREABOGADO. */
 export const KEYS_INSCRIPCION_INPREABOGADO_VISIBLES = [
@@ -409,8 +387,7 @@ export const KEYS_SOLVENCIA_INPREABOGADO_VISIBLES = [
   "periodo_vigencia_solvencia_inpreabogado",
 ] as const;
 
-export type KeySolvenciaInpreabogadoVisible =
-  (typeof KEYS_SOLVENCIA_INPREABOGADO_VISIBLES)[number];
+export type KeySolvenciaInpreabogadoVisible = (typeof KEYS_SOLVENCIA_INPREABOGADO_VISIBLES)[number];
 
 /** Campos visibles: prueba documental 15 años ejercicio libre. */
 export const KEYS_PRUEBA_EJERCICIO_LIBRE_VISIBLES = [
@@ -422,11 +399,9 @@ export const KEYS_PRUEBA_EJERCICIO_LIBRE_VISIBLES = [
   "fecha_acto_ejerciciolibre",
 ] as const;
 
-export type KeyPruebaEjercicioLibreVisible =
-  (typeof KEYS_PRUEBA_EJERCICIO_LIBRE_VISIBLES)[number];
+export type KeyPruebaEjercicioLibreVisible = (typeof KEYS_PRUEBA_EJERCICIO_LIBRE_VISIBLES)[number];
 
-export const KEY_PREFIJO_CEDULA_POSTULANTE_DOCENCIA =
-  "prefijo_cedula_postulante_docencia";
+export const KEY_PREFIJO_CEDULA_POSTULANTE_DOCENCIA = "prefijo_cedula_postulante_docencia";
 
 /** Campos visibles: certificación servicio docente. */
 export const KEYS_CERTIFICACION_DOCENTE_VISIBLES = [
@@ -444,8 +419,7 @@ export const KEYS_CERTIFICACION_DOCENTE_VISIBLES = [
   "escalafon_docente_docencia",
 ] as const;
 
-export type KeyCertificacionDocenteVisible =
-  (typeof KEYS_CERTIFICACION_DOCENTE_VISIBLES)[number];
+export type KeyCertificacionDocenteVisible = (typeof KEYS_CERTIFICACION_DOCENTE_VISIBLES)[number];
 
 export const KEY_PREFIJO_CEDULA_POSTULANTE_CONCURSODOCENTE =
   "prefijo_cedula_postulante_concursodocente";
@@ -465,8 +439,7 @@ export const KEYS_ACTA_CONCURSO_DOCENTE_VISIBLES = [
   "cedula_postulante_concursodocente",
 ] as const;
 
-export type KeyActaConcursoDocenteVisible =
-  (typeof KEYS_ACTA_CONCURSO_DOCENTE_VISIBLES)[number];
+export type KeyActaConcursoDocenteVisible = (typeof KEYS_ACTA_CONCURSO_DOCENTE_VISIBLES)[number];
 
 export const KEY_PREFIJO_CEDULA_POSTULANTE_CARRERAJUDICIAL =
   "prefijo_cedula_postulante_carrerajudicial";
@@ -491,8 +464,7 @@ export const KEYS_CARRERA_JUDICIAL_VISIBLES = [
   "ausencia_sanciones_carrerajudicial",
 ] as const;
 
-export type KeyCarreraJudicialVisible =
-  (typeof KEYS_CARRERA_JUDICIAL_VISIBLES)[number];
+export type KeyCarreraJudicialVisible = (typeof KEYS_CARRERA_JUDICIAL_VISIBLES)[number];
 
 export const KEY_PREFIJO_CEDULA_QUIENSUSCRIBE_CARRERAFUNCIONARIAL =
   "prefijo_cedula_quiensuscribe_carrerafuncionarial";
@@ -523,11 +495,9 @@ export const KEYS_CARRERA_FUNCIONARIAL_VISIBLES = [
   "fecha_expedicion_carrerafuncionarial",
 ] as const;
 
-export type KeyCarreraFuncionarialVisible =
-  (typeof KEYS_CARRERA_FUNCIONARIAL_VISIBLES)[number];
+export type KeyCarreraFuncionarialVisible = (typeof KEYS_CARRERA_FUNCIONARIAL_VISIBLES)[number];
 
-export const KEY_PREFIJO_CEDULA_DECLARANTE_NOMILITANCIA =
-  "prefijo_cedula_declarante_nomilitancia";
+export const KEY_PREFIJO_CEDULA_DECLARANTE_NOMILITANCIA = "prefijo_cedula_declarante_nomilitancia";
 
 /** Campos visibles: DJ no militancia político partidista. */
 export const KEYS_DJ_NO_MILITANCIA_VISIBLES = [
@@ -545,11 +515,9 @@ export const KEYS_DJ_NO_MILITANCIA_VISIBLES = [
   "fecha_otorgamiento_nomilitancia",
 ] as const;
 
-export type KeyDjNoMilitanciaVisible =
-  (typeof KEYS_DJ_NO_MILITANCIA_VISIBLES)[number];
+export type KeyDjNoMilitanciaVisible = (typeof KEYS_DJ_NO_MILITANCIA_VISIBLES)[number];
 
-export const KEY_PREFIJO_CEDULA_DECLARANTE_NOPARENTESCO =
-  "prefijo_cedula_declarante_noparentesco";
+export const KEY_PREFIJO_CEDULA_DECLARANTE_NOPARENTESCO = "prefijo_cedula_declarante_noparentesco";
 
 /** Campos visibles: DJ ausencia incompatibilidad por parentesco. */
 export const KEYS_DJ_NO_PARENTESCO_VISIBLES = [
@@ -567,11 +535,9 @@ export const KEYS_DJ_NO_PARENTESCO_VISIBLES = [
   "fecha_otorgamiento_noparentesco",
 ] as const;
 
-export type KeyDjNoParentescoVisible =
-  (typeof KEYS_DJ_NO_PARENTESCO_VISIBLES)[number];
+export type KeyDjNoParentescoVisible = (typeof KEYS_DJ_NO_PARENTESCO_VISIBLES)[number];
 
-export const KEY_PREFIJO_CEDULA_CONYUGE_MATRIMONIO =
-  "prefijo_cedula_conyugematrimonio_postulante";
+export const KEY_PREFIJO_CEDULA_CONYUGE_MATRIMONIO = "prefijo_cedula_conyugematrimonio_postulante";
 export const KEY_PREFIJO_CEDULA_SEGUNDO_CONYUGE_MATRIMONIO =
   "prefijo_cedula_segundoconyuge_postulante";
 
@@ -591,8 +557,7 @@ export const KEYS_ACTA_MATRIMONIO_VISIBLES = [
   "fecha_celebracionmatrimonio_postulante",
 ] as const;
 
-export type KeyActaMatrimonioVisible =
-  (typeof KEYS_ACTA_MATRIMONIO_VISIBLES)[number];
+export type KeyActaMatrimonioVisible = (typeof KEYS_ACTA_MATRIMONIO_VISIBLES)[number];
 
 export const KEY_PREFIJO_CEDULA_DECLARANTE_NOCONTRATACION =
   "prefijo_cedula_declarante_nocontratacion";
@@ -613,8 +578,7 @@ export const KEYS_DJ_NO_CONTRATACION_VISIBLES = [
   "fecha_otorgamiento_nocontratacion",
 ] as const;
 
-export type KeyDjNoContratacionVisible =
-  (typeof KEYS_DJ_NO_CONTRATACION_VISIBLES)[number];
+export type KeyDjNoContratacionVisible = (typeof KEYS_DJ_NO_CONTRATACION_VISIBLES)[number];
 
 export const KEY_PREFIJO_CEDULA_SINTESIS = "prefijo_cedula_sintesis";
 export const KEY_PREFIJO_INPRE_SINTESIS = "prefijo_inpre_sintesis";
@@ -636,8 +600,7 @@ export const KEYS_SINTESIS_CURRICULAR_VISIBLES = [
   "direccion_habitacion_sintesis",
 ] as const;
 
-export type KeySintesisCurricularVisible =
-  (typeof KEYS_SINTESIS_CURRICULAR_VISIBLES)[number];
+export type KeySintesisCurricularVisible = (typeof KEYS_SINTESIS_CURRICULAR_VISIBLES)[number];
 
 export const KEY_PREFIJO_CEDULA_OTRO = "prefijo_cedula_otro";
 export const KEY_PREFIJO_INPRE_OTRO = "prefijo_inpre_otro";
@@ -650,9 +613,34 @@ export const KEYS_OTRO_DOCUMENTO_VISIBLES = [
   "cedula_postulante_otro",
   "inpreabogado_postulante_otro",
   "descripcion_documento_otro",
+  "tipo_sugerido_otro",
+  "resumen_documento_otro",
 ] as const;
 
 export type KeyOtroDocumentoVisible = (typeof KEYS_OTRO_DOCUMENTO_VISIBLES)[number];
+
+/** Campos visibles: convalidación de título extranjero. */
+export const KEYS_CONVALIDACION_VISIBLES = [
+  "universidad_revalidadora_convalidacion",
+  "numero_resolucion_cu_convalidacion",
+  "fecha_resolucion_cu_convalidacion",
+  "titulo_equivalente_otorgado_convalidacion",
+  "oficio_registro_convalidacion",
+  "numero_asentamiento_convalidacion",
+  "tomo_registro_convalidacion",
+  "folio_registro_convalidacion",
+  "fecha_protocolizacion_convalidacion",
+  "universidad_origen_convalidacion",
+  "denominacion_titulo_origen_convalidacion",
+  "pais_origen_convalidacion",
+  "nombre_profesional_convalidacion",
+  "apellido_profesional_convalidacion",
+  "cedula_profesional_convalidacion",
+  "codigo_apostilla_convalidacion",
+  "traduccion_oficial_convalidacion",
+] as const;
+
+export type KeyConvalidacionVisible = (typeof KEYS_CONVALIDACION_VISIBLES)[number];
 
 /** Vacío permitido; si hay valor, aplica el schema de formato. */
 function opcionalEscrito<T extends z.ZodType>(schema: T) {
@@ -732,10 +720,7 @@ const codigoVerificacion = z
   .trim()
   .min(4, "Mínimo 4 caracteres")
   .max(80, "Máximo 80 caracteres")
-  .regex(
-    /^[A-Za-z0-9\-_/]+$/,
-    "Sólo letras, números y guiones",
-  );
+  .regex(/^[A-Za-z0-9\-_/]+$/, "Sólo letras, números y guiones");
 
 const prefijoVe = z.union([z.literal(""), z.enum(["V", "E"])]);
 
@@ -746,8 +731,8 @@ const metadatosInvisiblesSchema = {
   calidad_legibilidad: z.union([
     z.null(),
     z.literal(""),
-    z.enum(["alta", "media", "baja"], {
-      message: "Legibilidad: alta, media o baja",
+    z.enum(["alta", "media", "baja", "ilegible"], {
+      message: "Legibilidad: alta, media, baja o ilegible",
     }),
   ]),
   advertencias: z.union([
@@ -764,9 +749,7 @@ function str(v: string | boolean | null | undefined): string {
 function metaDesdeValores(valores: Readonly<ValoresFormularioRevision>) {
   return {
     es_documento:
-      valores.es_documento === true || valores.es_documento === false
-        ? valores.es_documento
-        : null,
+      valores.es_documento === true || valores.es_documento === false ? valores.es_documento : null,
     calidad_legibilidad:
       valores.calidad_legibilidad === null || valores.calidad_legibilidad === undefined
         ? null
@@ -1294,6 +1277,30 @@ export const formularioOtroDocumentoSchema = z.object({
   cedula_postulante_otro: opcionalEscrito(digitosCedula),
   inpreabogado_postulante_otro: opcionalEscrito(numericoActa),
   descripcion_documento_otro: opcionalEscrito(textoLargo),
+  tipo_sugerido_otro: opcionalEscrito(textoLargo),
+  resumen_documento_otro: opcionalEscrito(textoLargo),
+  ...metadatosInvisiblesSchema,
+});
+
+/** Convalidación de título extranjero: todos opcionales. */
+export const formularioConvalidacionSchema = z.object({
+  universidad_revalidadora_convalidacion: opcionalEscrito(textoInstitucion),
+  numero_resolucion_cu_convalidacion: opcionalEscrito(textoInstitucion),
+  fecha_resolucion_cu_convalidacion: opcionalEscrito(fechaIso),
+  titulo_equivalente_otorgado_convalidacion: opcionalEscrito(textoInstitucion),
+  oficio_registro_convalidacion: opcionalEscrito(textoInstitucion),
+  numero_asentamiento_convalidacion: opcionalEscrito(numericoActa),
+  tomo_registro_convalidacion: opcionalEscrito(numericoActa),
+  folio_registro_convalidacion: opcionalEscrito(numericoActa),
+  fecha_protocolizacion_convalidacion: opcionalEscrito(fechaIso),
+  universidad_origen_convalidacion: opcionalEscrito(textoInstitucion),
+  denominacion_titulo_origen_convalidacion: opcionalEscrito(textoInstitucion),
+  pais_origen_convalidacion: opcionalEscrito(letrasEspacios),
+  nombre_profesional_convalidacion: opcionalEscrito(letrasEspacios),
+  apellido_profesional_convalidacion: opcionalEscrito(letrasEspacios),
+  cedula_profesional_convalidacion: opcionalEscrito(digitosCedula),
+  codigo_apostilla_convalidacion: opcionalEscrito(textoInstitucion),
+  traduccion_oficial_convalidacion: opcionalEscrito(textoLargo),
   ...metadatosInvisiblesSchema,
 });
 
@@ -1361,9 +1368,7 @@ function normalizarParaDjOtraNacionalidad(
     [KEY_PREFIJO_CEDULA_DECLARANTE_OTRA]: str(valores[KEY_PREFIJO_CEDULA_DECLARANTE_OTRA]),
     nombre_declarante_otranacionalidad: str(valores.nombre_declarante_otranacionalidad),
     apellido_declarante_otranacionalidad: str(valores.apellido_declarante_otranacionalidad),
-    estadocivil_declarante_otranacionalidad: str(
-      valores.estadocivil_declarante_otranacionalidad,
-    ),
+    estadocivil_declarante_otranacionalidad: str(valores.estadocivil_declarante_otranacionalidad),
     cedula_declarante_otranacionalidad: str(valores.cedula_declarante_otranacionalidad),
     noposee_declaracion: str(valores.noposee_declaracion),
     renuncia_otranacionalidad: str(valores.renuncia_otranacionalidad),
@@ -1388,15 +1393,11 @@ function normalizarParaSolvenciaDeontologica(
     nombre_quiensuscribe_deontologica: str(valores.nombre_quiensuscribe_deontologica),
     cedula_quiensuscribe_deontologica: str(valores.cedula_quiensuscribe_deontologica),
     cargo_quiensuscribe_deontologica: str(valores.cargo_quiensuscribe_deontologica),
-    inpreabogado_quiensuscribe_deontologica: str(
-      valores.inpreabogado_quiensuscribe_deontologica,
-    ),
+    inpreabogado_quiensuscribe_deontologica: str(valores.inpreabogado_quiensuscribe_deontologica),
     nombre_postulante_deontologica: str(valores.nombre_postulante_deontologica),
     apellido_postulante_deontologica: str(valores.apellido_postulante_deontologica),
     cedula_postulante_deontologica: str(valores.cedula_postulante_deontologica),
-    inpreabogado_postulante_deontologica: str(
-      valores.inpreabogado_postulante_deontologica,
-    ),
+    inpreabogado_postulante_deontologica: str(valores.inpreabogado_postulante_deontologica),
     declaracion_solvencia_deontologica: str(valores.declaracion_solvencia_deontologica),
     fecha_expedicion_deontologica: str(valores.fecha_expedicion_deontologica),
     ...metaDesdeValores(valores),
@@ -1407,12 +1408,8 @@ function normalizarParaCertMedicaMental(
   valores: Readonly<ValoresFormularioRevision>,
 ): Record<string, unknown> {
   return {
-    [KEY_PREFIJO_CEDULA_PROFESIONAL_SALUD]: str(
-      valores[KEY_PREFIJO_CEDULA_PROFESIONAL_SALUD],
-    ),
-    [KEY_PREFIJO_CEDULA_POSTULANTE_SALUD]: str(
-      valores[KEY_PREFIJO_CEDULA_POSTULANTE_SALUD],
-    ),
+    [KEY_PREFIJO_CEDULA_PROFESIONAL_SALUD]: str(valores[KEY_PREFIJO_CEDULA_PROFESIONAL_SALUD]),
+    [KEY_PREFIJO_CEDULA_POSTULANTE_SALUD]: str(valores[KEY_PREFIJO_CEDULA_POSTULANTE_SALUD]),
     nombre_profesional_salud: str(valores.nombre_profesional_salud),
     cedula_profesional_salud: str(valores.cedula_profesional_salud),
     profesion_profesional_salud: str(valores.profesion_profesional_salud),
@@ -1430,9 +1427,7 @@ function normalizarParaAntecedentesPenales(
   valores: Readonly<ValoresFormularioRevision>,
 ): Record<string, unknown> {
   return {
-    [KEY_PREFIJO_CEDULA_POSTULANTE_PENALES]: str(
-      valores[KEY_PREFIJO_CEDULA_POSTULANTE_PENALES],
-    ),
+    [KEY_PREFIJO_CEDULA_POSTULANTE_PENALES]: str(valores[KEY_PREFIJO_CEDULA_POSTULANTE_PENALES]),
     nombre_entidad_penales: str(valores.nombre_entidad_penales),
     nombre_quiensuscribe_penales: str(valores.nombre_quiensuscribe_penales),
     cargo_quiensuscribe_penales: str(valores.cargo_quiensuscribe_penales),
@@ -1470,9 +1465,7 @@ function normalizarParaTituloPregrado(
   valores: Readonly<ValoresFormularioRevision>,
 ): Record<string, unknown> {
   return {
-    [KEY_PREFIJO_CEDULA_POSTULANTE_PREGRADO]: str(
-      valores[KEY_PREFIJO_CEDULA_POSTULANTE_PREGRADO],
-    ),
+    [KEY_PREFIJO_CEDULA_POSTULANTE_PREGRADO]: str(valores[KEY_PREFIJO_CEDULA_POSTULANTE_PREGRADO]),
     nombre_universidad_pregrado: str(valores.nombre_universidad_pregrado),
     nombre_rector_pregrado: str(valores.nombre_rector_pregrado),
     nombre_secretario_pregrado: str(valores.nombre_secretario_pregrado),
@@ -1538,9 +1531,7 @@ function normalizarParaTituloMaestria(
   valores: Readonly<ValoresFormularioRevision>,
 ): Record<string, unknown> {
   return {
-    [KEY_PREFIJO_CEDULA_POSTULANTE_MAESTRIA]: str(
-      valores[KEY_PREFIJO_CEDULA_POSTULANTE_MAESTRIA],
-    ),
+    [KEY_PREFIJO_CEDULA_POSTULANTE_MAESTRIA]: str(valores[KEY_PREFIJO_CEDULA_POSTULANTE_MAESTRIA]),
     nombre_universidad_maestria: str(valores.nombre_universidad_maestria),
     nombre_rector_maestria: str(valores.nombre_rector_maestria),
     nombre_secretario_maestria: str(valores.nombre_secretario_maestria),
@@ -1611,17 +1602,11 @@ function normalizarParaConstanciaDoctorado(
     [KEY_PREFIJO_CEDULA_POSTULANTE_TESIS_DOCTORADO]: str(
       valores[KEY_PREFIJO_CEDULA_POSTULANTE_TESIS_DOCTORADO],
     ),
-    nombre_universidad_tesis_doctorado: str(
-      valores.nombre_universidad_tesis_doctorado,
-    ),
-    denominacion_titulo_tesis_doctorado: str(
-      valores.denominacion_titulo_tesis_doctorado,
-    ),
+    nombre_universidad_tesis_doctorado: str(valores.nombre_universidad_tesis_doctorado),
+    denominacion_titulo_tesis_doctorado: str(valores.denominacion_titulo_tesis_doctorado),
     titulo_tesis_doctorado: str(valores.titulo_tesis_doctorado),
     nombre_postulante_tesis_doctorado: str(valores.nombre_postulante_tesis_doctorado),
-    apellido_postulante_tesis_doctorado: str(
-      valores.apellido_postulante_tesis_doctorado,
-    ),
+    apellido_postulante_tesis_doctorado: str(valores.apellido_postulante_tesis_doctorado),
     cedula_postulante_tesis_doctorado: str(valores.cedula_postulante_tesis_doctorado),
     jurado_examinador_doctorado: str(valores.jurado_examinador_doctorado),
     veredicto_calificacion_doctorado: str(valores.veredicto_calificacion_doctorado),
@@ -1634,12 +1619,8 @@ function normalizarParaInscripcionColegio(
   valores: Readonly<ValoresFormularioRevision>,
 ): Record<string, unknown> {
   return {
-    [KEY_PREFIJO_CEDULA_FIRMANTE_GREMIO]: str(
-      valores[KEY_PREFIJO_CEDULA_FIRMANTE_GREMIO],
-    ),
-    [KEY_PREFIJO_CEDULA_POSTULANTE_GREMIO]: str(
-      valores[KEY_PREFIJO_CEDULA_POSTULANTE_GREMIO],
-    ),
+    [KEY_PREFIJO_CEDULA_FIRMANTE_GREMIO]: str(valores[KEY_PREFIJO_CEDULA_FIRMANTE_GREMIO]),
+    [KEY_PREFIJO_CEDULA_POSTULANTE_GREMIO]: str(valores[KEY_PREFIJO_CEDULA_POSTULANTE_GREMIO]),
     nombre_gremio_emisor: str(valores.nombre_gremio_emisor),
     estado_gremio_emisor: str(valores.estado_gremio_emisor),
     direccion_gremio_emisor: str(valores.direccion_gremio_emisor),
@@ -1673,9 +1654,7 @@ function normalizarParaSolvenciaColegio(
     nombre_quiensuscribe_solvencia: str(valores.nombre_quiensuscribe_solvencia),
     cedula_quiensuscribe_solvencia: str(valores.cedula_quiensuscribe_solvencia),
     cargo_quiensuscribe_solvencia: str(valores.cargo_quiensuscribe_solvencia),
-    inpreabogado_quiensuscribe_solvencia: str(
-      valores.inpreabogado_quiensuscribe_solvencia,
-    ),
+    inpreabogado_quiensuscribe_solvencia: str(valores.inpreabogado_quiensuscribe_solvencia),
     nombre_postulante_solvencia: str(valores.nombre_postulante_solvencia),
     apellido_postulante_solvencia: str(valores.apellido_postulante_solvencia),
     cedula_postulante_solvencia: str(valores.cedula_postulante_solvencia),
@@ -1721,35 +1700,19 @@ function normalizarParaSolvenciaInpreabogado(
     [KEY_PREFIJO_CEDULA_POSTULANTE_SOLVENCIA_INPRE]: str(
       valores[KEY_PREFIJO_CEDULA_POSTULANTE_SOLVENCIA_INPRE],
     ),
-    nombre_firmante_solvencia_inpreabogado: str(
-      valores.nombre_firmante_solvencia_inpreabogado,
-    ),
-    cedula_firmante_solvencia_inpreabogado: str(
-      valores.cedula_firmante_solvencia_inpreabogado,
-    ),
-    cargo_firmante_solvencia_inpreabogado: str(
-      valores.cargo_firmante_solvencia_inpreabogado,
-    ),
+    nombre_firmante_solvencia_inpreabogado: str(valores.nombre_firmante_solvencia_inpreabogado),
+    cedula_firmante_solvencia_inpreabogado: str(valores.cedula_firmante_solvencia_inpreabogado),
+    cargo_firmante_solvencia_inpreabogado: str(valores.cargo_firmante_solvencia_inpreabogado),
     inpreabogado_firmante_solvencia: str(valores.inpreabogado_firmante_solvencia),
-    nombre_postulante_solvencia_inpreabogado: str(
-      valores.nombre_postulante_solvencia_inpreabogado,
-    ),
+    nombre_postulante_solvencia_inpreabogado: str(valores.nombre_postulante_solvencia_inpreabogado),
     apellido_postulante_solvencia_inpreabogado: str(
       valores.apellido_postulante_solvencia_inpreabogado,
     ),
-    cedula_postulante_solvencia_inpreabogado: str(
-      valores.cedula_postulante_solvencia_inpreabogado,
-    ),
-    inpreabogado_solicitante_solvencia: str(
-      valores.inpreabogado_solicitante_solvencia,
-    ),
+    cedula_postulante_solvencia_inpreabogado: str(valores.cedula_postulante_solvencia_inpreabogado),
+    inpreabogado_solicitante_solvencia: str(valores.inpreabogado_solicitante_solvencia),
     dictamen_solvencia_inpreabogado: str(valores.dictamen_solvencia_inpreabogado),
-    fecha_expedicion_solvencia_inpreabogado: str(
-      valores.fecha_expedicion_solvencia_inpreabogado,
-    ),
-    periodo_vigencia_solvencia_inpreabogado: str(
-      valores.periodo_vigencia_solvencia_inpreabogado,
-    ),
+    fecha_expedicion_solvencia_inpreabogado: str(valores.fecha_expedicion_solvencia_inpreabogado),
+    periodo_vigencia_solvencia_inpreabogado: str(valores.periodo_vigencia_solvencia_inpreabogado),
     ...metaDesdeValores(valores),
   };
 }
@@ -1760,12 +1723,8 @@ function normalizarParaPruebaEjercicioLibre(
   return {
     tipo_documento_ejerciciolibre: str(valores.tipo_documento_ejerciciolibre),
     nombre_postulante_ejerciciolibre: str(valores.nombre_postulante_ejerciciolibre),
-    apellido_postulante_ejerciciolibre: str(
-      valores.apellido_postulante_ejerciciolibre,
-    ),
-    inpreabogado_postulante_ejerciciolibre: str(
-      valores.inpreabogado_postulante_ejerciciolibre,
-    ),
+    apellido_postulante_ejerciciolibre: str(valores.apellido_postulante_ejerciciolibre),
+    inpreabogado_postulante_ejerciciolibre: str(valores.inpreabogado_postulante_ejerciciolibre),
     rol_postulante_ejerciciolibre: str(valores.rol_postulante_ejerciciolibre),
     fecha_acto_ejerciciolibre: str(valores.fecha_acto_ejerciciolibre),
     ...metaDesdeValores(valores),
@@ -1776,9 +1735,7 @@ function normalizarParaCertificacionDocente(
   valores: Readonly<ValoresFormularioRevision>,
 ): Record<string, unknown> {
   return {
-    [KEY_PREFIJO_CEDULA_POSTULANTE_DOCENCIA]: str(
-      valores[KEY_PREFIJO_CEDULA_POSTULANTE_DOCENCIA],
-    ),
+    [KEY_PREFIJO_CEDULA_POSTULANTE_DOCENCIA]: str(valores[KEY_PREFIJO_CEDULA_POSTULANTE_DOCENCIA]),
     nombre_universidad_docencia: str(valores.nombre_universidad_docencia),
     facultad_docencia: str(valores.facultad_docencia),
     organo_expedidor_docencia: str(valores.organo_expedidor_docencia),
@@ -1802,29 +1759,17 @@ function normalizarParaActaConcursoDocente(
     [KEY_PREFIJO_CEDULA_POSTULANTE_CONCURSODOCENTE]: str(
       valores[KEY_PREFIJO_CEDULA_POSTULANTE_CONCURSODOCENTE],
     ),
-    nombre_universidad_concursodocente: str(
-      valores.nombre_universidad_concursodocente,
-    ),
+    nombre_universidad_concursodocente: str(valores.nombre_universidad_concursodocente),
     facultad_concursodocente: str(valores.facultad_concursodocente),
     catedra_concursodocente: str(valores.catedra_concursodocente),
     numero_acta_concursodocente: str(valores.numero_acta_concursodocente),
     fecha_acta_concursodocente: str(valores.fecha_acta_concursodocente),
     veredicto_concursodocente: str(valores.veredicto_concursodocente),
-    categoria_otorgada_concursodocente: str(
-      valores.categoria_otorgada_concursodocente,
-    ),
-    jurado_examinador_concursodocente: str(
-      valores.jurado_examinador_concursodocente,
-    ),
-    nombre_postulante_concursodocente: str(
-      valores.nombre_postulante_concursodocente,
-    ),
-    apellido_postulante_concursodocente: str(
-      valores.apellido_postulante_concursodocente,
-    ),
-    cedula_postulante_concursodocente: str(
-      valores.cedula_postulante_concursodocente,
-    ),
+    categoria_otorgada_concursodocente: str(valores.categoria_otorgada_concursodocente),
+    jurado_examinador_concursodocente: str(valores.jurado_examinador_concursodocente),
+    nombre_postulante_concursodocente: str(valores.nombre_postulante_concursodocente),
+    apellido_postulante_concursodocente: str(valores.apellido_postulante_concursodocente),
+    cedula_postulante_concursodocente: str(valores.cedula_postulante_concursodocente),
     ...metaDesdeValores(valores),
   };
 }
@@ -1837,43 +1782,21 @@ function normalizarParaCarreraJudicial(
       valores[KEY_PREFIJO_CEDULA_POSTULANTE_CARRERAJUDICIAL],
     ),
     entidad_emisora_carrerajudicial: str(valores.entidad_emisora_carrerajudicial),
-    nombre_postulante_carrerajudicial: str(
-      valores.nombre_postulante_carrerajudicial,
-    ),
-    apellido_postulante_carrerajudicial: str(
-      valores.apellido_postulante_carrerajudicial,
-    ),
-    cedula_postulante_carrerajudicial: str(
-      valores.cedula_postulante_carrerajudicial,
-    ),
+    nombre_postulante_carrerajudicial: str(valores.nombre_postulante_carrerajudicial),
+    apellido_postulante_carrerajudicial: str(valores.apellido_postulante_carrerajudicial),
+    cedula_postulante_carrerajudicial: str(valores.cedula_postulante_carrerajudicial),
     expediente_dem_carrerajudicial: str(valores.expediente_dem_carrerajudicial),
     fecha_ingreso_judicatura: str(valores.fecha_ingreso_judicatura),
     fecha_corte_carrerajudicial: str(valores.fecha_corte_carrerajudicial),
     condicion_cargo_carrerajudicial: str(valores.condicion_cargo_carrerajudicial),
-    cargo_desempeñado_carrerajudicial: str(
-      valores.cargo_desempeñado_carrerajudicial,
-    ),
-    tribunal_competencia_carrerajudicial: str(
-      valores.tribunal_competencia_carrerajudicial,
-    ),
-    circuito_judicial_carrerajudicial: str(
-      valores.circuito_judicial_carrerajudicial,
-    ),
-    estado_circunscripcion_carrerajudicial: str(
-      valores.estado_circunscripcion_carrerajudicial,
-    ),
-    resolucion_nombramiento_carrerajudicial: str(
-      valores.resolucion_nombramiento_carrerajudicial,
-    ),
-    periodo_desempeño_carrerajudicial: str(
-      valores.periodo_desempeño_carrerajudicial,
-    ),
-    es_juez_superior_carrerajudicial: str(
-      valores.es_juez_superior_carrerajudicial,
-    ),
-    ausencia_sanciones_carrerajudicial: str(
-      valores.ausencia_sanciones_carrerajudicial,
-    ),
+    cargo_desempeñado_carrerajudicial: str(valores.cargo_desempeñado_carrerajudicial),
+    tribunal_competencia_carrerajudicial: str(valores.tribunal_competencia_carrerajudicial),
+    circuito_judicial_carrerajudicial: str(valores.circuito_judicial_carrerajudicial),
+    estado_circunscripcion_carrerajudicial: str(valores.estado_circunscripcion_carrerajudicial),
+    resolucion_nombramiento_carrerajudicial: str(valores.resolucion_nombramiento_carrerajudicial),
+    periodo_desempeño_carrerajudicial: str(valores.periodo_desempeño_carrerajudicial),
+    es_juez_superior_carrerajudicial: str(valores.es_juez_superior_carrerajudicial),
+    ausencia_sanciones_carrerajudicial: str(valores.ausencia_sanciones_carrerajudicial),
     ...metaDesdeValores(valores),
   };
 }
@@ -1888,66 +1811,28 @@ function normalizarParaCarreraFuncionarial(
     [KEY_PREFIJO_CEDULA_POSTULANTE_CARRERAFUNCIONARIAL]: str(
       valores[KEY_PREFIJO_CEDULA_POSTULANTE_CARRERAFUNCIONARIAL],
     ),
-    organo_emisor_carrerafuncionarial: str(
-      valores.organo_emisor_carrerafuncionarial,
-    ),
-    estado_entidad_carrerafuncionarial: str(
-      valores.estado_entidad_carrerafuncionarial,
-    ),
-    municipio_entidad_carrerafuncionarial: str(
-      valores.municipio_entidad_carrerafuncionarial,
-    ),
-    direccion_entidad_carrerafuncionarial: str(
-      valores.direccion_entidad_carrerafuncionarial,
-    ),
-    nombre_quiensuscribe_carrerafuncionarial: str(
-      valores.nombre_quiensuscribe_carrerafuncionarial,
-    ),
-    cedula_quiensuscribe_carrerafuncionarial: str(
-      valores.cedula_quiensuscribe_carrerafuncionarial,
-    ),
-    cargo_quiensuscribe_carrerafuncionarial: str(
-      valores.cargo_quiensuscribe_carrerafuncionarial,
-    ),
-    nombre_postulante_carrerafuncionarial: str(
-      valores.nombre_postulante_carrerafuncionarial,
-    ),
-    apellido_postulante_carrerafuncionarial: str(
-      valores.apellido_postulante_carrerafuncionarial,
-    ),
-    cedula_postulante_carrerafuncionarial: str(
-      valores.cedula_postulante_carrerafuncionarial,
-    ),
-    fecha_ingreso_carrerafuncionarial: str(
-      valores.fecha_ingreso_carrerafuncionarial,
-    ),
-    estatus_servicio_carrerafuncionarial: str(
-      valores.estatus_servicio_carrerafuncionarial,
-    ),
-    condicion_cargo_carrerafuncionarial: str(
-      valores.condicion_cargo_carrerafuncionarial,
-    ),
-    cargo_desempenado_carrerafuncionarial: str(
-      valores.cargo_desempenado_carrerafuncionarial,
-    ),
+    organo_emisor_carrerafuncionarial: str(valores.organo_emisor_carrerafuncionarial),
+    estado_entidad_carrerafuncionarial: str(valores.estado_entidad_carrerafuncionarial),
+    municipio_entidad_carrerafuncionarial: str(valores.municipio_entidad_carrerafuncionarial),
+    direccion_entidad_carrerafuncionarial: str(valores.direccion_entidad_carrerafuncionarial),
+    nombre_quiensuscribe_carrerafuncionarial: str(valores.nombre_quiensuscribe_carrerafuncionarial),
+    cedula_quiensuscribe_carrerafuncionarial: str(valores.cedula_quiensuscribe_carrerafuncionarial),
+    cargo_quiensuscribe_carrerafuncionarial: str(valores.cargo_quiensuscribe_carrerafuncionarial),
+    nombre_postulante_carrerafuncionarial: str(valores.nombre_postulante_carrerafuncionarial),
+    apellido_postulante_carrerafuncionarial: str(valores.apellido_postulante_carrerafuncionarial),
+    cedula_postulante_carrerafuncionarial: str(valores.cedula_postulante_carrerafuncionarial),
+    fecha_ingreso_carrerafuncionarial: str(valores.fecha_ingreso_carrerafuncionarial),
+    estatus_servicio_carrerafuncionarial: str(valores.estatus_servicio_carrerafuncionarial),
+    condicion_cargo_carrerafuncionarial: str(valores.condicion_cargo_carrerafuncionarial),
+    cargo_desempenado_carrerafuncionarial: str(valores.cargo_desempenado_carrerafuncionarial),
     dependencia_adscripcion_carrerafuncionarial: str(
       valores.dependencia_adscripcion_carrerafuncionarial,
     ),
-    naturaleza_cargo_carrerafuncionarial: str(
-      valores.naturaleza_cargo_carrerafuncionarial,
-    ),
-    acto_designacion_carrerafuncionarial: str(
-      valores.acto_designacion_carrerafuncionarial,
-    ),
-    periodo_desempeno_carrerafuncionarial: str(
-      valores.periodo_desempeno_carrerafuncionarial,
-    ),
-    ausencia_sanciones_carrerafuncionarial: str(
-      valores.ausencia_sanciones_carrerafuncionarial,
-    ),
-    fecha_expedicion_carrerafuncionarial: str(
-      valores.fecha_expedicion_carrerafuncionarial,
-    ),
+    naturaleza_cargo_carrerafuncionarial: str(valores.naturaleza_cargo_carrerafuncionarial),
+    acto_designacion_carrerafuncionarial: str(valores.acto_designacion_carrerafuncionarial),
+    periodo_desempeno_carrerafuncionarial: str(valores.periodo_desempeno_carrerafuncionarial),
+    ausencia_sanciones_carrerafuncionarial: str(valores.ausencia_sanciones_carrerafuncionarial),
+    fecha_expedicion_carrerafuncionarial: str(valores.fecha_expedicion_carrerafuncionarial),
     ...metaDesdeValores(valores),
   };
 }
@@ -1960,25 +1845,17 @@ function normalizarParaDjNoMilitancia(
       valores[KEY_PREFIJO_CEDULA_DECLARANTE_NOMILITANCIA],
     ),
     nombre_declarante_nomilitancia: str(valores.nombre_declarante_nomilitancia),
-    apellido_declarante_nomilitancia: str(
-      valores.apellido_declarante_nomilitancia,
-    ),
-    estadocivil_declarante_nomilitancia: str(
-      valores.estadocivil_declarante_nomilitancia,
-    ),
+    apellido_declarante_nomilitancia: str(valores.apellido_declarante_nomilitancia),
+    estadocivil_declarante_nomilitancia: str(valores.estadocivil_declarante_nomilitancia),
     cedula_declarante_nomilitancia: str(valores.cedula_declarante_nomilitancia),
     manifestacion_nomilitancia: str(valores.manifestacion_nomilitancia),
-    aclaratoria_renuncia_nomilitancia: str(
-      valores.aclaratoria_renuncia_nomilitancia,
-    ),
+    aclaratoria_renuncia_nomilitancia: str(valores.aclaratoria_renuncia_nomilitancia),
     estado_notaria_nomilitancia: str(valores.estado_notaria_nomilitancia),
     municipio_notaria_nomilitancia: str(valores.municipio_notaria_nomilitancia),
     nombre_notaria_nomilitancia: str(valores.nombre_notaria_nomilitancia),
     numero_folio_nomilitancia: str(valores.numero_folio_nomilitancia),
     numero_tomo_nomilitancia: str(valores.numero_tomo_nomilitancia),
-    fecha_otorgamiento_nomilitancia: str(
-      valores.fecha_otorgamiento_nomilitancia,
-    ),
+    fecha_otorgamiento_nomilitancia: str(valores.fecha_otorgamiento_nomilitancia),
     ...metaDesdeValores(valores),
   };
 }
@@ -1991,12 +1868,8 @@ function normalizarParaDjNoParentesco(
       valores[KEY_PREFIJO_CEDULA_DECLARANTE_NOPARENTESCO],
     ),
     nombre_declarante_noparentesco: str(valores.nombre_declarante_noparentesco),
-    apellido_declarante_noparentesco: str(
-      valores.apellido_declarante_noparentesco,
-    ),
-    estadocivil_declarante_noparentesco: str(
-      valores.estadocivil_declarante_noparentesco,
-    ),
+    apellido_declarante_noparentesco: str(valores.apellido_declarante_noparentesco),
+    estadocivil_declarante_noparentesco: str(valores.estadocivil_declarante_noparentesco),
     cedula_declarante_noparentesco: str(valores.cedula_declarante_noparentesco),
     manifestacion_ausenciavinculo_noparentesco: str(
       valores.manifestacion_ausenciavinculo_noparentesco,
@@ -2009,9 +1882,7 @@ function normalizarParaDjNoParentesco(
     nombre_notaria_noparentesco: str(valores.nombre_notaria_noparentesco),
     numero_folio_noparentesco: str(valores.numero_folio_noparentesco),
     numero_tomo_noparentesco: str(valores.numero_tomo_noparentesco),
-    fecha_otorgamiento_noparentesco: str(
-      valores.fecha_otorgamiento_noparentesco,
-    ),
+    fecha_otorgamiento_noparentesco: str(valores.fecha_otorgamiento_noparentesco),
     ...metaDesdeValores(valores),
   };
 }
@@ -2020,42 +1891,22 @@ function normalizarParaActaMatrimonio(
   valores: Readonly<ValoresFormularioRevision>,
 ): Record<string, unknown> {
   return {
-    [KEY_PREFIJO_CEDULA_CONYUGE_MATRIMONIO]: str(
-      valores[KEY_PREFIJO_CEDULA_CONYUGE_MATRIMONIO],
-    ),
+    [KEY_PREFIJO_CEDULA_CONYUGE_MATRIMONIO]: str(valores[KEY_PREFIJO_CEDULA_CONYUGE_MATRIMONIO]),
     [KEY_PREFIJO_CEDULA_SEGUNDO_CONYUGE_MATRIMONIO]: str(
       valores[KEY_PREFIJO_CEDULA_SEGUNDO_CONYUGE_MATRIMONIO],
     ),
-    nombrejefatura_matrimonio_postulante: str(
-      valores.nombrejefatura_matrimonio_postulante,
-    ),
-    numeroacta_matrimonio_postulante: str(
-      valores.numeroacta_matrimonio_postulante,
-    ),
+    nombrejefatura_matrimonio_postulante: str(valores.nombrejefatura_matrimonio_postulante),
+    numeroacta_matrimonio_postulante: str(valores.numeroacta_matrimonio_postulante),
     folio_matrimonio_postulante: str(valores.folio_matrimonio_postulante),
     tomo_matrimonio_postulante: str(valores.tomo_matrimonio_postulante),
     anio_matrimonio_postulante: str(valores.anio_matrimonio_postulante),
-    nombre_conyugematrimonio_postulante: str(
-      valores.nombre_conyugematrimonio_postulante,
-    ),
-    apellido_conyugematrimonio_postulante: str(
-      valores.apellido_conyugematrimonio_postulante,
-    ),
-    cedula_conyugematrimonio_postulante: str(
-      valores.cedula_conyugematrimonio_postulante,
-    ),
-    nombre_segundoconyuge_postulante: str(
-      valores.nombre_segundoconyuge_postulante,
-    ),
-    apellido_segundoconyuge_postulante: str(
-      valores.apellido_segundoconyuge_postulante,
-    ),
-    cedula_segundoconyuge_postulante: str(
-      valores.cedula_segundoconyuge_postulante,
-    ),
-    fecha_celebracionmatrimonio_postulante: str(
-      valores.fecha_celebracionmatrimonio_postulante,
-    ),
+    nombre_conyugematrimonio_postulante: str(valores.nombre_conyugematrimonio_postulante),
+    apellido_conyugematrimonio_postulante: str(valores.apellido_conyugematrimonio_postulante),
+    cedula_conyugematrimonio_postulante: str(valores.cedula_conyugematrimonio_postulante),
+    nombre_segundoconyuge_postulante: str(valores.nombre_segundoconyuge_postulante),
+    apellido_segundoconyuge_postulante: str(valores.apellido_segundoconyuge_postulante),
+    cedula_segundoconyuge_postulante: str(valores.cedula_segundoconyuge_postulante),
+    fecha_celebracionmatrimonio_postulante: str(valores.fecha_celebracionmatrimonio_postulante),
     ...metaDesdeValores(valores),
   };
 }
@@ -2067,34 +1918,20 @@ function normalizarParaDjNoContratacion(
     [KEY_PREFIJO_CEDULA_DECLARANTE_NOCONTRATACION]: str(
       valores[KEY_PREFIJO_CEDULA_DECLARANTE_NOCONTRATACION],
     ),
-    nombre_declarante_nocontratacion: str(
-      valores.nombre_declarante_nocontratacion,
-    ),
-    apellido_declarante_nocontratacion: str(
-      valores.apellido_declarante_nocontratacion,
-    ),
-    estadocivil_declarante_nocontratacion: str(
-      valores.estadocivil_declarante_nocontratacion,
-    ),
-    cedula_declarante_nocontratacion: str(
-      valores.cedula_declarante_nocontratacion,
-    ),
+    nombre_declarante_nocontratacion: str(valores.nombre_declarante_nocontratacion),
+    apellido_declarante_nocontratacion: str(valores.apellido_declarante_nocontratacion),
+    estadocivil_declarante_nocontratacion: str(valores.estadocivil_declarante_nocontratacion),
+    cedula_declarante_nocontratacion: str(valores.cedula_declarante_nocontratacion),
     declaracion_inexistentecontratos_nocontratacion: str(
       valores.declaracion_inexistentecontratos_nocontratacion,
     ),
-    declaracion_nolitigio_nocontratacion: str(
-      valores.declaracion_nolitigio_nocontratacion,
-    ),
+    declaracion_nolitigio_nocontratacion: str(valores.declaracion_nolitigio_nocontratacion),
     estado_notaria_nocontratacion: str(valores.estado_notaria_nocontratacion),
-    municipio_notaria_nocontratacion: str(
-      valores.municipio_notaria_nocontratacion,
-    ),
+    municipio_notaria_nocontratacion: str(valores.municipio_notaria_nocontratacion),
     nombre_notaria_nocontratacion: str(valores.nombre_notaria_nocontratacion),
     numero_folio_nocontratacion: str(valores.numero_folio_nocontratacion),
     numero_tomo_nocontratacion: str(valores.numero_tomo_nocontratacion),
-    fecha_otorgamiento_nocontratacion: str(
-      valores.fecha_otorgamiento_nocontratacion,
-    ),
+    fecha_otorgamiento_nocontratacion: str(valores.fecha_otorgamiento_nocontratacion),
     ...metaDesdeValores(valores),
   };
 }
@@ -2122,6 +1959,16 @@ function normalizarParaSintesisCurricular(
   };
 }
 
+function normalizarParaConvalidacion(
+  valores: Readonly<ValoresFormularioRevision>,
+): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
+  for (const key of KEYS_CONVALIDACION_VISIBLES) {
+    out[key] = str(valores[key]);
+  }
+  return { ...out, ...metaDesdeValores(valores) };
+}
+
 function normalizarParaOtroDocumento(
   valores: Readonly<ValoresFormularioRevision>,
 ): Record<string, unknown> {
@@ -2134,6 +1981,8 @@ function normalizarParaOtroDocumento(
     cedula_postulante_otro: str(valores.cedula_postulante_otro),
     inpreabogado_postulante_otro: str(valores.inpreabogado_postulante_otro),
     descripcion_documento_otro: str(valores.descripcion_documento_otro),
+    tipo_sugerido_otro: str(valores.tipo_sugerido_otro),
+    resumen_documento_otro: str(valores.resumen_documento_otro),
     ...metaDesdeValores(valores),
   };
 }
@@ -2155,9 +2004,7 @@ export function validarFormularioPartida(
 export function validarFormularioDjOtraNacionalidad(
   valores: Readonly<ValoresFormularioRevision>,
 ): ErroresFormularioRevision {
-  const r = formularioDjOtraNacionalidadSchema.safeParse(
-    normalizarParaDjOtraNacionalidad(valores),
-  );
+  const r = formularioDjOtraNacionalidadSchema.safeParse(normalizarParaDjOtraNacionalidad(valores));
   return r.success ? {} : erroresDesdeZod(r.error);
 }
 
@@ -2173,9 +2020,7 @@ export function validarFormularioSolvenciaDeontologica(
 export function validarFormularioCertMedicaMental(
   valores: Readonly<ValoresFormularioRevision>,
 ): ErroresFormularioRevision {
-  const r = formularioCertMedicaMentalSchema.safeParse(
-    normalizarParaCertMedicaMental(valores),
-  );
+  const r = formularioCertMedicaMentalSchema.safeParse(normalizarParaCertMedicaMental(valores));
   return r.success ? {} : erroresDesdeZod(r.error);
 }
 
@@ -2205,9 +2050,7 @@ export function validarFormularioTituloPregrado(
 export function validarFormularioTituloEspecialidad(
   valores: Readonly<ValoresFormularioRevision>,
 ): ErroresFormularioRevision {
-  const r = formularioTituloEspecialidadSchema.safeParse(
-    normalizarParaTituloEspecialidad(valores),
-  );
+  const r = formularioTituloEspecialidadSchema.safeParse(normalizarParaTituloEspecialidad(valores));
   return r.success ? {} : erroresDesdeZod(r.error);
 }
 
@@ -2228,18 +2071,14 @@ export function validarFormularioTituloMaestria(
 export function validarFormularioConstanciaMaestria(
   valores: Readonly<ValoresFormularioRevision>,
 ): ErroresFormularioRevision {
-  const r = formularioConstanciaMaestriaSchema.safeParse(
-    normalizarParaConstanciaMaestria(valores),
-  );
+  const r = formularioConstanciaMaestriaSchema.safeParse(normalizarParaConstanciaMaestria(valores));
   return r.success ? {} : erroresDesdeZod(r.error);
 }
 
 export function validarFormularioTituloDoctorado(
   valores: Readonly<ValoresFormularioRevision>,
 ): ErroresFormularioRevision {
-  const r = formularioTituloDoctoradoSchema.safeParse(
-    normalizarParaTituloDoctorado(valores),
-  );
+  const r = formularioTituloDoctoradoSchema.safeParse(normalizarParaTituloDoctorado(valores));
   return r.success ? {} : erroresDesdeZod(r.error);
 }
 
@@ -2255,18 +2094,14 @@ export function validarFormularioConstanciaDoctorado(
 export function validarFormularioInscripcionColegio(
   valores: Readonly<ValoresFormularioRevision>,
 ): ErroresFormularioRevision {
-  const r = formularioInscripcionColegioSchema.safeParse(
-    normalizarParaInscripcionColegio(valores),
-  );
+  const r = formularioInscripcionColegioSchema.safeParse(normalizarParaInscripcionColegio(valores));
   return r.success ? {} : erroresDesdeZod(r.error);
 }
 
 export function validarFormularioSolvenciaColegio(
   valores: Readonly<ValoresFormularioRevision>,
 ): ErroresFormularioRevision {
-  const r = formularioSolvenciaColegioSchema.safeParse(
-    normalizarParaSolvenciaColegio(valores),
-  );
+  const r = formularioSolvenciaColegioSchema.safeParse(normalizarParaSolvenciaColegio(valores));
   return r.success ? {} : erroresDesdeZod(r.error);
 }
 
@@ -2318,9 +2153,7 @@ export function validarFormularioActaConcursoDocente(
 export function validarFormularioCarreraJudicial(
   valores: Readonly<ValoresFormularioRevision>,
 ): ErroresFormularioRevision {
-  const r = formularioCarreraJudicialSchema.safeParse(
-    normalizarParaCarreraJudicial(valores),
-  );
+  const r = formularioCarreraJudicialSchema.safeParse(normalizarParaCarreraJudicial(valores));
   return r.success ? {} : erroresDesdeZod(r.error);
 }
 
@@ -2336,54 +2169,49 @@ export function validarFormularioCarreraFuncionarial(
 export function validarFormularioDjNoMilitancia(
   valores: Readonly<ValoresFormularioRevision>,
 ): ErroresFormularioRevision {
-  const r = formularioDjNoMilitanciaSchema.safeParse(
-    normalizarParaDjNoMilitancia(valores),
-  );
+  const r = formularioDjNoMilitanciaSchema.safeParse(normalizarParaDjNoMilitancia(valores));
   return r.success ? {} : erroresDesdeZod(r.error);
 }
 
 export function validarFormularioDjNoParentesco(
   valores: Readonly<ValoresFormularioRevision>,
 ): ErroresFormularioRevision {
-  const r = formularioDjNoParentescoSchema.safeParse(
-    normalizarParaDjNoParentesco(valores),
-  );
+  const r = formularioDjNoParentescoSchema.safeParse(normalizarParaDjNoParentesco(valores));
   return r.success ? {} : erroresDesdeZod(r.error);
 }
 
 export function validarFormularioActaMatrimonio(
   valores: Readonly<ValoresFormularioRevision>,
 ): ErroresFormularioRevision {
-  const r = formularioActaMatrimonioSchema.safeParse(
-    normalizarParaActaMatrimonio(valores),
-  );
+  const r = formularioActaMatrimonioSchema.safeParse(normalizarParaActaMatrimonio(valores));
   return r.success ? {} : erroresDesdeZod(r.error);
 }
 
 export function validarFormularioDjNoContratacion(
   valores: Readonly<ValoresFormularioRevision>,
 ): ErroresFormularioRevision {
-  const r = formularioDjNoContratacionSchema.safeParse(
-    normalizarParaDjNoContratacion(valores),
-  );
+  const r = formularioDjNoContratacionSchema.safeParse(normalizarParaDjNoContratacion(valores));
   return r.success ? {} : erroresDesdeZod(r.error);
 }
 
 export function validarFormularioSintesisCurricular(
   valores: Readonly<ValoresFormularioRevision>,
 ): ErroresFormularioRevision {
-  const r = formularioSintesisCurricularSchema.safeParse(
-    normalizarParaSintesisCurricular(valores),
-  );
+  const r = formularioSintesisCurricularSchema.safeParse(normalizarParaSintesisCurricular(valores));
   return r.success ? {} : erroresDesdeZod(r.error);
 }
 
 export function validarFormularioOtroDocumento(
   valores: Readonly<ValoresFormularioRevision>,
 ): ErroresFormularioRevision {
-  const r = formularioOtroDocumentoSchema.safeParse(
-    normalizarParaOtroDocumento(valores),
-  );
+  const r = formularioOtroDocumentoSchema.safeParse(normalizarParaOtroDocumento(valores));
+  return r.success ? {} : erroresDesdeZod(r.error);
+}
+
+export function validarFormularioConvalidacion(
+  valores: Readonly<ValoresFormularioRevision>,
+): ErroresFormularioRevision {
+  const r = formularioConvalidacionSchema.safeParse(normalizarParaConvalidacion(valores));
   return r.success ? {} : erroresDesdeZod(r.error);
 }
 
@@ -2483,6 +2311,9 @@ export function validarFormularioRevision(
   }
   if (esFormularioOtroDocumento(slotKey)) {
     return validarFormularioOtroDocumento(valores);
+  }
+  if (esFormularioConvalidacion(slotKey)) {
+    return validarFormularioConvalidacion(valores);
   }
   return validarFormularioGenerico(valores);
 }
@@ -3087,10 +2918,24 @@ export function valoresVaciosOtroDocumento(): ValoresFormularioRevision {
     cedula_postulante_otro: "",
     inpreabogado_postulante_otro: "",
     descripcion_documento_otro: "",
+    tipo_sugerido_otro: "",
+    resumen_documento_otro: "",
     es_documento: null,
     calidad_legibilidad: null,
     advertencias: null,
   };
+}
+
+export function valoresVaciosConvalidacion(): ValoresFormularioRevision {
+  const vacios: ValoresFormularioRevision = {
+    es_documento: null,
+    calidad_legibilidad: null,
+    advertencias: null,
+  };
+  for (const key of KEYS_CONVALIDACION_VISIBLES) {
+    vacios[key] = "";
+  }
+  return vacios;
 }
 
 export function valoresVaciosParaSlot(slotKey: string): ValoresFormularioRevision {
@@ -3158,6 +3003,9 @@ export function valoresVaciosParaSlot(slotKey: string): ValoresFormularioRevisio
   }
   if (esFormularioOtroDocumento(slotKey)) {
     return valoresVaciosOtroDocumento();
+  }
+  if (esFormularioConvalidacion(slotKey)) {
+    return valoresVaciosConvalidacion();
   }
   return {
     notas: "",
@@ -3277,8 +3125,7 @@ export function rellenoIaAntecedentesPenales(): ValoresFormularioRevision {
     nombre_entidad_penales:
       "MINISTERIO DEL PODER POPULAR PARA RELACIONES INTERIORES, JUSTICIA Y PAZ",
     nombre_quiensuscribe_penales: "Félix Ramón Osorio Guzmán",
-    cargo_quiensuscribe_penales:
-      "Viceministro de Política Interior y Seguridad Jurídica",
+    cargo_quiensuscribe_penales: "Viceministro de Política Interior y Seguridad Jurídica",
     designacion_quiensuscribe_penales:
       "Designado según Decreto N° 4.521 de fecha 12 de marzo de 2024. Publicado en Gaceta Oficial de la República Bolivariana de Venezuela N° 42.850 Extraordinario en la misma fecha.",
     nombre_postulante_penales: "María Elena",
@@ -3299,8 +3146,7 @@ export function rellenoIaContraloriaCgr(): ValoresFormularioRevision {
     [KEY_PREFIJO_CEDULA_POSTULANTE_CGR]: "V",
     nombre_direccion_cgr: "Dirección General de Procedimientos Especiales",
     nombre_quiensuscribe_cgr: "Carlos Ramón Gómez",
-    cargo_quiensuscribe_cgr:
-      "Director del departamento de determinación de responsabilidades",
+    cargo_quiensuscribe_cgr: "Director del departamento de determinación de responsabilidades",
     designacion_quiensuscribe_cgr:
       "Designado según Decreto N° 4.210 de fecha 5 de enero de 2024. Publicado en Gaceta Oficial de la República Bolivariana de Venezuela N° 42.800 Extraordinario en la misma fecha.",
     nombre_postulante_cgr: "María Elena",
@@ -3351,8 +3197,7 @@ export function rellenoIaTituloEspecialidad(): ValoresFormularioRevision {
     apellido_postulante_especialidad: "Rodríguez Páez",
     cedula_postulante_especialidad: "12456789",
     fecha_graduacion_especialidad: "2012-11-20",
-    registro_publico_especialidad:
-      "Oficina Principal de Registro Público del Distrito Capital",
+    registro_publico_especialidad: "Oficina Principal de Registro Público del Distrito Capital",
     numero_asentamiento_especialidad: "4412",
     tomo_registro_especialidad: "52",
     folio_registro_especialidad: "88",
@@ -3373,8 +3218,7 @@ export function rellenoIaConstanciaTeg(): ValoresFormularioRevision {
     nombre_postulante_teg: "María Elena",
     apellido_postulante_teg: "Rodríguez Páez",
     cedula_postulante_teg: "12456789",
-    jurado_examinador_teg:
-      "María del Carmen Pérez, Carlos Augusto Rodríguez, María Méndez",
+    jurado_examinador_teg: "María del Carmen Pérez, Carlos Augusto Rodríguez, María Méndez",
     veredicto_calificacion_teg: "Aprobada por unanimidad, mención honorífica",
     fecha_defensa_teg: "2012-10-05",
     es_documento: true,
@@ -3395,8 +3239,7 @@ export function rellenoIaTituloMaestria(): ValoresFormularioRevision {
     apellido_postulante_maestria: "Rodríguez Páez",
     cedula_postulante_maestria: "12456789",
     fecha_graduacion_maestria: "2015-06-12",
-    registro_publico_maestria:
-      "Oficina Principal de Registro Público del Distrito Capital",
+    registro_publico_maestria: "Oficina Principal de Registro Público del Distrito Capital",
     numero_asentamiento_maestria: "5510",
     tomo_registro_maestria: "61",
     folio_registro_maestria: "94",
@@ -3417,8 +3260,7 @@ export function rellenoIaConstanciaMaestria(): ValoresFormularioRevision {
     nombre_postulante_tesis_maestria: "María Elena",
     apellido_postulante_tesis_maestria: "Rodríguez Páez",
     cedula_postulante_tesis_maestria: "12456789",
-    jurado_examinador_maestria:
-      "María del Carmen Pérez, Carlos Augusto Rodríguez, María Méndez",
+    jurado_examinador_maestria: "María del Carmen Pérez, Carlos Augusto Rodríguez, María Méndez",
     veredicto_calificacion_maestria: "Aprobada por unanimidad, mención honorífica",
     fecha_defensa_maestria: "2015-05-20",
     es_documento: true,
@@ -3439,8 +3281,7 @@ export function rellenoIaTituloDoctorado(): ValoresFormularioRevision {
     apellido_postulante_doctorado: "Rodríguez Páez",
     cedula_postulante_doctorado: "12456789",
     fecha_graduacion_doctorado: "2019-11-22",
-    registro_publico_doctorado:
-      "Oficina Principal de Registro Público del Distrito Capital",
+    registro_publico_doctorado: "Oficina Principal de Registro Público del Distrito Capital",
     numero_asentamiento_doctorado: "7821",
     tomo_registro_doctorado: "88",
     folio_registro_doctorado: "112",
@@ -3461,8 +3302,7 @@ export function rellenoIaConstanciaDoctorado(): ValoresFormularioRevision {
     nombre_postulante_tesis_doctorado: "María Elena",
     apellido_postulante_tesis_doctorado: "Rodríguez Páez",
     cedula_postulante_tesis_doctorado: "12456789",
-    jurado_examinador_doctorado:
-      "María del Carmen Pérez, Carlos Augusto Rodríguez, María Méndez",
+    jurado_examinador_doctorado: "María del Carmen Pérez, Carlos Augusto Rodríguez, María Méndez",
     veredicto_calificacion_doctorado: "Aprobada por unanimidad, mención honorífica",
     fecha_defensa_doctorado: "2019-10-08",
     es_documento: true,
@@ -3619,8 +3459,7 @@ export function rellenoIaActaConcursoDocente(): ValoresFormularioRevision {
 export function rellenoIaCarreraJudicial(): ValoresFormularioRevision {
   return {
     [KEY_PREFIJO_CEDULA_POSTULANTE_CARRERAJUDICIAL]: "V",
-    entidad_emisora_carrerajudicial:
-      "Dirección Ejecutiva de la Magistratura (DEM)",
+    entidad_emisora_carrerajudicial: "Dirección Ejecutiva de la Magistratura (DEM)",
     nombre_postulante_carrerajudicial: "María Elena",
     apellido_postulante_carrerajudicial: "Rodríguez Páez",
     cedula_postulante_carrerajudicial: "12456789",
@@ -3631,8 +3470,7 @@ export function rellenoIaCarreraJudicial(): ValoresFormularioRevision {
     cargo_desempeñado_carrerajudicial: "Juez/a Superior",
     tribunal_competencia_carrerajudicial:
       "Tribunal Superior Primero en lo Contencioso Administrativo de la Región Capital",
-    circuito_judicial_carrerajudicial:
-      "Circunscripción judicial del Distrito Capital",
+    circuito_judicial_carrerajudicial: "Circunscripción judicial del Distrito Capital",
     estado_circunscripcion_carrerajudicial: "Distrito Capital",
     resolucion_nombramiento_carrerajudicial: "RES-DEM-2012-089",
     periodo_desempeño_carrerajudicial: "15/03/2012 – 20/06/2024",
@@ -3727,8 +3565,7 @@ export function rellenoIaActaMatrimonio(): ValoresFormularioRevision {
   return {
     [KEY_PREFIJO_CEDULA_CONYUGE_MATRIMONIO]: "V",
     [KEY_PREFIJO_CEDULA_SEGUNDO_CONYUGE_MATRIMONIO]: "V",
-    nombrejefatura_matrimonio_postulante:
-      "Registro Civil del Municipio Libertador",
+    nombrejefatura_matrimonio_postulante: "Registro Civil del Municipio Libertador",
     numeroacta_matrimonio_postulante: "1842",
     folio_matrimonio_postulante: "88",
     tomo_matrimonio_postulante: "7",
@@ -3759,8 +3596,7 @@ export function rellenoIaDjNoContratacion(): ValoresFormularioRevision {
       "Declaro no ejercer representación judicial activa en causas lucrativas privadas contra entes del Estado.",
     estado_notaria_nocontratacion: "Distrito Capital",
     municipio_notaria_nocontratacion: "Libertador",
-    nombre_notaria_nocontratacion:
-      "Notaría Pública Primera del Municipio Libertador",
+    nombre_notaria_nocontratacion: "Notaría Pública Primera del Municipio Libertador",
     numero_folio_nocontratacion: "61",
     numero_tomo_nocontratacion: "15",
     fecha_otorgamiento_nocontratacion: "2024-05-15",
@@ -3922,6 +3758,10 @@ export function esFormularioOtroDocumento(slotKey: string): boolean {
   return slotKey === "otro_documento";
 }
 
+export function esFormularioConvalidacion(slotKey: string): boolean {
+  return slotKey === "convalidacion_titulo";
+}
+
 export function usaBotonVerificado(slotKey: string): boolean {
   return (
     esFormularioCedula(slotKey) ||
@@ -3952,6 +3792,7 @@ export function usaBotonVerificado(slotKey: string): boolean {
     esFormularioActaMatrimonio(slotKey) ||
     esFormularioDjNoContratacion(slotKey) ||
     esFormularioSintesisCurricular(slotKey) ||
-    esFormularioOtroDocumento(slotKey)
+    esFormularioOtroDocumento(slotKey) ||
+    esFormularioConvalidacion(slotKey)
   );
 }

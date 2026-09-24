@@ -1,52 +1,43 @@
 "use client";
 
-import { useEffect, useMemo, useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, FileStack, FileText, Sparkles, Trash2 } from "lucide-react";
-import type { DocumentoExpediente, ExpedienteDetalle } from "@/contracts";
-import { CATEGORIA_ETIQUETA, SALA_ETIQUETA } from "@/contracts";
+import { ArrowLeft } from "lucide-react";
+import type { ExpedienteDetalle } from "@/contracts";
+import { SALA_ETIQUETA } from "@/contracts";
 import {
   declararElegible,
   declararInelegible,
   generarInformeIaElegibilidad,
+  leerInformeIaElegibilidad,
 } from "@/app/(panel)/evaluacion/[candidateId]/acciones";
+import { InformeIaSheet } from "@/components/informe-ia-sheet";
 import { useToast } from "@/components/toast-provider";
-import { VisorDocumentoRevision } from "@/components/revision-maqueta/visor-documento-revision";
-import { marcarSidebarDocumentoAbierto } from "@/lib/sidebar-panel";
+import { VistaDocumentosFormulario } from "@/components/vista-documentos-formulario";
+import { documentosVigentes } from "@/lib/documentos-vigentes";
 import {
-  borrarTextoInformeIaElegibilidad,
-  guardarTextoInformeIaElegibilidad,
   informeIaElegibilidadYaUsado,
-  leerTextoInformeIaElegibilidad,
   marcarInformeIaElegibilidadUsado,
 } from "@/lib/ia-cupo-sesion";
+import { marcarSidebarDocumentoAbierto } from "@/lib/sidebar-panel";
 import {
   BLOQUES_ELEGIBILIDAD,
   CAUSALES_INELEGIBILIDAD,
   checklistCompleto,
   checklistVacio,
-  documentosPorPestana,
-  guardarDecision,
-  PESTANAS_VISOR,
   type BloqueElegibilidadId,
   type CausalInelegibilidadId,
   type ChecklistElegibilidad,
-  type DecisionElegibilidad,
-  type PestanaVisorId,
 } from "@/lib/elegibilidad";
-
-type PestanaId = PestanaVisorId | "otros";
 
 /**
  * Paso 1 — elegibilidad.
- * Mismo modelo de scroll que revisión documental: la página hace scroll;
- * el visor tiene altura fija y sticky; formulario e Informe IA fluyen sin
- * paneles anidados con overflow propio.
+ * Documentos y formulario quedan fijos mientras la columna de elegibilidad
+ * hace scroll. El Informe IA vive en una hoja lateral que abre un botón flotante.
  */
 export function PantallaElegibilidad({
   expediente,
-  evaluador,
 }: {
   readonly expediente: ExpedienteDetalle;
   readonly evaluador: { readonly id: string; readonly nombre: string };
@@ -55,75 +46,41 @@ export function PantallaElegibilidad({
   const toast = useToast();
   const [pendiente, iniciar] = useTransition();
   const [generandoIa, setGenerandoIa] = useState(false);
-  const docs = expediente.submissions[0]?.documents ?? [];
+  const [cargandoInforme, setCargandoInforme] = useState(true);
+  const docs = documentosVigentes(expediente.submissions[0]?.documents ?? []);
   const fileNumber = expediente.submissions[0]?.fileNumber ?? "—";
   const salaLabel = SALA_ETIQUETA[expediente.chamber] ?? String(expediente.chamber);
 
-  const pestanasConDocs = useMemo(() => {
-    const cubiertas = PESTANAS_VISOR.map((p) => ({
-      ...p,
-      docs: documentosPorPestana(docs, p.id),
-    })).filter((p) => p.docs.length > 0);
-
-    const idsCubiertos = new Set(cubiertas.flatMap((p) => p.docs.map((d) => d.id)));
-    const huerfanos = docs.filter((d) => !idsCubiertos.has(d.id));
-    if (huerfanos.length === 0) {
-      return cubiertas as readonly {
-        readonly id: PestanaId;
-        readonly etiqueta: string;
-        readonly docs: DocumentoExpediente[];
-      }[];
-    }
-
-    return [
-      ...cubiertas,
-      { id: "otros" as const, etiqueta: "Otros", docs: huerfanos },
-    ];
-  }, [docs]);
-
-  const [pestanaActiva, setPestanaActiva] = useState<PestanaId | null>(null);
-  const [documentoId, setDocumentoId] = useState<string | null>(null);
-  const [cupoIaUsado, setCupoIaUsado] = useState(false);
   const [informeIa, setInformeIa] = useState("");
+  const [informeIaUsado, setInformeIaUsado] = useState(false);
 
   useEffect(() => {
-    setCupoIaUsado(informeIaElegibilidadYaUsado(expediente.id));
-    setInformeIa(leerTextoInformeIaElegibilidad(expediente.id));
+    setInformeIaUsado(informeIaElegibilidadYaUsado(expediente.id));
   }, [expediente.id]);
+
+  useEffect(() => {
+    let cancelado = false;
+    setCargandoInforme(true);
+    void (async () => {
+      const r = await leerInformeIaElegibilidad(expediente.id);
+      if (cancelado) return;
+      setCargandoInforme(false);
+      if (!r.ok) {
+        toast.error(r.error ?? "No se pudo cargar el Informe IA.");
+        return;
+      }
+      setInformeIa(r.texto);
+    })();
+    return () => {
+      cancelado = true;
+    };
+  }, [expediente.id, toast]);
 
   // Comprimir sidebar apenas se entra al expediente.
   useEffect(() => {
     marcarSidebarDocumentoAbierto(true);
     return () => marcarSidebarDocumentoAbierto(false);
   }, []);
-
-  const docsDePestana = useMemo(() => {
-    if (!pestanaActiva) return [] as DocumentoExpediente[];
-    return pestanasConDocs.find((p) => p.id === pestanaActiva)?.docs ?? [];
-  }, [pestanaActiva, pestanasConDocs]);
-
-  const documentoSeleccionado = useMemo(() => {
-    if (!documentoId) return null;
-    return docs.find((d) => d.id === documentoId) ?? null;
-  }, [docs, documentoId]);
-
-  const formularioRevision = useMemo(() => {
-    if (!documentoSeleccionado?.reviewData) return [] as { clave: string; valor: string }[];
-    return Object.entries(documentoSeleccionado.reviewData)
-      .filter(([k]) => !k.startsWith("_") && k !== "es_documento" && k !== "calidad_legibilidad")
-      .map(([clave, valor]) => ({
-        clave,
-        valor:
-          valor === null || valor === undefined
-            ? "—"
-            : typeof valor === "boolean"
-              ? valor
-                ? "Sí"
-                : "No"
-              : String(valor),
-      }))
-      .filter((c) => c.valor.trim() !== "");
-  }, [documentoSeleccionado]);
 
   const [checklist, setChecklist] = useState<ChecklistElegibilidad>(checklistVacio);
   const [motivo, setMotivo] = useState("");
@@ -132,15 +89,6 @@ export function PantallaElegibilidad({
   const [causales, setCausales] = useState<Set<CausalInelegibilidadId>>(new Set());
 
   const completo = checklistCompleto(checklist);
-
-  function seleccionarPestana(id: PestanaId) {
-    setPestanaActiva(id);
-    setDocumentoId(null);
-  }
-
-  function seleccionarDocumento(id: string) {
-    setDocumentoId(id);
-  }
 
   function toggleBloque(id: BloqueElegibilidadId) {
     setChecklist((prev) => ({ ...prev, [id]: !prev[id] }));
@@ -157,16 +105,18 @@ export function PantallaElegibilidad({
 
   function onCambiarInformeIa(texto: string) {
     setInformeIa(texto);
-    guardarTextoInformeIaElegibilidad(expediente.id, texto);
   }
 
   function onBorrarInformeIa() {
     setInformeIa("");
-    borrarTextoInformeIaElegibilidad(expediente.id);
   }
 
   function onGenerarInformeIa() {
-    if (cupoIaUsado || generandoIa) return;
+    if (generandoIa) return;
+    if (informeIaElegibilidadYaUsado(expediente.id) || informeIaUsado) {
+      toast.error("La generación con IA ya se usó en esta sesión para este expediente.");
+      return;
+    }
     setGenerandoIa(true);
     void (async () => {
       const r = await generarInformeIaElegibilidad(expediente.id);
@@ -176,41 +126,21 @@ export function PantallaElegibilidad({
         return;
       }
       marcarInformeIaElegibilidadUsado(expediente.id);
-      setCupoIaUsado(true);
-      onCambiarInformeIa(r.texto);
+      setInformeIaUsado(true);
+      setInformeIa(r.texto);
       toast.exito("Informe IA generado. Puede editarlo antes de dictaminar.");
     })();
   }
 
-  function construirDecisionBase(
-    resultado: DecisionElegibilidad["resultado"],
-  ): DecisionElegibilidad {
-    const actualizadoEn = new Date().toISOString();
-    const resumen = {
-      fileNumber,
-      postulanteNombre: `${expediente.firstName} ${expediente.lastName}`,
-      nationalId: expediente.nationalId,
-      salaLabel,
-      evaluadorNombre: evaluador.nombre,
-      evaluadorId: evaluador.id,
-    };
-    return {
-      candidateId: expediente.id,
-      resultado,
-      checklist,
-      motivo: motivo.trim(),
-      resumen,
-      actualizadoEn,
-      ficha:
-        resultado === "INELEGIBLE"
-          ? {
-              ...resumen,
-              causales: [...causales],
-              motivo: motivo.trim(),
-              fechaIso: actualizadoEn,
-            }
-          : null,
-    };
+  function errorMotivo(): string | null {
+    const texto = motivo.trim();
+    if (texto.length < 20) {
+      return "La fundamentación es obligatoria (mínimo 20 caracteres).";
+    }
+    if (texto.length > 3000) {
+      return "La fundamentación no puede superar 3000 caracteres.";
+    }
+    return null;
   }
 
   function onDeclararElegible() {
@@ -218,16 +148,24 @@ export function PantallaElegibilidad({
       toast.error("Debe marcar los seis requisitos del checklist.");
       return;
     }
+    const falloMotivo = errorMotivo();
+    if (falloMotivo) {
+      toast.error(falloMotivo);
+      return;
+    }
     setConfirmandoElegible(true);
   }
 
   function confirmarElegible() {
-    const decision = construirDecisionBase("ELEGIBLE");
-    guardarDecision(decision);
+    const falloMotivo = errorMotivo();
+    if (falloMotivo) {
+      toast.error(falloMotivo);
+      return;
+    }
     iniciar(async () => {
       const r = await declararElegible(expediente.id, {
         checklist,
-        motivo: motivo.trim() || undefined,
+        motivo: motivo.trim(),
       });
       if (!r.ok) {
         toast.error(r.error ?? "No se pudo registrar la elegibilidad.");
@@ -241,8 +179,9 @@ export function PantallaElegibilidad({
   }
 
   function onAbrirInelegible() {
-    if (!motivo.trim()) {
-      toast.error("Indique el motivo fundamentado de la inelegibilidad.");
+    const falloMotivo = errorMotivo();
+    if (falloMotivo) {
+      toast.error(falloMotivo);
       return;
     }
     setPanelInelegible(true);
@@ -253,12 +192,11 @@ export function PantallaElegibilidad({
       toast.error("Marque al menos una causal de inelegibilidad.");
       return;
     }
-    if (!motivo.trim()) {
-      toast.error("El motivo es obligatorio.");
+    const falloMotivo = errorMotivo();
+    if (falloMotivo) {
+      toast.error(falloMotivo);
       return;
     }
-    const decision = construirDecisionBase("INELEGIBLE");
-    guardarDecision(decision);
     iniciar(async () => {
       const r = await declararInelegible(expediente.id, {
         checklist,
@@ -276,7 +214,7 @@ export function PantallaElegibilidad({
   }
 
   return (
-    <div className="mx-auto w-full max-w-6xl space-y-6 px-4 py-6 sm:px-6">
+    <div className="mx-auto w-full max-w-7xl space-y-6 px-4 py-6 sm:px-6">
       <div className="rounded-lg border border-toga-200 bg-white px-5 py-5 sm:px-6">
         <Link
           href="/evaluacion"
@@ -299,190 +237,12 @@ export function PantallaElegibilidad({
         </div>
       </div>
 
-      <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(16rem,20rem)]">
-        <section
-          aria-label="Visualización y formulario del revisor"
-          className="rounded-lg border border-toga-200 bg-white p-5 sm:p-6"
-        >
-          <div
-            role="tablist"
-            aria-label="Clasificación de documentos"
-            className="-mx-5 -mt-5 mb-4 flex overflow-x-auto border-b border-toga-200 bg-toga-50 sm:-mx-6 sm:-mt-6"
-          >
-            {pestanasConDocs.length === 0 ? (
-              <p className="px-4 py-2.5 text-sm text-toga-500">Sin documentos en el expediente.</p>
-            ) : (
-              pestanasConDocs.map((p) => (
-                <button
-                  key={p.id}
-                  role="tab"
-                  type="button"
-                  aria-selected={pestanaActiva === p.id}
-                  onClick={() => seleccionarPestana(p.id)}
-                  className={`whitespace-nowrap border-b-2 px-4 py-2.5 text-sm font-medium transition-colors ${
-                    pestanaActiva === p.id
-                      ? "border-balanza-600 bg-white text-toga-900"
-                      : "border-transparent text-toga-500 hover:text-toga-900"
-                  }`}
-                >
-                  {p.etiqueta}
-                  <span className="cifra ml-1.5 text-xs text-toga-400">({p.docs.length})</span>
-                </button>
-              ))
-            )}
-          </div>
+      <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1.15fr)_minmax(20rem,0.9fr)]">
+        <div className="xl:sticky xl:top-4 xl:z-10 xl:max-h-[calc(100dvh-1.5rem)] xl:self-start xl:overflow-y-auto">
+          <VistaDocumentosFormulario documentos={docs} anclarVisor={false} ampliar />
+        </div>
 
-          {pestanaActiva && docsDePestana.length > 0 && (
-            <div
-              className="mb-4 flex flex-wrap gap-2"
-              role="list"
-              aria-label="Documentos de la clasificación"
-            >
-              {docsDePestana.map((d) => {
-                const activo = documentoSeleccionado?.id === d.id;
-                const etiqueta =
-                  d.originalName?.trim() ||
-                  CATEGORIA_ETIQUETA[d.category] ||
-                  String(d.category);
-                return (
-                  <button
-                    key={d.id}
-                    type="button"
-                    role="listitem"
-                    title={etiqueta}
-                    onClick={() => seleccionarDocumento(d.id)}
-                    className={`inline-flex max-w-[16rem] items-center gap-2 rounded-md border px-2.5 py-1.5 text-left text-xs transition-colors ${
-                      activo
-                        ? "border-balanza-600 bg-balanza-50 text-toga-900"
-                        : "border-toga-200 bg-white text-toga-700 hover:border-toga-300"
-                    }`}
-                  >
-                    <FileText
-                      className={`h-3.5 w-3.5 shrink-0 ${activo ? "text-balanza-700" : "text-toga-400"}`}
-                      aria-hidden="true"
-                    />
-                    <span className="min-w-0 truncate font-medium">{etiqueta}</span>
-                  </button>
-                );
-              })}
-            </div>
-          )}
-
-          {documentoSeleccionado ? (
-            <div className="space-y-4">
-              <h2 className="text-sm font-semibold text-toga-900">
-                Visualización y formulario
-              </h2>
-              <div className="grid gap-6 lg:grid-cols-2">
-                <VisorDocumentoRevision
-                  key={documentoSeleccionado.id}
-                  documentId={documentoSeleccionado.id}
-                  nombreArchivo={documentoSeleccionado.originalName}
-                  sizeKb={Math.max(1, Math.round(documentoSeleccionado.sizeBytes / 1024))}
-                  titulo={
-                    CATEGORIA_ETIQUETA[documentoSeleccionado.category] ??
-                    String(documentoSeleccionado.category)
-                  }
-                />
-                <div>
-                  <h3 className="text-sm font-semibold text-toga-900">
-                    Formulario del revisor
-                  </h3>
-                  <p className="mt-1 text-xs text-toga-500">
-                    Datos capturados en revisión documental
-                  </p>
-                  {formularioRevision.length === 0 ? (
-                    <p className="mt-4 text-sm text-toga-500">
-                      Este documento no tiene formulario de revisión guardado.
-                    </p>
-                  ) : (
-                    <dl className="mt-4 space-y-3">
-                      {formularioRevision.map((c) => (
-                        <div key={c.clave}>
-                          <dt className="text-[0.65rem] font-medium uppercase tracking-wide text-toga-400">
-                            {etiquetaCampoRevision(c.clave)}
-                          </dt>
-                          <dd className="mt-0.5 whitespace-pre-wrap text-sm text-toga-800">
-                            {c.valor}
-                          </dd>
-                        </div>
-                      ))}
-                    </dl>
-                  )}
-                </div>
-              </div>
-            </div>
-          ) : (
-            <div className="flex flex-col items-center justify-center px-4 py-14 text-center">
-              <FileStack className="h-10 w-10 text-toga-300" aria-hidden="true" />
-              <p className="mt-3 text-sm font-medium text-toga-700">
-                Ningún documento seleccionado
-              </p>
-              <p className="mt-1 max-w-sm text-xs text-toga-500">
-                Elija una clasificación y un documento. Se mostrarán el archivo cargado y el
-                formulario que llenó el revisor.
-              </p>
-            </div>
-          )}
-        </section>
-
-        <aside aria-label="Informe IA y elegibilidad" className="space-y-4 lg:sticky lg:top-4">
-          <div className="rounded-lg border border-toga-200 bg-white p-4">
-            <div className="flex items-start gap-2">
-              <Sparkles
-                className="mt-0.5 h-4 w-4 shrink-0 text-balanza-700"
-                aria-hidden="true"
-              />
-              <div className="min-w-0 flex-1">
-                <h2 className="text-sm font-semibold text-toga-900">Informe IA</h2>
-                <p className="mt-1 text-xs text-toga-500">
-                  Resumen editable. Solo una generación por sesión.
-                </p>
-              </div>
-            </div>
-            <div className="mt-3 flex flex-wrap gap-2">
-              <button
-                type="button"
-                disabled={cupoIaUsado || generandoIa}
-                onClick={onGenerarInformeIa}
-                title={
-                  cupoIaUsado
-                    ? "Ya generado en esta sesión"
-                    : "Generar informe con IA (una vez por sesión)"
-                }
-                className="inline-flex items-center gap-1.5 rounded-md bg-balanza-600 px-3 py-2 text-sm font-semibold text-white hover:bg-balanza-700 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
-                {generandoIa ? "Generando…" : "Generar"}
-              </button>
-              <button
-                type="button"
-                disabled={!informeIa.trim()}
-                onClick={onBorrarInformeIa}
-                className="inline-flex items-center gap-1.5 rounded-md border border-toga-300 bg-white px-3 py-2 text-sm font-medium text-toga-700 hover:bg-toga-50 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
-                Borrar
-              </button>
-            </div>
-            {cupoIaUsado && (
-              <p className="mt-2 text-xs text-toga-500">
-                Ya generado en esta sesión. Puede editar o borrar el texto.
-              </p>
-            )}
-            <label htmlFor="informe-ia-elegibilidad" className="sr-only">
-              Texto del Informe IA
-            </label>
-            <textarea
-              id="informe-ia-elegibilidad"
-              rows={5}
-              value={informeIa}
-              onChange={(e) => onCambiarInformeIa(e.target.value)}
-              placeholder="El Informe IA aparecerá aquí tras generarlo."
-              className="mt-3 w-full rounded-md border border-toga-300 bg-white px-3 py-2 text-sm text-toga-900 placeholder:text-toga-400 focus:border-balanza-600 focus:outline-none focus:ring-2 focus:ring-balanza-600/20"
-            />
-          </div>
-
+        <aside aria-label="Elegibilidad" className="space-y-4">
           <div className="rounded-lg border border-toga-200 bg-white p-4">
             <h2 className="text-sm font-semibold text-toga-900">Lista de verificación</h2>
             <p className="mt-1 text-xs text-toga-500">
@@ -529,7 +289,9 @@ export function PantallaElegibilidad({
               >
                 Fundamentación
               </label>
-              <p className="mt-1 text-xs text-toga-500">Obligatoria si declara inelegible.</p>
+              <p className="mt-1 text-xs text-toga-500">
+                Obligatoria en ambos dictámenes (entre 20 y 3000 caracteres).
+              </p>
               <textarea
                 id="motivo-elegibilidad"
                 rows={4}
@@ -634,11 +396,18 @@ export function PantallaElegibilidad({
           </div>
         </aside>
       </div>
+
+      <InformeIaSheet
+        nombrePostulante={`${expediente.firstName} ${expediente.lastName}`}
+        informe={informeIa}
+        cargando={cargandoInforme}
+        generando={generandoIa}
+        onGenerar={onGenerarInformeIa}
+        onCambiar={onCambiarInformeIa}
+        onBorrar={onBorrarInformeIa}
+        cupoSesion
+        generacionAgotada={informeIaUsado}
+      />
     </div>
   );
-}
-
-function etiquetaCampoRevision(clave: string): string {
-  if (clave === "advertencias" || clave === "advertencia") return "Nota";
-  return clave.replace(/_/g, " ");
 }

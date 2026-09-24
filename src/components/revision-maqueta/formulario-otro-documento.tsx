@@ -31,8 +31,8 @@ export function FormularioOtroDocumento({
       <fieldset className="space-y-3">
         <legend className="text-sm font-semibold text-toga-900">Otro documento</legend>
         <p className="text-[0.7rem] text-toga-500">
-          Documento adicional que el postulante haya consignado. Todos los campos son
-          opcionales: si no se pueden leer, déjelos vacíos.
+          Documento adicional que el postulante haya consignado. Todos los campos son opcionales: si
+          no se pueden leer, déjelos vacíos.
         </p>
 
         <p className="pt-1 text-xs font-semibold text-toga-800">
@@ -113,6 +113,39 @@ export function FormularioOtroDocumento({
             <p className="mensaje-error-campo">{errores.descripcion_documento_otro}</p>
           )}
         </div>
+
+        <CampoTexto
+          id="tipo_sugerido_otro"
+          etiqueta="Tipo de documento sugerido"
+          ayuda="La IA propone de qué recaudo se trata. Confirme o corrija el texto."
+          value={String(valores.tipo_sugerido_otro ?? "")}
+          error={errores.tipo_sugerido_otro}
+          onChange={(v) => onCampo("tipo_sugerido_otro", v)}
+        />
+
+        <div>
+          <label
+            htmlFor="resumen_documento_otro"
+            className="block text-xs font-medium text-toga-600"
+          >
+            Resumen del documento
+          </label>
+          <p className="mt-0.5 text-[0.7rem] text-toga-400">
+            Resumen que propone la extracción. Revíselo contra el original.
+          </p>
+          <textarea
+            id="resumen_documento_otro"
+            rows={4}
+            value={String(valores.resumen_documento_otro ?? "")}
+            onChange={(e) => onCampo("resumen_documento_otro", e.target.value)}
+            className={`${CAMPO}${errores.resumen_documento_otro ? " campo-con-error" : ""}`}
+            aria-invalid={Boolean(errores.resumen_documento_otro)}
+            autoComplete="off"
+          />
+          {errores.resumen_documento_otro && (
+            <p className="mensaje-error-campo">{errores.resumen_documento_otro}</p>
+          )}
+        </div>
       </fieldset>
     </div>
   );
@@ -181,10 +214,7 @@ function CampoVeNumero({
       </label>
       <p className="mt-0.5 text-[0.7rem] text-toga-400">{ayuda}</p>
       <div className="mt-1 flex w-fit max-w-full gap-2">
-        <Select
-          value={prefijo === "E" ? "E" : "V"}
-          onValueChange={(v) => onCampo(prefijoKey, v)}
-        >
+        <Select value={prefijo === "E" ? "E" : "V"} onValueChange={(v) => onCampo(prefijoKey, v)}>
           <SelectTrigger
             className={`w-16 shrink-0${error ? " campo-con-error" : ""}`}
             aria-label="Prefijo V o E"
@@ -201,9 +231,7 @@ function CampoVeNumero({
           inputMode="numeric"
           maxLength={maxLength}
           value={digitos}
-          onChange={(e) =>
-            onCampo(id, e.target.value.replace(/\D/g, "").slice(0, maxLength))
-          }
+          onChange={(e) => onCampo(id, e.target.value.replace(/\D/g, "").slice(0, maxLength))}
           className={`${CAMPO} !mt-0 !w-36 codigo${error ? " campo-con-error" : ""}`}
           aria-invalid={Boolean(error)}
           autoComplete="off"

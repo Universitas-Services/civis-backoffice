@@ -22,14 +22,24 @@ export async function GET(
     return NextResponse.json({ message: "Sesión expirada o API inaccesible" }, { status: 401 });
   }
   if (!respuesta.ok) {
-    return new Response("Documento no disponible", { status: respuesta.status });
+    const cuerpo = (await respuesta.json().catch(() => null)) as { message?: unknown } | null;
+    const message =
+      typeof cuerpo?.message === "string" && cuerpo.message.trim()
+        ? cuerpo.message
+        : "Documento no disponible";
+    return NextResponse.json({ message }, { status: respuesta.status });
   }
 
-  const contentType = respuesta.headers.get("content-type") ?? "application/pdf";
+  const contentType =
+    respuesta.headers.get("content-type")?.split(";")[0]?.trim().toLowerCase() ?? "";
+  const visible =
+    contentType === "application/pdf" || contentType.startsWith("image/")
+      ? contentType
+      : "application/octet-stream";
   const salida = new NextResponse(respuesta.body, {
     status: 200,
     headers: {
-      "Content-Type": contentType.includes("pdf") ? contentType : "application/pdf",
+      "Content-Type": visible,
       "Content-Disposition": respuesta.headers.get("content-disposition") ?? "inline",
       "Cache-Control": "no-store",
       "X-Frame-Options": "SAMEORIGIN",

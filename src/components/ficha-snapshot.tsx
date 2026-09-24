@@ -65,8 +65,7 @@ export function FichaSnapshot({
           <span aria-hidden="true" className="mr-1.5">
             🛈
           </span>
-          Usted preparó este snapshot. Debe aprobarlo otra persona con rol de publicación: la
-          separación de funciones es lo que evita que una sola persona publique sin revisión.
+          Usted preparó este snapshot. Lo debe publicar un superadministrador.
         </p>
       ) : (
         <form action={accion} className="mt-4 space-y-3">

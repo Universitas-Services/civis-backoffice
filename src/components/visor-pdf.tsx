@@ -3,13 +3,13 @@
 import { useEffect, useState } from "react";
 import type { DocumentoExpediente } from "@/contracts";
 import { CATEGORIA_ETIQUETA } from "@/contracts";
+import { prepararVistaDocumento } from "@/lib/archivo-documento";
 import { InsigniaAnalisis, InsigniaClasificacion } from "./insignias";
 
 /**
  * Visor documental con pestañas.
  *
- * Carga el PDF vía fetch + blob URL (misma técnica que revisión) para evitar
- * el iframe directo a /api/... que el navegador rechaza con «conexión rechazada».
+ * Carga el archivo vía fetch + blob URL. Un PDF va en iframe; una imagen, en img.
  */
 export function VisorPdf({
   documentos,
@@ -21,6 +21,7 @@ export function VisorPdf({
 }) {
   const [activo, setActivo] = useState(0);
   const [url, setUrl] = useState<string | null>(null);
+  const [modo, setModo] = useState<"imagen" | "pdf">("pdf");
   const [cargando, setCargando] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -30,6 +31,7 @@ export function VisorPdf({
     let objectUrl: string | null = null;
     const indice = Math.min(activo, documentos.length - 1);
     const documentId = documentos[indice]!.id;
+    const nombre = documentos[indice]!.originalName ?? "";
 
     async function cargar() {
       setCargando(true);
@@ -51,7 +53,10 @@ export function VisorPdf({
         }
         const blob = await respuesta.blob();
         if (cancelado) return;
-        objectUrl = URL.createObjectURL(blob);
+        const vista = await prepararVistaDocumento(blob, nombre);
+        if (cancelado) return;
+        objectUrl = URL.createObjectURL(vista.blob);
+        setModo(vista.modo);
         setUrl(objectUrl);
       } catch {
         if (!cancelado) setError("No se pudo cargar el documento (red o API).");
@@ -93,9 +98,7 @@ export function VisorPdf({
         >
           {documentos.map((d, i) => {
             const etiqueta =
-              d.originalName?.trim() ||
-              CATEGORIA_ETIQUETA[d.category] ||
-              String(d.category);
+              d.originalName?.trim() || CATEGORIA_ETIQUETA[d.category] || String(d.category);
             return (
               <button
                 key={d.id}
@@ -150,7 +153,16 @@ export function VisorPdf({
             </a>
           </div>
         )}
-        {url && !cargando && !error && (
+        {url && !cargando && !error && modo === "imagen" && (
+          <div className="flex h-full items-center justify-center bg-white p-4">
+            <img
+              src={url}
+              alt={documento.originalName}
+              className="max-h-full max-w-full object-contain"
+            />
+          </div>
+        )}
+        {url && !cargando && !error && modo === "pdf" && (
           <iframe
             src={url}
             title={`Documento: ${documento.originalName}`}

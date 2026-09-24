@@ -92,8 +92,8 @@ export function SidebarChecklistDocumentos({
   }
 
   return (
-    <aside className="rounded-lg border border-toga-200 bg-white">
-      <div className="border-b border-toga-100 px-4 py-3">
+    <aside className="flex flex-col rounded-lg border border-toga-200 bg-white lg:sticky lg:top-4 lg:max-h-[calc(100dvh-2rem)] lg:self-start lg:overflow-hidden">
+      <div className="shrink-0 border-b border-toga-100 px-4 py-3">
         <p className="text-sm font-semibold text-toga-900">Documentos del expediente</p>
         <p className="mt-1 text-xs text-toga-500">
           <span className="cifra font-medium text-toga-800">{cargados}</span>
@@ -110,7 +110,7 @@ export function SidebarChecklistDocumentos({
         </div>
       </div>
 
-      <nav className="space-y-2 p-3" aria-label="Índice de documentos">
+      <nav className="min-h-0 flex-1 space-y-2 overflow-y-auto p-3" aria-label="Índice de documentos">
         {resumenPorBloque.map(({ bloque, items, hechos, completo }) => {
           const abierto = estaAbierto(bloque, completo);
           const panelId = `bloque-docs-${bloque}`;

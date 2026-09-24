@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useLayoutEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -8,13 +8,30 @@ import type { Sesion } from "@/contracts";
 import { seccionesDe } from "@/lib/secciones-nav";
 import { terminarSesion } from "@/app/acciones-auth";
 import { ConTooltip, TooltipProvider } from "@/components/ui/tooltip";
-import { EVENTO_SIDEBAR_DOCUMENTO } from "@/lib/sidebar-panel";
+import {
+  CLAVE_SIDEBAR_COLAPSADO,
+  EVENTO_SIDEBAR_DOCUMENTO,
+  reiniciarSidebar,
+} from "@/lib/sidebar-panel";
 
-const CLAVE_COLAPSADO = "civis.sidebar.colapsado";
-
-function rutaCoincide(pathname: string | null | undefined, href: string) {
-  if (!pathname) return false;
+function rutaActiva(pathname: string, href: string) {
+  if (href === "/baremo") {
+    return (
+      pathname === "/baremo" ||
+      (pathname.startsWith("/baremo/") && !pathname.startsWith("/baremo/configuracion"))
+    );
+  }
   return pathname === href || pathname.startsWith(`${href}/`);
+}
+
+function claseEnlace(activo: boolean, estrecho: boolean) {
+  return `flex items-center rounded-md text-sm transition-colors ${
+    estrecho ? "justify-center px-2 py-2.5 md:mx-auto md:w-10" : "gap-3 px-3 py-2 md:border-l-2"
+  } ${
+    activo
+      ? "bg-black/25 text-white md:border-white"
+      : "text-white/80 hover:bg-black/15 hover:text-white md:border-transparent"
+  }`;
 }
 
 /**
@@ -33,17 +50,18 @@ export function BarraLateral({ usuario }: { readonly usuario: Sesion }) {
   const [colapsado, setColapsado] = useState(false);
   const [documentoAbierto, setDocumentoAbierto] = useState(false);
   const [listo, setListo] = useState(false);
+  const [menuAbierto, setMenuAbierto] = useState<boolean | null>(null);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     try {
-      setColapsado(localStorage.getItem(CLAVE_COLAPSADO) === "1");
+      setColapsado(localStorage.getItem(CLAVE_SIDEBAR_COLAPSADO) === "1");
     } catch {
       /* almacenamiento no disponible */
     }
     setListo(true);
   }, []);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     function onDocumento(ev: Event) {
       const detail = (ev as CustomEvent<{ abierto?: boolean }>).detail;
       setDocumentoAbierto(Boolean(detail?.abierto));
@@ -61,7 +79,7 @@ export function BarraLateral({ usuario }: { readonly usuario: Sesion }) {
       setDocumentoAbierto(false);
       setColapsado(false);
       try {
-        localStorage.setItem(CLAVE_COLAPSADO, "0");
+        localStorage.setItem(CLAVE_SIDEBAR_COLAPSADO, "0");
       } catch {
         /* ignore */
       }
@@ -69,18 +87,19 @@ export function BarraLateral({ usuario }: { readonly usuario: Sesion }) {
     }
     setColapsado(true);
     try {
-      localStorage.setItem(CLAVE_COLAPSADO, "1");
+      localStorage.setItem(CLAVE_SIDEBAR_COLAPSADO, "1");
     } catch {
       /* ignore */
     }
   }
 
   const estrecho = listo && (colapsado || documentoAbierto);
+  const baremoAbierto = menuAbierto ?? pathname.startsWith("/baremo");
 
   return (
     <TooltipProvider delayDuration={200}>
       <aside
-        className={`flex w-full shrink-0 flex-col bg-balanza-600 transition-[width] duration-200 md:sticky md:top-0 md:h-dvh md:self-start md:overflow-hidden ${
+        className={`flex w-full shrink-0 flex-col bg-balanza-600 md:sticky md:top-0 md:h-dvh md:self-start md:overflow-hidden ${
           estrecho ? "md:w-16" : "md:w-64"
         }`}
       >
@@ -126,21 +145,63 @@ export function BarraLateral({ usuario }: { readonly usuario: Sesion }) {
         >
           <ul className={`flex gap-1 ${estrecho ? "md:flex-col md:items-center" : "md:flex-col"}`}>
             {visibles.map((s) => {
-              const activa = rutaCoincide(pathname, s.href);
+              const hijos = s.hijos ?? [];
+              if (hijos.length > 1) {
+                return (
+                  <li key={s.href} className={estrecho ? "md:w-full" : "w-full"}>
+                    <button
+                      type="button"
+                      aria-expanded={baremoAbierto}
+                      onClick={() => setMenuAbierto(!baremoAbierto)}
+                      className={`${claseEnlace(pathname.startsWith("/baremo"), false)} w-full ${
+                        estrecho ? "md:hidden" : ""
+                      }`}
+                    >
+                      <IconoSeccion href={s.href} className="h-5 w-5 shrink-0" />
+                      <span className="flex-1 text-left">{s.texto}</span>
+                      <Chevron className={`h-4 w-4 ${baremoAbierto ? "rotate-180" : ""}`} />
+                    </button>
+                    {baremoAbierto && (
+                      <ul
+                        className={`mt-1 flex flex-col gap-1 ${estrecho ? "md:hidden" : "md:ml-3"}`}
+                      >
+                        {hijos.map((h) => (
+                          <li key={h.href}>
+                            <Link
+                              href={h.href}
+                              aria-current={rutaActiva(pathname, h.href) ? "page" : undefined}
+                              className={claseEnlace(rutaActiva(pathname, h.href), false)}
+                            >
+                              <IconoHijo href={h.href} />
+                              <span>{h.texto}</span>
+                            </Link>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                    <div className={estrecho ? "hidden md:block" : "hidden"}>
+                      <ConTooltip texto={s.texto} side="right" activo={estrecho}>
+                        <Link
+                          href={s.href}
+                          aria-label={s.texto}
+                          aria-current={pathname.startsWith(s.href) ? "page" : undefined}
+                          className={claseEnlace(pathname.startsWith(s.href), true)}
+                        >
+                          <IconoSeccion href={s.href} compacto />
+                        </Link>
+                      </ConTooltip>
+                    </div>
+                  </li>
+                );
+              }
+
+              const activa = rutaActiva(pathname, s.href);
               const enlace = (
                 <Link
                   href={s.href}
                   aria-label={s.texto}
                   aria-current={activa ? "page" : undefined}
-                  className={`flex items-center rounded-md text-sm transition-colors ${
-                    estrecho
-                      ? "justify-center px-2 py-2.5 md:mx-auto md:w-10"
-                      : "gap-3 px-3 py-2 md:border-l-2"
-                  } ${
-                    activa
-                      ? "bg-black/25 text-white md:border-white"
-                      : "text-white/80 hover:bg-black/15 hover:text-white md:border-transparent"
-                  }`}
+                  className={claseEnlace(activa, estrecho)}
                 >
                   <IconoSeccion href={s.href} className="h-5 w-5 shrink-0" />
                   <span className={estrecho ? "md:hidden" : ""}>{s.texto}</span>
@@ -149,13 +210,9 @@ export function BarraLateral({ usuario }: { readonly usuario: Sesion }) {
 
               return (
                 <li key={s.href} className={estrecho ? "md:w-full" : undefined}>
-                  {estrecho ? (
-                    <ConTooltip texto={s.texto} side="right">
-                      {enlace}
-                    </ConTooltip>
-                  ) : (
-                    enlace
-                  )}
+                  <ConTooltip texto={s.texto} side="right" activo={estrecho}>
+                    {enlace}
+                  </ConTooltip>
                 </li>
               );
             })}
@@ -175,6 +232,7 @@ export function BarraLateral({ usuario }: { readonly usuario: Sesion }) {
           )}
           <form
             action={terminarSesion}
+            onSubmit={reiniciarSidebar}
             className={estrecho ? "flex justify-center" : "mt-3 flex justify-center"}
           >
             {estrecho ? (
@@ -203,7 +261,60 @@ export function BarraLateral({ usuario }: { readonly usuario: Sesion }) {
   );
 }
 
-function IconoSeccion({ href, className }: { readonly href: string; readonly className?: string }) {
+function Chevron({ className }: { readonly className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="none" aria-hidden="true">
+      <path
+        d="M6 9.5 12 15.5 18 9.5"
+        stroke="currentColor"
+        strokeWidth="1.75"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+function IconoHijo({ href }: { readonly href: string }) {
+  const props = {
+    viewBox: "0 0 24 24",
+    className: "h-4 w-4 shrink-0",
+    fill: "none" as const,
+    "aria-hidden": true as const,
+  };
+  if (href === "/baremo/configuracion") {
+    return (
+      <svg {...props}>
+        <path
+          d="M12 5.5v13M5.5 12h13"
+          stroke="currentColor"
+          strokeWidth="1.75"
+          strokeLinecap="round"
+        />
+      </svg>
+    );
+  }
+  return (
+    <svg {...props}>
+      <path
+        d="M5 7.5h14M5 12h14M5 16.5h9"
+        stroke="currentColor"
+        strokeWidth="1.75"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+function IconoSeccion({
+  href,
+  className,
+  compacto = false,
+}: {
+  readonly href: string;
+  readonly className?: string;
+  readonly compacto?: boolean;
+}) {
   const props = {
     viewBox: "0 0 24 24",
     className,
@@ -243,7 +354,12 @@ function IconoSeccion({ href, className }: { readonly href: string; readonly cla
             strokeWidth="1.75"
             strokeLinejoin="round"
           />
-          <path d="M14 3.5V8h4.5M8.5 13h7M8.5 16.5h5" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
+          <path
+            d="M14 3.5V8h4.5M8.5 13h7M8.5 16.5h5"
+            stroke="currentColor"
+            strokeWidth="1.75"
+            strokeLinecap="round"
+          />
         </svg>
       );
     case "/evaluacion":
@@ -271,7 +387,11 @@ function IconoSeccion({ href, className }: { readonly href: string; readonly cla
           alt=""
           width={80}
           height={20}
-          className={`${className ?? ""} h-5 w-auto max-w-[4.5rem] object-contain object-left`}
+          className={
+            compacto
+              ? "h-5 w-5 object-contain"
+              : `${className ?? ""} h-5 w-auto max-w-[4.5rem] object-contain object-left`
+          }
           aria-hidden="true"
         />
       );
@@ -346,7 +466,12 @@ function IconoSeccion({ href, className }: { readonly href: string; readonly cla
             strokeWidth="1.75"
             strokeLinejoin="round"
           />
-          <path d="M9 9h6M9 12.5h6M9 16h4" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
+          <path
+            d="M9 9h6M9 12.5h6M9 16h4"
+            stroke="currentColor"
+            strokeWidth="1.75"
+            strokeLinecap="round"
+          />
         </svg>
       );
     default:

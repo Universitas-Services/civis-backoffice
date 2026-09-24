@@ -29,7 +29,7 @@ const nextConfig: NextConfig = {
           "form-action 'self'",
           "frame-ancestors 'none'",
           "object-src 'none'",
-          "img-src 'self' data:",
+          "img-src 'self' data: blob:",
           "font-src 'self'",
           "style-src 'self' 'unsafe-inline'",
           // React DevTools / reconstrucción de callstacks usan eval() en
@@ -38,11 +38,8 @@ const nextConfig: NextConfig = {
             ? "script-src 'self' 'unsafe-inline'"
             : "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
           ["connect-src 'self'", apiOrigin].filter(Boolean).join(" "),
-          // El visor enmarca el documento servido por la API, no por el
-          // almacenamiento: los bytes pasan por ella para poder entregarse
-          // `inline` y con su nombre real. De ahí que `frame-src` necesite el
-          // origen de la API. `documentOrigin` se mantiene por si algún
-          // despliegue vuelve a servir desde el almacén.
+          // PDF en iframe (frame-src blob:). Imagen en <img> (img-src blob:).
+          // Los bytes salen del proxy del panel, no del almacén.
           ["frame-src 'self' blob:", apiOrigin, documentOrigin].filter(Boolean).join(" "),
         ].join("; "),
       },

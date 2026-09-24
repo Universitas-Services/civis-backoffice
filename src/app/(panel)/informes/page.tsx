@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import type { InformeListado } from "@/contracts";
 import { llamarApi, NoAutorizado } from "@/lib/api";
 import { exigirRol, renovarYVolver } from "@/lib/rutas";
-import { CabeceraPagina, EstadoVacio } from "@/components/cabecera-pagina";
-import { GenerarInforme, FichaInforme } from "@/components/gestion-informes";
+import { EstadoVacio } from "@/components/cabecera-pagina";
+import { MarcoInformes, FichaInforme } from "@/components/gestion-informes";
 
 export const metadata: Metadata = { title: "Informes" };
 
@@ -21,15 +21,8 @@ export default async function Informes() {
   const puedeGenerar = usuario.roles.some((r) => r === "SUPER_ADMIN" || r === "ADMIN");
 
   return (
-    <>
-      <CabeceraPagina
-        titulo="Informes finales"
-        descripcion="Cada informe se genera a partir de evaluaciones aprobadas y se publica con su huella digital, para que cualquiera pueda comprobar que el documento no cambió."
-      />
-
-      <div className="space-y-8 px-5 py-6 sm:px-8">
-        {puedeGenerar && <GenerarInforme />}
-
+    <MarcoInformes puedeGenerar={puedeGenerar}>
+      <div className="space-y-8">
         <section aria-labelledby="listado">
           <h2 id="listado" className="text-base font-semibold text-toga-900">
             Informes generados
@@ -57,6 +50,6 @@ export default async function Informes() {
           )}
         </section>
       </div>
-    </>
+    </MarcoInformes>
   );
 }

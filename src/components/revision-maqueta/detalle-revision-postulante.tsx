@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, FileStack, Sparkles } from "lucide-react";
@@ -10,6 +10,7 @@ import {
   type PostulanteRevision,
 } from "@/lib/adaptar-revision-api";
 import {
+  devolverASecretaria,
   enviarAEvaluacion,
   extraerConIa,
   guardarRevision,
@@ -49,6 +50,7 @@ import { FormularioActaMatrimonio } from "./formulario-acta-matrimonio";
 import { FormularioDjNoContratacion } from "./formulario-dj-no-contratacion";
 import { FormularioSintesisCurricular } from "./formulario-sintesis-curricular";
 import { FormularioOtroDocumento } from "./formulario-otro-documento";
+import { FormularioConvalidacionTitulo } from "./formulario-convalidacion-titulo";
 import {
   esFormularioActaConcursoDocente,
   esFormularioActaMatrimonio,
@@ -68,6 +70,7 @@ import {
   esFormularioDjOtraNacionalidad,
   esFormularioInscripcionColegio,
   esFormularioInscripcionInpreabogado,
+  esFormularioConvalidacion,
   esFormularioOtroDocumento,
   esFormularioPartida,
   esFormularioPruebaEjercicioLibre,
@@ -127,6 +130,8 @@ export function DetalleRevisionPostulante({
   });
   const [rellenandoIa, setRellenandoIa] = useState(false);
   const [confirmandoEnvio, setConfirmandoEnvio] = useState(false);
+  const [motivoDevolucion, setMotivoDevolucion] = useState("");
+  const [confirmandoDevolucion, setConfirmandoDevolucion] = useState(false);
   const [extractUsados, setExtractUsados] = useState<Set<string>>(() => new Set());
 
   const doc = postulante.documentos.find((d) => d.id === activo);
@@ -199,8 +204,10 @@ export function DetalleRevisionPostulante({
     const documento = postulante.documentos.find((d) => d.id === docId);
     if (!documento) return;
     const valoresDoc = valoresDe(documento);
+    const cerrarAlVerificar = usaBotonVerificado(documento.slotKey);
     startTransition(async () => {
-      await persistirYMarcar(documento, valoresDoc, usaBotonVerificado(documento.slotKey));
+      const ok = await persistirYMarcar(documento, valoresDoc, cerrarAlVerificar);
+      if (ok && cerrarAlVerificar) setActivo(undefined);
     });
   }
 
@@ -253,6 +260,24 @@ export function DetalleRevisionPostulante({
         `Expediente de ${postulante.nombre} ${postulante.apellido} enviado a evaluación.`,
       );
       setConfirmandoEnvio(false);
+      router.push("/revision-documental");
+      router.refresh();
+    });
+  }
+
+  function devolver() {
+    const motivo = motivoDevolucion.trim();
+    if (motivo.length < 10) {
+      toast.error("Indique el motivo de la devolución (mínimo 10 caracteres).");
+      return;
+    }
+    startTransition(async () => {
+      const r = await devolverASecretaria(postulante.id, motivo);
+      if (!r.ok) {
+        toast.error(r.error ?? "No se pudo devolver el expediente.");
+        return;
+      }
+      toast.exito("Expediente devuelto a secretaría.");
       router.push("/revision-documental");
       router.refresh();
     });
@@ -344,6 +369,52 @@ export function DetalleRevisionPostulante({
               </button>
             </div>
           )}
+          <div className="mt-4 border-t border-toga-100 pt-4">
+            {confirmandoDevolucion ? (
+              <div className="space-y-3">
+                <label
+                  htmlFor="motivo-devolucion"
+                  className="block text-sm font-semibold text-toga-900"
+                >
+                  Motivo de la devolución a secretaría
+                </label>
+                <textarea
+                  id="motivo-devolucion"
+                  rows={3}
+                  value={motivoDevolucion}
+                  onChange={(e) => setMotivoDevolucion(e.target.value)}
+                  placeholder="Explique qué debe corregir secretaría (mínimo 10 caracteres)"
+                  className="w-full rounded-md border border-toga-300 bg-white px-3 py-2 text-sm text-toga-900 placeholder:text-toga-400"
+                />
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={devolver}
+                    disabled={pending}
+                    className="rounded-md border border-balanza-600 px-4 py-2 text-sm font-semibold text-balanza-700 hover:bg-balanza-50 disabled:opacity-60"
+                  >
+                    {pending ? "Devolviendo…" : "Confirmar devolución"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setConfirmandoDevolucion(false)}
+                    disabled={pending}
+                    className="rounded-md border border-toga-300 bg-white px-4 py-2 text-sm font-medium text-toga-700 hover:bg-toga-50"
+                  >
+                    Cancelar
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setConfirmandoDevolucion(true)}
+                className="rounded-md border border-balanza-600 px-4 py-2 text-sm font-semibold text-balanza-700 hover:bg-balanza-50"
+              >
+                Devolver a secretaría
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
@@ -352,6 +423,7 @@ export function DetalleRevisionPostulante({
           {doc ? (
             <PanelVisualizacionYFormulario
               doc={doc}
+              submissionId={postulante.submissionId}
               valores={valoresDe(doc)}
               verificado={formulariosGuardados.has(doc.id)}
               rellenandoIa={rellenandoIa}
@@ -387,6 +459,7 @@ export function DetalleRevisionPostulante({
 
 function PanelVisualizacionYFormulario({
   doc,
+  submissionId,
   valores,
   verificado,
   rellenandoIa,
@@ -397,6 +470,7 @@ function PanelVisualizacionYFormulario({
   onRellenarIa,
 }: {
   readonly doc: DocumentoRevision;
+  readonly submissionId: string;
   readonly valores: Readonly<ValoresFormularioRevision>;
   readonly verificado: boolean;
   readonly rellenandoIa: boolean;
@@ -437,6 +511,7 @@ function PanelVisualizacionYFormulario({
   const esDjNoContratacion = esFormularioDjNoContratacion(doc.slotKey);
   const esSintesis = esFormularioSintesisCurricular(doc.slotKey);
   const esOtro = esFormularioOtroDocumento(doc.slotKey);
+  const esConvalidacion = esFormularioConvalidacion(doc.slotKey);
   const botonVerificado = usaBotonVerificado(doc.slotKey);
   const [errores, setErrores] = useState<ErroresFormularioRevision>({});
 
@@ -478,14 +553,19 @@ function PanelVisualizacionYFormulario({
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <div>
-          <VisorDocumentoRevision
-            documentId={doc.id}
-            nombreArchivo={doc.nombreArchivo}
-            sizeKb={doc.sizeKb}
-            titulo={doc.titulo}
-          />
-        </div>
+        <VisorDocumentoRevision
+          documentId={doc.id}
+          nombreArchivo={doc.nombreArchivo}
+          sizeKb={doc.sizeKb}
+          titulo={doc.titulo}
+          acciones={
+            <ActualizarDocumento
+              submissionId={submissionId}
+              documentId={doc.id}
+              category={doc.category}
+            />
+          }
+        />
 
         <div>
           {esCedula ? (
@@ -662,6 +742,12 @@ function PanelVisualizacionYFormulario({
               errores={errores}
               onCampo={actualizarCampo}
             />
+          ) : esConvalidacion ? (
+            <FormularioConvalidacionTitulo
+              valores={valores}
+              errores={errores}
+              onCampo={actualizarCampo}
+            />
           ) : (
             <FormularioGenericoStub valores={valores} errores={errores} onCampo={actualizarCampo} />
           )}
@@ -709,6 +795,77 @@ function PanelVisualizacionYFormulario({
               </div>
             )}          </div>
         </div>
+      </div>
+    </div>
+  );
+}
+
+function ActualizarDocumento({
+  submissionId,
+  documentId,
+  category,
+}: {
+  readonly submissionId: string;
+  readonly documentId: string;
+  readonly category: string;
+}) {
+  const toast = useToast();
+  const router = useRouter();
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [subiendo, setSubiendo] = useState(false);
+
+  async function onArchivo(archivo: File) {
+    if (!submissionId) {
+      toast.error("Este expediente no tiene una carga asociada.");
+      return;
+    }
+    const cuerpo = new FormData();
+    cuerpo.append("category", category);
+    cuerpo.append("replaces", documentId);
+    cuerpo.append("file", archivo);
+    setSubiendo(true);
+    try {
+      const respuesta = await fetch(`/api/documentos/${submissionId}`, {
+        method: "POST",
+        body: cuerpo,
+      });
+      const datos = (await respuesta.json().catch(() => null)) as { message?: string } | null;
+      if (!respuesta.ok) {
+        toast.error(datos?.message ?? "No se pudo actualizar el documento.");
+        return;
+      }
+      toast.exito("Documento actualizado. El visor mostrará el archivo nuevo.");
+      router.refresh();
+    } finally {
+      setSubiendo(false);
+      if (inputRef.current) inputRef.current.value = "";
+    }
+  }
+
+  return (
+    <div>
+      <input
+        ref={inputRef}
+        type="file"
+        accept="application/pdf,image/jpeg,image/png,.pdf,.jpg,.jpeg,.png"
+        className="sr-only"
+        onChange={(e) => {
+          const archivo = e.target.files?.[0];
+          if (archivo) void onArchivo(archivo);
+        }}
+      />
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+        <button
+          type="button"
+          disabled={subiendo || !submissionId}
+          onClick={() => inputRef.current?.click()}
+          className="rounded-md border border-toga-300 bg-white px-3 py-2 text-sm font-medium text-toga-800 hover:bg-toga-50 disabled:opacity-60"
+        >
+          {subiendo ? "Actualizando…" : "Actualizar documento"}
+        </button>
+        <p className="text-xs text-toga-500">
+          Sustituye este archivo. La categoría se conserva.
+        </p>
       </div>
     </div>
   );

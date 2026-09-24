@@ -6,6 +6,7 @@ import { postulanteDesdeExpediente } from "@/lib/adaptar-revision-api";
 import { exigirRol, renovarYVolver } from "@/lib/rutas";
 import { CabeceraPagina } from "@/components/cabecera-pagina";
 import { DetalleRevisionPostulante } from "@/components/revision-maqueta/detalle-revision-postulante";
+import { HojaHistorialExpediente, type EventoHistorial } from "@/components/historial-expediente";
 
 export const metadata: Metadata = { title: "Revisión del postulante" };
 
@@ -26,6 +27,13 @@ export default async function RevisionDocumentalPostulante({
     throw error;
   }
 
+  let historial: EventoHistorial[] = [];
+  try {
+    historial = await llamarApi<EventoHistorial[]>(`/internal/candidates/${id}/history`);
+  } catch (error) {
+    if (error instanceof NoAutorizado) renovarYVolver(`/revision-documental/${id}`);
+  }
+
   if (expediente.workflowStatus !== "DOCUMENT_REVIEW") {
     notFound();
   }
@@ -41,8 +49,9 @@ export default async function RevisionDocumentalPostulante({
           { href: "/revision-documental", texto: "Revisión documental" },
           { texto: `${postulante.nombre} ${postulante.apellido}` },
         ]}
+        acciones={<HojaHistorialExpediente eventos={historial} />}
       />
-      <div className="px-5 py-6 sm:px-8">
+      <div className="space-y-6 px-5 py-6 sm:px-8">
         <DetalleRevisionPostulante postulante={postulante} />
       </div>
     </>

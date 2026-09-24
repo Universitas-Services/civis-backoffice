@@ -1,8 +1,13 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import type { Chamber, WorkflowStatus } from "@/contracts";
+import type { Chamber, ExpedienteListado, WorkflowStatus } from "@/contracts";
 import { llamarApi, NoAutorizado } from "@/lib/api";
 import { exigirRol, renovarYVolver } from "@/lib/rutas";
+import {
+  decisionDesdeFichaApi,
+  type DecisionElegibilidad,
+  type FichaElegibilidadApi,
+} from "@/lib/elegibilidad";
 import { CabeceraPagina } from "@/components/cabecera-pagina";
 import { BandejaEvaluacionTabs } from "@/components/bandeja-evaluacion-tabs";
 
@@ -38,8 +43,26 @@ export default async function BandejaEvaluacion() {
   await exigirRol("SUPER_ADMIN", "EVALUATOR");
 
   let bandeja: Bandeja;
+  let inelegibles: DecisionElegibilidad[];
   try {
     bandeja = await llamarApi<Bandeja>("/internal/evaluations/inbox");
+    const descalificados = await llamarApi<{ readonly items: readonly ExpedienteListado[] }>(
+      "/internal/candidates?estado=DISQUALIFIED&pageSize=100",
+    );
+    const fichas = await Promise.all(
+      descalificados.items.map(async (candidato) => {
+        try {
+          const ficha = await llamarApi<FichaElegibilidadApi | null>(
+            `/internal/evaluations/candidate/${candidato.id}/eligibility`,
+          );
+          return decisionDesdeFichaApi(candidato, ficha);
+        } catch (error) {
+          if (error instanceof NoAutorizado) throw error;
+          return decisionDesdeFichaApi(candidato, null);
+        }
+      }),
+    );
+    inelegibles = fichas;
   } catch (error) {
     if (error instanceof NoAutorizado) renovarYVolver("/evaluacion");
     throw error;
@@ -90,10 +113,7 @@ export default async function BandejaEvaluacion() {
           </section>
         )}
 
-        <BandejaEvaluacionTabs
-          pendientes={bandeja.pendientes}
-          misEvaluaciones={bandeja.misEvaluaciones}
-        />
+        <BandejaEvaluacionTabs pendientes={bandeja.pendientes} inelegibles={inelegibles} />
       </div>
     </>
   );

@@ -29,6 +29,7 @@ export function PasoCargaDocumentos({
   const [guardados, setGuardados] = useState<Record<string, ArchivoGuardado[]>>({});
   const [activo, setActivo] = useState<string | undefined>();
   const [guardando, setGuardando] = useState(false);
+  const [sustituyendoId, setSustituyendoId] = useState<string | null>(null);
   const [enRevision, setEnRevision] = useState(false);
   const [confirmandoRevision, setConfirmandoRevision] = useState(false);
 
@@ -109,13 +110,51 @@ export function PasoCargaDocumentos({
     }
   }
 
-  function quitarGuardado(slotKey: string, id: string) {
-    if (enRevision || enviandoRevision) return;
-    // La API no expone borrado; sólo quitamos de la UI de esta sesión.
-    setGuardados((prev) => ({
-      ...prev,
-      [slotKey]: (prev[slotKey] ?? []).filter((g) => g.id !== id),
-    }));
+  async function sustituirDocumento(slotKey: string, id: string, file: File) {
+    const slot = slots.find((s) => s.slotKey === slotKey);
+    if (!slot || enRevision || enviandoRevision || sustituyendoId) return;
+    const category = categoryDesdeSlotKey(slotKey);
+    if (!category) {
+      toast.error("Tipo de documento no reconocido.");
+      return;
+    }
+
+    setSustituyendoId(id);
+    try {
+      const cuerpo = new FormData();
+      cuerpo.append("category", category);
+      cuerpo.append("replaces", id);
+      cuerpo.append("file", file);
+
+      const respuesta = await fetch(`/api/documentos/${submissionId}`, {
+        method: "POST",
+        body: cuerpo,
+      });
+      const datosResp = (await respuesta.json()) as {
+        id?: string;
+        originalName?: string;
+        sizeBytes?: number;
+        message?: string;
+      };
+      if (!respuesta.ok || !datosResp.id) {
+        toast.error(datosResp.message ?? "No se pudo sustituir el documento.");
+        return;
+      }
+      const nuevo: ArchivoGuardado = {
+        id: datosResp.id,
+        name: datosResp.originalName ?? file.name,
+        size: datosResp.sizeBytes ?? file.size,
+      };
+      setGuardados((prev) => ({
+        ...prev,
+        [slotKey]: (prev[slotKey] ?? []).map((g) => (g.id === id ? nuevo : g)),
+      }));
+      toast.exito(`Documento sustituido: ${slot.titulo}`);
+    } catch {
+      toast.error("Fallo de conexión al sustituir el documento.");
+    } finally {
+      setSustituyendoId(null);
+    }
   }
 
   function pedirConfirmacionEnvio() {
@@ -165,7 +204,7 @@ export function PasoCargaDocumentos({
       </div>
 
       <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(16rem,20rem)]">
-        <div className="space-y-4">
+        <div className="space-y-4 lg:sticky lg:top-4 lg:z-10 lg:self-start">
           <div className="rounded-lg border border-toga-200 bg-white p-5 sm:p-6">
             {slotActivo ? (
               <SlotDocumentoPdf
@@ -182,7 +221,8 @@ export function PasoCargaDocumentos({
                 guardando={guardando}
                 onPendiente={(f) => setPendiente(slotActivo.slotKey, f)}
                 onGuardar={() => void guardarDocumento(slotActivo.slotKey)}
-                onQuitarGuardado={(id) => quitarGuardado(slotActivo.slotKey, id)}
+                onSustituir={(id, file) => void sustituirDocumento(slotActivo.slotKey, id, file)}
+                sustituyendoId={sustituyendoId}
               />
             ) : (
               <div className="flex flex-col items-center justify-center px-4 py-14 text-center">

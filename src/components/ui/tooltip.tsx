@@ -33,15 +33,18 @@ export function ConTooltip({
   texto,
   children,
   side = "top",
+  activo = true,
 }: {
   readonly texto: string;
   readonly children: React.ReactNode;
   readonly side?: "top" | "right" | "bottom" | "left";
+  /** Si es false, el disparador sigue montado pero el cartel no aparece. */
+  readonly activo?: boolean;
 }) {
   return (
     <Tooltip>
       <TooltipTrigger asChild>{children}</TooltipTrigger>
-      <TooltipContent side={side}>{texto}</TooltipContent>
+      {activo ? <TooltipContent side={side}>{texto}</TooltipContent> : null}
     </Tooltip>
   );
 }

@@ -22,7 +22,7 @@ export type BloqueDocumentoId =
 
 export type TrayectoriaOpcion = "A" | "B" | "C";
 
-export type TipoParFormacion = "especializacion" | "maestria" | "doctorado" | "convalidacion";
+export type TipoParFormacion = "especializacion" | "maestria" | "doctorado";
 
 export interface DefinicionSlotFijo {
   readonly kind: "fijo";
@@ -175,18 +175,13 @@ export const CATALOGO_DOCUMENTOS_MAQUETA: readonly DefinicionCatalogo[] = [
     etiquetaAnadir: "Añadir otro título de doctorado",
   },
   {
-    kind: "par_repetible",
-    grupoId: "convalidacion",
+    kind: "fijo",
+    id: "convalidacion_titulo",
     bloque: "formacion",
     opcional: true,
-    tituloTitulo: "Copia del certificado de revalidación o convalidación de título extranjero",
-    ayudaTitulo:
-      "Adjunte PDF o imagen de la resolución o certificado de revalidación o convalidación del título extranjero (aplica a pregrado, especialización, maestría o doctorado del exterior)",
-    tituloConstancia: "Documento de apoyo de la convalidación",
-    ayudaConstancia:
-      "Si aplica, Adjunte PDF o imagen adicional vinculado a esta convalidación (apostilla, registro, etc.)",
-    notaPar: "Por cada título extranjero consignar la convalidación del mismo",
-    etiquetaAnadir: "Añadir otra convalidación de título",
+    titulo: "Copia del certificado de revalidación o convalidación de título extranjero",
+    ayuda:
+      "Adjunte PDF o imagen de la resolución o certificado de revalidación o convalidación del título extranjero. Puede cargar varios si hay más de un título del exterior.",
   },
   {
     kind: "fijo",
@@ -366,22 +361,20 @@ export function construirSlotsVisibles(): SlotInstancia[] {
       grupoPar: def.grupoId,
       rolPar: "titulo",
     });
-    if (def.grupoId !== "convalidacion") {
-      const slotConstancia = `${def.grupoId}_constancia`;
-      const recaudoConstancia = recaudoPorSlotKey(slotConstancia);
-      out.push({
-        slotKey: slotConstancia,
-        bloque: def.bloque,
-        titulo: def.tituloConstancia,
-        ayuda: def.ayudaConstancia,
-        opcional: recaudoConstancia?.optional ?? Boolean(def.opcional),
-        multiple: recaudoConstancia?.multiple ?? true,
-        notaMultiple: def.notaPar,
-        etiquetaAnadir: "Añadir otra constancia de aprobación",
-        grupoPar: def.grupoId,
-        rolPar: "constancia",
-      });
-    }
+    const slotConstancia = `${def.grupoId}_constancia`;
+    const recaudoConstancia = recaudoPorSlotKey(slotConstancia);
+    out.push({
+      slotKey: slotConstancia,
+      bloque: def.bloque,
+      titulo: def.tituloConstancia,
+      ayuda: def.ayudaConstancia,
+      opcional: recaudoConstancia?.optional ?? Boolean(def.opcional),
+      multiple: recaudoConstancia?.multiple ?? true,
+      notaMultiple: def.notaPar,
+      etiquetaAnadir: "Añadir otra constancia de aprobación",
+      grupoPar: def.grupoId,
+      rolPar: "constancia",
+    });
   }
 
   return out;

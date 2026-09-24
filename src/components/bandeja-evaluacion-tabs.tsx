@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { Eye, FileText } from "lucide-react";
 import type { Chamber, WorkflowStatus } from "@/contracts";
@@ -14,7 +14,6 @@ import { InsigniaEstado } from "@/components/insignias";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ConTooltip, TooltipProvider } from "@/components/ui/tooltip";
 import {
-  listarInelegibles,
   type DecisionElegibilidad,
   type FichaDescalificacion,
 } from "@/lib/elegibilidad";
@@ -33,51 +32,23 @@ export type PendienteEvaluacion = {
   readonly _count: { readonly objections: number };
 };
 
-export type EvaluacionEnCurso = {
-  readonly id: string;
-  readonly status: string;
-  readonly totalPoints: string;
-  readonly candidate: {
-    readonly id: string;
-    readonly firstName: string;
-    readonly lastName: string;
-  };
-};
-
-function etiquetaEstadoEval(status: string): string {
-  if (status === "DRAFT") return "Borrador";
-  if (status === "SUBMITTED") return "Enviada";
-  return status;
-}
-
 /**
- * Bandeja de evaluación: En curso, Pendientes e Inelegibles.
+ * Bandeja de evaluación: pendientes de elegibilidad e inelegibles.
+ * Quien ya fue declarado elegible no se lista aquí: sigue en Baremo.
  */
 export function BandejaEvaluacionTabs({
   pendientes,
-  misEvaluaciones,
+  inelegibles,
 }: {
   readonly pendientes: readonly PendienteEvaluacion[];
-  readonly misEvaluaciones: readonly EvaluacionEnCurso[];
+  readonly inelegibles: readonly DecisionElegibilidad[];
 }) {
-  const [inelegibles, setInelegibles] = useState<readonly DecisionElegibilidad[]>([]);
   const [fichaAbierta, setFichaAbierta] = useState<FichaDescalificacion | null>(null);
-
-  useEffect(() => {
-    setInelegibles(listarInelegibles());
-  }, []);
-
-  const defaultTab =
-    misEvaluaciones.length > 0 && pendientes.length === 0 ? "en-curso" : "pendientes";
 
   return (
     <>
-      <Tabs defaultValue={defaultTab} className="w-full">
+      <Tabs defaultValue="pendientes" className="w-full">
         <TabsList aria-label="Bandejas de evaluación">
-          <TabsTrigger value="en-curso">
-            En curso
-            <span className="cifra ml-1.5 text-xs text-toga-500">({misEvaluaciones.length})</span>
-          </TabsTrigger>
           <TabsTrigger value="pendientes">
             Pendientes por evaluar
             <span className="cifra ml-1.5 text-xs text-toga-500">({pendientes.length})</span>
@@ -87,17 +58,6 @@ export function BandejaEvaluacionTabs({
             <span className="cifra ml-1.5 text-xs text-toga-500">({inelegibles.length})</span>
           </TabsTrigger>
         </TabsList>
-
-        <TabsContent value="en-curso">
-          {misEvaluaciones.length === 0 ? (
-            <EstadoVacio
-              titulo="No tiene evaluaciones en curso"
-              detalle="Cuando inicie o retome una calificación en baremo, aparecerá aquí."
-            />
-          ) : (
-            <TablaEnCurso items={misEvaluaciones} />
-          )}
-        </TabsContent>
 
         <TabsContent value="pendientes">
           {pendientes.length === 0 ? (
@@ -273,72 +233,6 @@ function TablaInelegibles({
             </li>
           );
         })}
-      </ul>
-    </TooltipProvider>
-  );
-}
-
-function TablaEnCurso({ items }: { readonly items: readonly EvaluacionEnCurso[] }) {
-  return (
-    <TooltipProvider delayDuration={200}>
-      <div className="hidden overflow-hidden rounded-lg border border-toga-200 bg-white lg:block">
-        <table className="w-full text-center text-sm">
-          <caption className="sr-only">Evaluaciones en curso</caption>
-          <thead className="border-b-2 border-toga-300 bg-toga-50">
-            <tr>
-              <th scope="col" className="px-4 py-3 font-semibold text-toga-700">
-                Postulante
-              </th>
-              <th scope="col" className="px-4 py-3 font-semibold text-toga-700">
-                Puntos
-              </th>
-              <th scope="col" className="px-4 py-3 font-semibold text-toga-700">
-                Estado
-              </th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-toga-100">
-            {items.map((e) => (
-              <tr key={e.id} className="hover:bg-toga-50">
-                <td className="px-4 py-3">
-                  <Link
-                    href={`/baremo/${e.candidate.id}`}
-                    className="font-medium text-toga-900 hover:text-balanza-700 hover:underline"
-                  >
-                    {e.candidate.firstName} {e.candidate.lastName}
-                  </Link>
-                </td>
-                <td className="cifra px-4 py-3 font-medium text-toga-800">
-                  {Number(e.totalPoints)}
-                </td>
-                <td className="px-4 py-3">
-                  <span className="inline-flex rounded-full bg-toga-100 px-2.5 py-1 text-xs font-medium text-toga-600">
-                    {etiquetaEstadoEval(e.status)}
-                  </span>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      <ul className="space-y-3 lg:hidden">
-        {items.map((e) => (
-          <li key={e.id}>
-            <Link
-              href={`/baremo/${e.candidate.id}`}
-              className="block rounded-lg border border-toga-200 bg-white p-4 hover:bg-toga-50"
-            >
-              <p className="font-medium text-toga-900">
-                {e.candidate.firstName} {e.candidate.lastName}
-              </p>
-              <p className="mt-1 text-xs text-toga-500">
-                <span className="cifra">{Number(e.totalPoints)}</span> pts ·{" "}
-                {etiquetaEstadoEval(e.status)}
-              </p>
-            </Link>
-          </li>
-        ))}
       </ul>
     </TooltipProvider>
   );

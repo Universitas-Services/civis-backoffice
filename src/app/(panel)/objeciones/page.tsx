@@ -1,14 +1,15 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import type { ObjecionBandeja } from "@/contracts";
-import { CAUSAL_ETIQUETA, SALA_ETIQUETA } from "@/contracts";
+import { SALA_ETIQUETA } from "@/contracts";
 import { llamarApi, NoAutorizado } from "@/lib/api";
 import { exigirRol, renovarYVolver } from "@/lib/rutas";
 import { CabeceraPagina, EstadoVacio } from "@/components/cabecera-pagina";
-import { InsigniaObjecion } from "@/components/insignias";
-import { FichaObjecion } from "@/components/ficha-objecion";
+import { InterruptorObjeciones } from "@/components/interruptor-objeciones";
 
 export const metadata: Metadata = { title: "Objeciones" };
+
+const RESUELTAS = new Set(["RESOLVED_FOUNDED", "RESOLVED_UNFOUNDED", "REJECTED_INADMISSIBLE"]);
 
 interface Respuesta {
   readonly items: readonly ObjecionBandeja[];
@@ -16,81 +17,117 @@ interface Respuesta {
   readonly resumen: Record<string, number>;
 }
 
-export default async function Objeciones({
-  searchParams,
-}: {
-  readonly searchParams: Promise<{ abiertas?: string; candidato?: string }>;
-}) {
-  const usuario = await exigirRol("SUPER_ADMIN", "EVALUATOR");
-  const params = await searchParams;
-
-  const query = new URLSearchParams();
-  if (params.abiertas !== "false") query.set("soloAbiertas", "true");
+export default async function Objeciones() {
+  const usuario = await exigirRol("SUPER_ADMIN", "ADMIN", "EVALUATOR");
+  const puedeLapso = usuario.roles.some((r) => r === "SUPER_ADMIN" || r === "ADMIN");
+  const puedeAjustar = usuario.roles.some((r) => r === "SUPER_ADMIN" || r === "EVALUATOR");
 
   let datos: Respuesta;
   try {
-    datos = await llamarApi<Respuesta>(`/internal/objections?${query}`);
+    datos = await llamarApi<Respuesta>("/internal/objections");
   } catch (error) {
     if (error instanceof NoAutorizado) renovarYVolver("/objeciones");
     throw error;
   }
 
-  const items = params.candidato
-    ? datos.items.filter((o) => o.candidate.id === params.candidato)
-    : datos.items;
+  const porPostulante = new Map<
+    string,
+    { nombre: string; sala: string; total: number; abiertas: number }
+  >();
+  for (const o of datos.items) {
+    const actual = porPostulante.get(o.candidate.id) ?? {
+      nombre: `${o.candidate.firstName} ${o.candidate.lastName}`,
+      sala: SALA_ETIQUETA[o.candidate.chamber] ?? o.candidate.chamber,
+      total: 0,
+      abiertas: 0,
+    };
+    actual.total += 1;
+    if (!RESUELTAS.has(o.status)) actual.abiertas += 1;
+    porPostulante.set(o.candidate.id, actual);
+  }
 
-  const soloAbiertas = params.abiertas !== "false";
+  let lapsoAbierto = false;
+  if (puedeLapso) {
+    try {
+      const portal = await llamarApi<{ objectionsOpen: boolean }>("/public/portal");
+      lapsoAbierto = portal.objectionsOpen;
+    } catch (error) {
+      if (error instanceof NoAutorizado) renovarYVolver("/objeciones");
+    }
+  }
 
   return (
     <>
       <CabeceraPagina
         titulo="Objeciones ciudadanas"
-        descripcion="Esta bandeja no muestra los datos de quien objetó. Para verlos hay que abrir la objeción, y esa apertura queda registrada en la bitácora."
+        descripcion="Las denuncias se agrupan por postulante. Si hay objeciones, el baremo guardado se puede corregir desde aquí."
       />
 
       <div className="px-5 py-6 sm:px-8">
-        <div className="flex flex-wrap items-center gap-3">
-          <Link
-            href={soloAbiertas ? "/objeciones?abiertas=false" : "/objeciones"}
-            className="rounded-md border border-toga-300 bg-white px-4 py-2 text-sm font-medium text-toga-700 hover:bg-toga-100"
-          >
-            {soloAbiertas ? "Ver también las resueltas" : "Ver sólo las abiertas"}
-          </Link>
-          {params.candidato && (
-            <Link href="/objeciones" className="text-sm font-medium text-balanza-700 underline">
-              Quitar filtro por postulante
-            </Link>
-          )}
-          <span className="ml-auto flex flex-wrap gap-2">
-            {Object.entries(datos.resumen).map(([estado, n]) => (
-              <span key={estado} className="flex items-center gap-1.5">
-                <InsigniaObjecion estado={estado as never} />
-                <span className="cifra text-xs font-semibold text-toga-600">{n}</span>
-              </span>
-            ))}
-          </span>
-        </div>
-
-        {items.length === 0 ? (
-          <div className="mt-6">
-            <EstadoVacio
-              titulo="No hay objeciones que mostrar"
-              detalle="Las objeciones ciudadanas llegan desde el sitio público y aparecen aquí para su tramitación."
-            />
+        {puedeLapso && (
+          <div className="mb-6 max-w-xl">
+            <InterruptorObjeciones abierto={lapsoAbierto} />
           </div>
+        )}
+
+        {porPostulante.size === 0 ? (
+          <EstadoVacio
+            titulo="No hay objeciones que mostrar"
+            detalle="Las objeciones ciudadanas llegan desde el sitio público y aparecen aquí agrupadas por postulante."
+          />
         ) : (
-          <ul className="mt-6 space-y-4">
-            {items.map((o) => (
-              <li key={o.id}>
-                <FichaObjecion
-                  objecion={o}
-                  causa={CAUSAL_ETIQUETA[o.category] ?? o.category}
-                  sala={SALA_ETIQUETA[o.candidate.chamber] ?? o.candidate.chamber}
-                  usuarioId={usuario.id}
-                />
-              </li>
-            ))}
-          </ul>
+          <div className="overflow-hidden rounded-lg border border-toga-200 bg-white">
+            <table className="w-full text-left text-sm">
+              <caption className="sr-only">Postulantes con objeciones</caption>
+              <thead className="border-b-2 border-toga-300 bg-toga-50">
+                <tr>
+                  <th scope="col" className="px-4 py-3 font-semibold text-toga-700">
+                    Postulante
+                  </th>
+                  <th scope="col" className="px-4 py-3 font-semibold text-toga-700">
+                    Sala
+                  </th>
+                  <th scope="col" className="px-4 py-3 text-right font-semibold text-toga-700">
+                    Objeciones
+                  </th>
+                  <th scope="col" className="px-4 py-3 font-semibold text-toga-700">
+                    Estado
+                  </th>
+                  {puedeAjustar && (
+                    <th scope="col" className="px-4 py-3">
+                      <span className="sr-only">Ajustar</span>
+                    </th>
+                  )}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-toga-100">
+                {[...porPostulante.entries()].map(([id, fila]) => (
+                  <tr key={id} className="hover:bg-toga-50">
+                    <th scope="row" className="px-4 py-3 text-left font-medium text-toga-900">
+                      {fila.nombre}
+                    </th>
+                    <td className="px-4 py-3 text-toga-600">{fila.sala}</td>
+                    <td className="cifra px-4 py-3 text-right font-semibold text-toga-900">
+                      {fila.total}
+                    </td>
+                    <td className="px-4 py-3 text-toga-600">
+                      {fila.abiertas > 0 ? `${fila.abiertas} abiertas` : "Resueltas"}
+                    </td>
+                    {puedeAjustar && (
+                      <td className="px-4 py-3 text-right">
+                        <Link
+                          href={`/objeciones/baremo/${id}`}
+                          className="text-sm font-semibold text-balanza-700 hover:text-balanza-600"
+                        >
+                          Ajustar baremo
+                        </Link>
+                      </td>
+                    )}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
     </>

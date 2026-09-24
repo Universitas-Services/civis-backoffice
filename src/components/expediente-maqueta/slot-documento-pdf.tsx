@@ -30,7 +30,8 @@ export function SlotDocumentoPdf({
   guardando,
   onPendiente,
   onGuardar,
-  onQuitarGuardado,
+  onSustituir,
+  sustituyendoId = null,
 }: {
   readonly slotKey: string;
   readonly titulo: string;
@@ -45,7 +46,8 @@ export function SlotDocumentoPdf({
   readonly guardando: boolean;
   readonly onPendiente: (file: File | null) => void;
   readonly onGuardar: () => void;
-  readonly onQuitarGuardado: (id: string) => void;
+  readonly onSustituir: (id: string, file: File) => void;
+  readonly sustituyendoId?: string | null;
 }) {
   const inputId = `slot-${slotKey}`;
   const inputExtraId = `slot-extra-${slotKey}`;
@@ -81,33 +83,52 @@ export function SlotDocumentoPdf({
       </div>
 
       {tieneGuardados && (
-        <ul className="mt-4 space-y-2">
-          {guardados.map((g) => (
-            <li
-              key={g.id}
-              className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-toga-200 bg-white px-3 py-2"
-            >
-              <span className="flex min-w-0 items-center gap-2 text-sm text-toga-800">
-                <FileText className="h-4 w-4 shrink-0 text-toga-500" aria-hidden="true" />
-                <span className="truncate">{g.name}</span>
-                <span className="shrink-0 text-xs text-toga-400">
-                  {Math.round(g.size / 1024)} KB
+        <>
+          <ul className="mt-4 space-y-2">
+            {guardados.map((g) => (
+              <li
+                key={g.id}
+                className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-toga-200 bg-white px-3 py-2"
+              >
+                <span className="flex min-w-0 items-center gap-2 text-sm text-toga-800">
+                  <FileText className="h-4 w-4 shrink-0 text-toga-500" aria-hidden="true" />
+                  <span className="truncate">{g.name}</span>
+                  <span className="shrink-0 text-xs text-toga-400">
+                    {Math.round(g.size / 1024)} KB
+                  </span>
                 </span>
-              </span>
-              {!bloqueado && (
-                <button
-                  type="button"
-                  onClick={() => onQuitarGuardado(g.id)}
-                  disabled={guardando}
-                  className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-toga-600 hover:bg-toga-100 disabled:opacity-50"
-                >
-                  <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
-                  Quitar
-                </button>
-              )}
-            </li>
-          ))}
-        </ul>
+                {!bloqueado && (
+                  <label
+                    htmlFor={`sustituir-${slotKey}-${g.id}`}
+                    className={`inline-flex cursor-pointer items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-toga-700 hover:bg-toga-100 ${
+                      sustituyendoId === g.id ? "pointer-events-none opacity-50" : ""
+                    }`}
+                  >
+                    {sustituyendoId === g.id ? "Sustituyendo…" : "Sustituir"}
+                    <input
+                      id={`sustituir-${slotKey}-${g.id}`}
+                      type="file"
+                      accept={ACCEPT_ARCHIVO_DOCUMENTO}
+                      className="sr-only"
+                      disabled={guardando || sustituyendoId !== null}
+                      onChange={(e) => {
+                        const f = e.target.files?.[0] ?? null;
+                        e.target.value = "";
+                        if (!f || !esArchivoDocumentoPermitido(f)) return;
+                        onSustituir(g.id, f);
+                      }}
+                    />
+                  </label>
+                )}
+              </li>
+            ))}
+          </ul>
+          {!bloqueado && (
+            <p className="mt-2 text-[0.7rem] text-toga-500">
+              Un archivo ya guardado no se elimina: use Sustituir para cambiarlo por otro.
+            </p>
+          )}
+        </>
       )}
 
       {pendiente ? (

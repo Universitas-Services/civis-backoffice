@@ -1,8 +1,9 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useState, type ReactNode } from "react";
 import { useFormStatus } from "react-dom";
 import type { InformeListado } from "@/contracts";
+import { CabeceraPagina } from "@/components/cabecera-pagina";
 import {
   generarInforme,
   publicarInforme,
@@ -23,48 +24,60 @@ function Boton({ texto, cargando }: { readonly texto: string; readonly cargando:
   );
 }
 
-export function GenerarInforme() {
+export function MarcoInformes({
+  puedeGenerar,
+  children,
+}: {
+  readonly puedeGenerar: boolean;
+  readonly children: ReactNode;
+}) {
   const [estado, accion] = useActionState<EstadoInformes, FormData>(generarInforme, {});
   const [abierto, setAbierto] = useState(false);
   useToastDesdeEstado(estado);
 
   return (
-    <section aria-labelledby="generar">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 id="generar" className="text-base font-semibold text-toga-900">
-          Generar un informe
-        </h2>
-        <button
-          type="button"
-          onClick={() => setAbierto(!abierto)}
-          className="rounded-md bg-balanza-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-balanza-700"
-        >
-          {abierto ? "Cancelar" : "+ Nuevo borrador"}
-        </button>
+    <>
+      <CabeceraPagina
+        titulo="Informes finales"
+        descripcion="Cada informe se genera a partir de evaluaciones aprobadas y se publica con su huella digital, para que cualquiera pueda comprobar que el documento no cambió."
+        acciones={
+          puedeGenerar ? (
+            <button
+              type="button"
+              onClick={() => setAbierto(!abierto)}
+              className="rounded-md bg-balanza-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-balanza-700"
+            >
+              {abierto ? "Cancelar" : "Nuevo borrador"}
+            </button>
+          ) : undefined
+        }
+      />
+      <div className="space-y-8 px-5 py-6 sm:px-8">
+        {puedeGenerar && abierto && (
+          <form action={accion} className="rounded-lg border border-toga-200 bg-white p-5">
+            <h2 className="text-sm font-semibold text-toga-900">Generar un informe</h2>
+            <label htmlFor="cutoffAt" className="mt-3 block text-xs font-medium text-toga-600">
+              Fecha de corte de los datos
+            </label>
+            <p className="mt-1 max-w-2xl text-xs leading-relaxed text-toga-500">
+              El informe recoge el estado del proceso a esta fecha. Es una entrada, no el momento de
+              generarlo: con los mismos datos y la misma fecha, el informe sale idéntico y su huella
+              digital coincide. Si lo deja en blanco se usa ahora mismo.
+            </p>
+            <input
+              id="cutoffAt"
+              name="cutoffAt"
+              type="datetime-local"
+              className="mt-2 rounded-md border border-toga-300 px-3 py-2 text-sm"
+            />
+            <div className="mt-4">
+              <Boton texto="Generar borrador" cargando="Generando…" />
+            </div>
+          </form>
+        )}
+        {children}
       </div>
-
-      {abierto && (
-        <form action={accion} className="mt-4 rounded-lg border border-toga-200 bg-white p-5">
-          <label htmlFor="cutoffAt" className="block text-xs font-medium text-toga-600">
-            Fecha de corte de los datos
-          </label>
-          <p className="mt-1 max-w-2xl text-xs leading-relaxed text-toga-500">
-            El informe recoge el estado del proceso a esta fecha. Es una entrada, no el momento de
-            generarlo: con los mismos datos y la misma fecha, el informe sale idéntico y su huella
-            digital coincide. Si lo deja en blanco se usa ahora mismo.
-          </p>
-          <input
-            id="cutoffAt"
-            name="cutoffAt"
-            type="datetime-local"
-            className="mt-2 rounded-md border border-toga-300 px-3 py-2 text-sm"
-          />
-          <div className="mt-4">
-            <Boton texto="Generar borrador" cargando="Generando…" />
-          </div>
-        </form>
-      )}
-    </section>
+    </>
   );
 }
 

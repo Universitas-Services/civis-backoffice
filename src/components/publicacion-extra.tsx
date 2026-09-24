@@ -128,7 +128,6 @@ export function PrepararFicha() {
           </p>
           <p className="cifra mt-2 text-2xl font-semibold text-toga-900">
             {vista.total}
-            <span className="ml-1 text-sm font-normal text-toga-500">/ 100</span>
             {vista.ineligible && (
               <span className="ml-3 rounded-full bg-balanza-600 px-2.5 py-1 text-xs font-medium text-white">
                 Inhabilitado
