@@ -1,60 +1,82 @@
 import type { Metadata } from "next";
-import type { DocumentoEnRevision } from "@/contracts";
-import { llamarApi, NoAutorizado } from "@/lib/api";
+import type { ExpedienteListado } from "@/contracts";
+import { ErrorApi, llamarApi, NoAutorizado } from "@/lib/api";
+import { postulanteDesdeListado } from "@/lib/adaptar-revision-api";
 import { exigirRol, renovarYVolver } from "@/lib/rutas";
 import { CabeceraPagina, EstadoVacio } from "@/components/cabecera-pagina";
-import { FichaRevision } from "@/components/ficha-revision";
+import { ListaPostulantesRevision } from "@/components/revision-maqueta/lista-postulantes-revision";
+import { Paginacion } from "@/components/paginacion";
 
 export const metadata: Metadata = { title: "Revisión documental" };
 
-export default async function RevisionDocumental() {
-  const usuario = await exigirRol("SUPER_ADMIN", "SECRETARY", "EVALUATOR", "PUBLISHER");
+const PAGE_SIZE = 20;
 
-  let documentos: readonly DocumentoEnRevision[];
+interface Respuesta {
+  readonly items: readonly ExpedienteListado[];
+  readonly total: number;
+  readonly page: number;
+  readonly pageSize: number;
+}
+
+export default async function RevisionDocumental({
+  searchParams,
+}: {
+  readonly searchParams: Promise<{ buscar?: string; page?: string }>;
+}) {
+  await exigirRol("SUPER_ADMIN", "REVIEWER");
+  const params = await searchParams;
+  const page = Math.max(1, Number(params.page) || 1);
+
+  const query = new URLSearchParams({
+    page: String(page),
+    pageSize: String(PAGE_SIZE),
+    estado: "DOCUMENT_REVIEW",
+  });
+  if (params.buscar) query.set("buscar", params.buscar);
+
+  let datos: Respuesta;
   try {
-    documentos = await llamarApi<DocumentoEnRevision[]>("/internal/documents/review-queue");
+    datos = await llamarApi<Respuesta>(`/internal/candidates?${query}`);
   } catch (error) {
     if (error instanceof NoAutorizado) renovarYVolver("/revision-documental");
+    if (error instanceof ErrorApi) throw error;
     throw error;
   }
 
-  // Sólo quien publica decide qué archivo se hace público. La pantalla lo
-  // oculta al resto, pero la API es quien lo impide de verdad.
-  const puedeClasificar = usuario.roles.some((r) => r === "SUPER_ADMIN" || r === "PUBLISHER");
-  const puedeVerificar = usuario.roles.some(
-    (r) => r === "SUPER_ADMIN" || r === "SECRETARY" || r === "EVALUATOR",
-  );
+  const postulantes = datos.items.map(postulanteDesdeListado);
+  const pageSize = datos.pageSize || PAGE_SIZE;
 
   return (
     <>
       <CabeceraPagina
         titulo="Revisión documental"
-        descripcion="Documentos cargados que esperan verificación. Aquí se comprueba que son legibles y corresponden a lo declarado, antes de que el expediente pase a evaluación."
+        descripcion="Postulantes enviados a revisión documental. Elija un expediente para ver y revisar sus documentos."
       />
 
       <div className="px-5 py-6 sm:px-8">
-        {documentos.length === 0 ? (
+        {postulantes.length === 0 ? (
           <EstadoVacio
-            titulo="No hay documentos pendientes de verificar"
-            detalle="Aparecerán aquí en cuanto secretaría cargue documentos en un expediente que siga en borrador o en revisión."
+            titulo="No hay postulantes en revisión"
+            detalle="Aparecerán aquí cuando secretaría envíe un expediente a revisión documental."
           />
         ) : (
           <>
             <p className="text-sm text-toga-500">
-              {documentos.length}{" "}
-              {documentos.length === 1 ? "documento pendiente" : "documentos pendientes"}
+              <span className="cifra font-medium text-toga-800">{datos.total}</span>{" "}
+              {datos.total === 1 ? "postulante en revisión" : "postulantes en revisión"}
             </p>
-            <ul className="mt-4 space-y-4">
-              {documentos.map((d) => (
-                <li key={d.id}>
-                  <FichaRevision
-                    documento={d}
-                    puedeVerificar={puedeVerificar}
-                    puedeClasificar={puedeClasificar}
-                  />
-                </li>
-              ))}
-            </ul>
+            <ListaPostulantesRevision items={postulantes} />
+            {datos.total > pageSize && (
+              <div className="mt-4">
+                <Paginacion
+                  ruta="/revision-documental"
+                  page={datos.page}
+                  pageSize={pageSize}
+                  total={datos.total}
+                  params={{ buscar: params.buscar }}
+                />
+              </div>
+            )}
           </>
         )}
       </div>

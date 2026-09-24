@@ -12,7 +12,11 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { readonly children: React.ReactNode }) {
   return (
-    <html lang="es-VE" className={`${sans.variable} ${serif.variable} ${mono.variable}`}>
+    <html
+      lang="es-VE"
+      data-scroll-behavior="smooth"
+      className={`${sans.variable} ${serif.variable} ${mono.variable}`}
+    >
       <body>
         <a href="#contenido" className="salto-contenido">
           Saltar al contenido principal

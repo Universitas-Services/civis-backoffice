@@ -48,7 +48,7 @@ export default async function Expedientes({
     throw error;
   }
 
-  const puedeCrear = tieneRol(usuario, "SUPER_ADMIN", "SECRETARY", "EVALUATOR");
+  const puedeCrear = tieneRol(usuario, "SUPER_ADMIN", "SECRETARY");
   const pageSize = datos.pageSize || PAGE_SIZE;
 
   return (

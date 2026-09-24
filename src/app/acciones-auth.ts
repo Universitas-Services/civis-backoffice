@@ -7,6 +7,7 @@ import {
   cabecerasAuthCookie,
   extraerRefreshCookie,
 } from "@/lib/auth-refresh";
+import { rutaInicio } from "@/lib/secciones-nav";
 import { cerrarSesion, guardarSesion, leerSesion } from "@/lib/sesion";
 
 export interface EstadoLogin {
@@ -104,7 +105,7 @@ export async function iniciarSesion(
     refreshCookie,
   });
 
-  redirect(datos.mustChangePassword ? "/cambiar-contrasena" : "/dashboard");
+  redirect(datos.mustChangePassword ? "/cambiar-contrasena" : rutaInicio(datos.user.roles));
 }
 
 export async function terminarSesion(): Promise<void> {

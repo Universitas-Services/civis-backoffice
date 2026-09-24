@@ -9,6 +9,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  ACCEPT_ARCHIVO_DOCUMENTO,
+  esArchivoDocumentoPermitido,
+  TEXTO_FORMATOS_DOCUMENTO,
+} from "@/lib/archivo-documento";
 
 export interface DocumentoCargado {
   readonly id: string;
@@ -38,7 +43,7 @@ export function ZonaDocumentos({
   /** En el detalle del expediente la lista la pinta el servidor; aquí solo la zona de carga. */
   readonly mostrarLista?: boolean;
 }) {
-  const [categoria, setCategoria] = useState<DocumentCategory>("CURRICULUM");
+  const [categoria, setCategoria] = useState<DocumentCategory>("NATIONAL_ID");
   const [arrastrando, setArrastrando] = useState(false);
   const [subiendo, setSubiendo] = useState(false);
   const [errores, setErrores] = useState<string[]>([]);
@@ -52,8 +57,8 @@ export function ZonaDocumentos({
 
     for (const archivo of Array.from(archivos)) {
       const cuerpo = new FormData();
-      cuerpo.append("file", archivo);
       cuerpo.append("category", categoria);
+      cuerpo.append("file", archivo);
 
       try {
         const respuesta = await fetch(`/api/documentos/${submissionId}`, {
@@ -83,10 +88,7 @@ export function ZonaDocumentos({
         <label htmlFor="categoria-trigger" className="block text-xs font-medium text-toga-600">
           Tipo de documento que va a cargar
         </label>
-        <Select
-          value={categoria}
-          onValueChange={(v) => setCategoria(v as DocumentCategory)}
-        >
+        <Select value={categoria} onValueChange={(v) => setCategoria(v as DocumentCategory)}>
           <SelectTrigger id="categoria-trigger" className="mt-1 w-full sm:w-72">
             <SelectValue />
           </SelectTrigger>
@@ -108,7 +110,10 @@ export function ZonaDocumentos({
           onDrop={(e) => {
             e.preventDefault();
             setArrastrando(false);
-            if (e.dataTransfer.files.length > 0) void subir(e.dataTransfer.files);
+            if (e.dataTransfer.files.length > 0) {
+              const validos = Array.from(e.dataTransfer.files).filter(esArchivoDocumentoPermitido);
+              if (validos.length > 0) void subir(validos);
+            }
           }}
           className={`mt-4 rounded-lg border-2 border-dashed p-8 text-center transition-colors ${
             arrastrando ? "border-balanza-600 bg-toga-100" : "border-toga-300 bg-toga-50"
@@ -135,7 +140,7 @@ export function ZonaDocumentos({
             />
           </svg>
 
-          <p className="mt-3 text-sm text-toga-600">Arrastre aquí los PDF, o</p>
+          <p className="mt-3 text-sm text-toga-600">Arrastre aquí PDF o imágenes, o</p>
           <button
             type="button"
             onClick={() => inputRef.current?.click()}
@@ -147,17 +152,17 @@ export function ZonaDocumentos({
           <input
             ref={inputRef}
             type="file"
-            accept="application/pdf"
+            accept={ACCEPT_ARCHIVO_DOCUMENTO}
             multiple
             className="sr-only"
-            aria-label="Seleccionar documentos PDF"
+            aria-label="Seleccionar documentos PDF o imagen"
             onChange={(e) => {
-              if (e.target.files?.length) void subir(e.target.files);
+              if (!e.target.files?.length) return;
+              const validos = Array.from(e.target.files).filter(esArchivoDocumentoPermitido);
+              if (validos.length > 0) void subir(validos);
             }}
           />
-          <p className="mt-3 text-xs text-toga-500">
-            Sólo PDF. Se comprueba el contenido del archivo, no su extensión.
-          </p>
+          <p className="mt-3 text-xs text-toga-500">{TEXTO_FORMATOS_DOCUMENTO}</p>
         </div>
       </div>
 
@@ -188,7 +193,8 @@ export function ZonaDocumentos({
                     {d.originalName}
                   </span>
                   <span className="shrink-0 text-xs text-toga-500">
-                    {CATEGORIA_ETIQUETA[d.category]} · {Math.round(d.sizeBytes / 1024)} KB
+                    {CATEGORIA_ETIQUETA[d.category] ?? d.category} ·{" "}
+                    {Math.round(d.sizeBytes / 1024)} KB
                   </span>
                 </div>
               </li>

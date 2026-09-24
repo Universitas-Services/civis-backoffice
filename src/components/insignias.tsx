@@ -47,6 +47,7 @@ const ESTADO_ESTILO: Record<WorkflowStatus, string> = {
   READY_FOR_EVALUATION: "bg-balanza-600 text-white ring-balanza-700/30",
   EVALUATION_IN_PROGRESS: "bg-balanza-600 text-white ring-balanza-700/30",
   EVALUATED: "bg-validado-50 text-validado-700 ring-validado-700/20",
+  DISQUALIFIED: "bg-objetado-100 text-objetado-600 ring-objetado-600/20",
   OBJECTION_PERIOD: "bg-objetado-100 text-objetado-600 ring-objetado-600/20",
   FINAL_REVIEW: "bg-balanza-50 text-balanza-700 ring-balanza-600/25",
   FINALIZED: "bg-validado-50 text-validado-700 ring-validado-700/20",
@@ -179,7 +180,7 @@ export function InsigniaAnalisis({ valor }: { readonly valor: string }) {
   return <Pildora texto={a.texto} clases={a.clases} Icono={a.Icono} />;
 }
 
-/** Puntaje sobre 100, con la cifra como dato principal. */
+/** Puntaje que devolvió el servidor, con la cifra como dato principal. */
 export function Puntaje({
   valor,
   tamano = "md",
@@ -191,7 +192,6 @@ export function Puntaje({
   return (
     <span className="cifra inline-flex items-baseline gap-1">
       <span className={`${clase} font-semibold tracking-tight text-toga-900`}>{valor}</span>
-      <span className="text-xs text-toga-500">/ 100</span>
     </span>
   );
 }

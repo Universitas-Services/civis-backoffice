@@ -1,5 +1,7 @@
 import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
 import type { Role, Sesion } from "@/contracts";
+import { COOKIE_RECIEN_RENOVADA } from "./config";
 import { usuarioActual } from "./sesion";
 
 export { SECCIONES, seccionesDe, puedeVerRuta } from "./secciones-nav";
@@ -31,7 +33,15 @@ export async function exigirRol(...roles: readonly Role[]): Promise<Sesion> {
  * La renovación no puede hacerse desde el render —Next no deja escribir
  * cookies ahí—, así que se delega en /api/sesion/renovar, que sí puede. Si el
  * refresh tampoco vale, ese handler manda al login.
+ *
+ * Si ya renovamos hace un instante (`cp_bo_recien_renovada`) y la API sigue
+ * en 401, vamos a login: evita ERR_TOO_MANY_REDIRECTS.
  */
-export function renovarYVolver(ruta: string): never {
+export async function renovarYVolver(ruta: string): Promise<never> {
+  const store = await cookies();
+  if (store.get(COOKIE_RECIEN_RENOVADA)?.value === "1") {
+    store.delete(COOKIE_RECIEN_RENOVADA);
+    redirect("/login?sesion=expirada");
+  }
   redirect(`/api/sesion/renovar?volver=${encodeURIComponent(ruta)}`);
 }

@@ -45,10 +45,12 @@ const ACCION: Record<string, string> = {
   "evaluation.submitted": "Envió una evaluación",
   "evaluation.approved": "Aprobó una evaluación",
   "evaluation.adjusted": "Ajustó un puntaje",
+  "evaluation.ineligible": "Declaró inelegible por objeciones",
   "objection.received": "Se recibió una objeción",
   "objection.opened": "Abrió una objeción (vio la identidad del objetante)",
   "objection.assigned": "Asignó una objeción",
   "objection.resolved": "Resolvió una objeción",
+  "portal.updated": "Abrió o cerró el lapso de objeciones",
   "publication.snapshot.prepared": "Preparó una publicación",
   "publication.snapshot.published": "Publicó contenido",
   "publication.snapshot.withdrawn": "Retiró contenido publicado",
@@ -160,39 +162,62 @@ export default async function Auditoria({
               {datos.total} eventos · página {datos.page} de {datos.totalPages}
             </p>
 
-            <ol className="mt-3 space-y-2">
+            <ul className="mt-3 space-y-3 lg:hidden">
               {datos.items.map((e) => (
                 <li key={e.id} className="rounded-lg border border-toga-200 bg-white px-4 py-3">
-                  <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-                    <time dateTime={e.occurredAt} className="cifra shrink-0 text-xs text-toga-500">
-                      {new Date(e.occurredAt).toLocaleString("es-VE", {
-                        dateStyle: "short",
-                        timeStyle: "medium",
-                      })}
-                    </time>
-                    <span className="font-medium text-toga-900">
-                      {ACCION[e.action] ?? e.action}
-                    </span>
-                    <span className="text-sm text-toga-600">
-                      — {e.actor?.fullName ?? "sistema"}
-                      {e.effectiveRole && (
-                        <span className="ml-1.5 rounded bg-toga-100 px-1.5 py-0.5 text-[0.65rem] font-medium uppercase tracking-wide text-toga-600">
-                          {e.effectiveRole}
-                        </span>
-                      )}
-                    </span>
-                  </div>
-                  {e.reason && (
-                    <p className="mt-1 text-sm leading-relaxed text-toga-600">{e.reason}</p>
-                  )}
-                  <p className="codigo mt-1 text-[0.65rem] text-toga-400">
-                    {e.entityType}
-                    {e.entityId && `:${e.entityId.slice(0, 8)}`} · corr.{" "}
-                    {e.correlationId.slice(0, 8)}
-                  </p>
+                  <FilaEvento evento={e} />
                 </li>
               ))}
-            </ol>
+            </ul>
+
+            <div className="mt-3 hidden overflow-hidden rounded-lg border border-toga-200 bg-white lg:block">
+              <table className="w-full text-left text-sm">
+                <caption className="sr-only">Eventos de la bitácora</caption>
+                <thead className="border-b-2 border-toga-300 bg-toga-50">
+                  <tr>
+                    <th scope="col" className="px-4 py-3 font-semibold text-toga-700">
+                      Fecha
+                    </th>
+                    <th scope="col" className="px-4 py-3 font-semibold text-toga-700">
+                      Acción
+                    </th>
+                    <th scope="col" className="px-4 py-3 font-semibold text-toga-700">
+                      Persona
+                    </th>
+                    <th scope="col" className="px-4 py-3 font-semibold text-toga-700">
+                      Motivo
+                    </th>
+                    <th scope="col" className="px-4 py-3 font-semibold text-toga-700">
+                      Referencia
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-toga-100">
+                  {datos.items.map((e) => (
+                    <tr key={e.id} className="hover:bg-toga-50">
+                      <td className="cifra whitespace-nowrap px-4 py-3 text-xs text-toga-500">
+                        <time dateTime={e.occurredAt}>{fechaEvento(e.occurredAt)}</time>
+                      </td>
+                      <td className="px-4 py-3 font-medium text-toga-900">
+                        {ACCION[e.action] ?? e.action}
+                      </td>
+                      <td className="px-4 py-3 text-toga-600">
+                        {e.actor?.fullName ?? "sistema"}
+                        {e.effectiveRole && (
+                          <span className="ml-1.5 rounded bg-toga-100 px-1.5 py-0.5 text-[0.65rem] font-medium uppercase tracking-wide text-toga-600">
+                            {e.effectiveRole}
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3 text-toga-600">{e.reason ?? "—"}</td>
+                      <td className="codigo px-4 py-3 text-xs text-toga-400">
+                        {referenciaEvento(e)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
 
             {datos.totalPages > 1 && (
               <nav aria-label="Paginación" className="mt-6 flex justify-center gap-2">
@@ -217,6 +242,38 @@ export default async function Auditoria({
           </>
         )}
       </div>
+    </>
+  );
+}
+
+function fechaEvento(iso: string) {
+  return new Date(iso).toLocaleString("es-VE", { dateStyle: "short", timeStyle: "medium" });
+}
+
+function referenciaEvento(e: EventoAuditoria) {
+  const entidad = `${e.entityType}${e.entityId ? `:${e.entityId.slice(0, 8)}` : ""}`;
+  return `${entidad} · corr. ${e.correlationId.slice(0, 8)}`;
+}
+
+function FilaEvento({ evento: e }: { readonly evento: EventoAuditoria }) {
+  return (
+    <>
+      <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+        <time dateTime={e.occurredAt} className="cifra shrink-0 text-xs text-toga-500">
+          {fechaEvento(e.occurredAt)}
+        </time>
+        <span className="font-medium text-toga-900">{ACCION[e.action] ?? e.action}</span>
+        <span className="text-sm text-toga-600">
+          — {e.actor?.fullName ?? "sistema"}
+          {e.effectiveRole && (
+            <span className="ml-1.5 rounded bg-toga-100 px-1.5 py-0.5 text-[0.65rem] font-medium uppercase tracking-wide text-toga-600">
+              {e.effectiveRole}
+            </span>
+          )}
+        </span>
+      </div>
+      {e.reason && <p className="mt-1 text-sm leading-relaxed text-toga-600">{e.reason}</p>}
+      <p className="codigo mt-1 text-[0.65rem] text-toga-400">{referenciaEvento(e)}</p>
     </>
   );
 }

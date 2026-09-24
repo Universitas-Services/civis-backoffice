@@ -1,8 +1,9 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect } from "react";
 import { useFormStatus } from "react-dom";
 import { iniciarSesion, type EstadoLogin } from "@/app/acciones-auth";
+import { reiniciarSidebar } from "@/lib/sidebar-panel";
 
 function Boton() {
   const { pending } = useFormStatus();
@@ -23,6 +24,10 @@ function Boton() {
 
 export function FormularioLogin() {
   const [estado, accion] = useActionState<EstadoLogin, FormData>(iniciarSesion, {});
+
+  useEffect(() => {
+    reiniciarSidebar();
+  }, []);
 
   const claseCampo =
     "mt-1 w-full rounded-md border border-toga-300 bg-white px-3 py-2.5 text-sm text-toga-900 transition-colors placeholder:text-toga-400 focus:border-balanza-600 focus:ring-2 focus:ring-balanza-600/20";

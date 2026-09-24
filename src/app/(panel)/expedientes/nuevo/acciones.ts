@@ -4,6 +4,7 @@ import { crearExpedienteSchema, PREFIJOS_TELEFONO } from "@/contracts";
 import { ErrorApi, llamarApiAccion } from "@/lib/api";
 
 export type ValoresWizard = {
+  readonly nationalIdPrefix: "V" | "E" | "J";
   readonly nationalIdDigits: string;
   readonly firstName: string;
   readonly lastName: string;
@@ -28,22 +29,29 @@ export interface EstadoWizard {
 }
 
 function leerValores(formData: FormData): ValoresWizard {
+  const prefijoBruto = String(formData.get("nationalIdPrefix") ?? "V").toUpperCase();
+  const nationalIdPrefix: "V" | "E" | "J" =
+    prefijoBruto === "E" ? "E" : prefijoBruto === "J" ? "J" : "V";
   return {
-    nationalIdDigits: String(formData.get("nationalIdDigits") ?? "").replace(/\D/g, "").slice(0, 8),
+    nationalIdPrefix,
+    nationalIdDigits: String(formData.get("nationalIdDigits") ?? "")
+      .replace(/\D/g, "")
+      .slice(0, 9),
     firstName: String(formData.get("firstName") ?? ""),
     lastName: String(formData.get("lastName") ?? ""),
     chamber: String(formData.get("chamber") ?? ""),
     publicSummary: String(formData.get("publicSummary") ?? ""),
     email: String(formData.get("email") ?? ""),
     phonePrefix: String(formData.get("phonePrefix") ?? "") || "0412",
-    phoneDigits: String(formData.get("phoneDigits") ?? "").replace(/\D/g, "").slice(0, 7),
+    phoneDigits: String(formData.get("phoneDigits") ?? "")
+      .replace(/\D/g, "")
+      .slice(0, 7),
     internalNotes: String(formData.get("internalNotes") ?? ""),
   };
 }
 
 type TelefonoArmado =
-  | { readonly ok: true; readonly valor?: string }
-  | { readonly ok: false; readonly mensaje: string };
+  { readonly ok: true; readonly valor?: string } | { readonly ok: false; readonly mensaje: string };
 
 function armarTelefono(prefix: string, digits: string): TelefonoArmado {
   const p = prefix.trim();
@@ -60,32 +68,22 @@ function armarTelefono(prefix: string, digits: string): TelefonoArmado {
   return { ok: true, valor: `${p} ${d}` };
 }
 
-/**
- * Paso 1 del wizard: registra al postulante y abre su expediente.
- *
- * Se hace en el servidor porque la subida de documentos del paso 2 necesita
- * el `submissionId`, y ese identificador no debe fabricarse en el cliente.
- */
-export async function crearExpediente(
-  _previo: EstadoWizard,
-  formData: FormData,
-): Promise<EstadoWizard> {
-  const valores = leerValores(formData);
+async function crearDesdeValores(valores: ValoresWizard): Promise<EstadoWizard> {
   const telefono = armarTelefono(valores.phonePrefix, valores.phoneDigits);
 
   const camposPrevios: Record<string, string> = {};
-  if (!/^\d{6,8}$/.test(valores.nationalIdDigits)) {
+  if (!/^\d{6,9}$/.test(valores.nationalIdDigits)) {
     camposPrevios.nationalIdDigits =
       valores.nationalIdDigits.length === 0
         ? "Indique la cédula"
-        : "La cédula debe tener entre 6 y 8 dígitos";
+        : "La cédula debe tener entre 6 y 9 dígitos";
   }
   if (!telefono.ok) {
     camposPrevios.phone = telefono.mensaje;
   }
 
   const bruto = {
-    nationalId: `V-${valores.nationalIdDigits}`,
+    nationalId: `${valores.nationalIdPrefix}-${valores.nationalIdDigits}`,
     firstName: valores.firstName,
     lastName: valores.lastName,
     chamber: valores.chamber || undefined,
@@ -101,13 +99,8 @@ export async function crearExpediente(
     if (!analisis.success) {
       for (const issue of analisis.error.issues) {
         const clave = issue.path.join(".");
-        // Mapear errores del campo compuesto a los inputs partidos.
         const claveUi =
-          clave === "nationalId"
-            ? "nationalIdDigits"
-            : clave === "phone"
-              ? "phone"
-              : clave;
+          clave === "nationalId" ? "nationalIdDigits" : clave === "phone" ? "phone" : clave;
         if (!campos[claveUi]) campos[claveUi] = issue.message;
       }
     }
@@ -142,6 +135,41 @@ export async function crearExpediente(
       valores,
     };
   }
+}
+
+/**
+ * Paso 1 del wizard: registra al postulante y abre su expediente.
+ *
+ * Se hace en el servidor porque la subida de documentos del paso 2 necesita
+ * el `submissionId`, y ese identificador no debe fabricarse en el cliente.
+ */
+export async function crearExpediente(
+  _previo: EstadoWizard,
+  formData: FormData,
+): Promise<EstadoWizard> {
+  return crearDesdeValores(leerValores(formData));
+}
+
+/** Alta desde la UI de checklist (objeto tipado, sin FormData). */
+export async function registrarPostulante(input: {
+  readonly nationalIdPrefix: "V" | "E" | "J";
+  readonly nationalIdDigits: string;
+  readonly firstName: string;
+  readonly lastName: string;
+  readonly chamber: string;
+}): Promise<EstadoWizard> {
+  return crearDesdeValores({
+    nationalIdPrefix: input.nationalIdPrefix,
+    nationalIdDigits: input.nationalIdDigits.replace(/\D/g, "").slice(0, 9),
+    firstName: input.firstName,
+    lastName: input.lastName,
+    chamber: input.chamber,
+    publicSummary: "",
+    email: "",
+    phonePrefix: "0412",
+    phoneDigits: "",
+    internalNotes: "",
+  });
 }
 
 /** Paso 3: envía el expediente a revisión documental. */

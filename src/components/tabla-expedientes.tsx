@@ -109,8 +109,10 @@ export function TablaExpedientes({ items }: { readonly items: readonly Expedient
                     </ConTooltip>
                   </td>
                   <td className="px-4 py-3 text-toga-600">
-                    <ConTooltip texto={SALA_ETIQUETA[e.chamber]}>
-                      <span className="cursor-default">{SALA_ETIQUETA[e.chamber]}</span>
+                    <ConTooltip texto={SALA_ETIQUETA[e.chamber] ?? String(e.chamber)}>
+                      <span className="cursor-default">
+                        {SALA_ETIQUETA[e.chamber] ?? e.chamber}
+                      </span>
                     </ConTooltip>
                   </td>
                   <td className="px-4 py-3">
@@ -124,9 +126,7 @@ export function TablaExpedientes({ items }: { readonly items: readonly Expedient
                   </td>
                   <td className="cifra px-4 py-3 text-toga-600">
                     <ConTooltip
-                      texto={
-                        docs === 1 ? "1 documento cargado" : `${docs} documentos cargados`
-                      }
+                      texto={docs === 1 ? "1 documento cargado" : `${docs} documentos cargados`}
                     >
                       <span className="cursor-default">{docs}</span>
                     </ConTooltip>

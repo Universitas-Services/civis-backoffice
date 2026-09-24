@@ -62,16 +62,62 @@ export function cabecerasAuthCookie(refreshCookie?: string | null): Record<strin
 let renovacionEnCurso: Promise<TokensRenovados | null> | null = null;
 
 /**
+ * Último refresh exitoso en este proceso. Evita REUSE_DETECTED cuando un proxy
+ * (PDF) ya rotó el refresh y otra petición concurrente aún lleva el viejo:
+ * la cookie del navegador no se propaga entre requests en vuelo.
+ */
+let ultimoRefreshOk: {
+  readonly refreshUsado: string;
+  readonly tokens: TokensRenovados;
+} | null = null;
+
+/**
  * Un solo POST /auth/refresh a la vez. Si accessToken es null, 401, o no hay
  * Set-Cookie nuevo, devuelve null (sin reutilizar el refresh anterior).
+ *
+ * `accessQueFallo`: si el access cacheado es exactamente el que acaba de
+ * recibir 401, no lo devolvemos otra vez (evitaría un bucle renovar→página).
  */
 export async function renovarAccessConMutex(
   refreshCookie: string,
+  accessQueFallo?: string | null,
 ): Promise<TokensRenovados | null> {
+  // Access cacheado ya rechazado: invalidar para no reenviar el mismo JWT.
+  if (
+    ultimoRefreshOk &&
+    accessQueFallo &&
+    ultimoRefreshOk.tokens.accessToken === accessQueFallo
+  ) {
+    ultimoRefreshOk = null;
+  }
+
+  if (
+    ultimoRefreshOk &&
+    ultimoRefreshOk.refreshUsado === refreshCookie &&
+    (!accessQueFallo || ultimoRefreshOk.tokens.accessToken !== accessQueFallo)
+  ) {
+    return ultimoRefreshOk.tokens;
+  }
+  if (
+    ultimoRefreshOk &&
+    ultimoRefreshOk.tokens.refreshCookie === refreshCookie &&
+    (!accessQueFallo || ultimoRefreshOk.tokens.accessToken !== accessQueFallo)
+  ) {
+    return ultimoRefreshOk.tokens;
+  }
+
   if (!renovacionEnCurso) {
-    renovacionEnCurso = ejecutarRefresh(refreshCookie).finally(() => {
-      renovacionEnCurso = null;
-    });
+    const usado = refreshCookie;
+    renovacionEnCurso = ejecutarRefresh(refreshCookie)
+      .then((tokens) => {
+        if (tokens) {
+          ultimoRefreshOk = { refreshUsado: usado, tokens };
+        }
+        return tokens;
+      })
+      .finally(() => {
+        renovacionEnCurso = null;
+      });
   }
   return renovacionEnCurso;
 }
@@ -103,7 +149,7 @@ export async function renovarSesionTras401(
   }
 
   const refreshAUsar = actual?.refreshCookie ?? refreshAlFallar;
-  const tokens = await renovarAccessConMutex(refreshAUsar);
+  const tokens = await renovarAccessConMutex(refreshAUsar, accessQueFallo);
 
   if (tokens) {
     return tokens;

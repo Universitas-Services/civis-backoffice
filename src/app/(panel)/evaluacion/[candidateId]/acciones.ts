@@ -3,48 +3,64 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { ErrorApi, llamarApiAccion } from "@/lib/api";
-import type { Evaluacion } from "@/contracts";
-
-const puntajeSchema = z.object({
-  criterionKey: z.string().min(1),
-  value: z.number().nonnegative().max(1000),
-  justification: z.string().trim().max(2000).optional(),
-  evidenceDocumentId: z.string().uuid().nullable().optional(),
-  evidencePage: z.number().int().positive().nullable().optional(),
-});
+import { BLOQUE_ELEGIBILIDAD_IDS, CAUSAL_INELEGIBILIDAD_IDS } from "@/lib/elegibilidad";
 
 export interface Resultado {
   readonly ok: boolean;
   readonly error?: string;
-  readonly evaluacion?: Evaluacion;
 }
 
+const lineaBaremoSchema = z.object({
+  criterioId: z.string().uuid(),
+  rangoId: z.string().uuid(),
+  points: z.number().finite().nonnegative().max(1000),
+  resultado: z.string().trim().max(2000).nullable(),
+});
+
 /**
- * Guarda los valores por criterio.
- *
- * Nótese que NO se envía ningún total: se mandan las cantidades declaradas y
- * la API devuelve el total recalculado. El totalizador de la pantalla muestra
- * lo que responde el servidor, nunca una suma hecha en el navegador.
+ * Guarda los rangos marcados del baremo congelado.
+ * No envía total: la API suma, valida el tope de cada criterio y devuelve totalPoints.
  */
-export async function guardarPuntajes(
+export async function guardarLineasBaremo(
   evaluationId: string,
-  scores: readonly z.infer<typeof puntajeSchema>[],
-  internalNotes?: string,
-): Promise<Resultado> {
-  const analisis = z.array(puntajeSchema).min(1).safeParse(scores);
+  candidateId: string,
+  lineas: readonly z.infer<typeof lineaBaremoSchema>[],
+): Promise<{
+  readonly ok: boolean;
+  readonly error?: string;
+  readonly totalPoints?: number;
+  readonly band?: string;
+}> {
+  const analisis = z.array(lineaBaremoSchema).min(1).safeParse(lineas);
   if (!analisis.success) {
     return { ok: false, error: analisis.error.issues[0]?.message ?? "Datos inválidos" };
   }
 
   try {
-    const evaluacion = await llamarApiAccion<Evaluacion>(`/internal/evaluations/${evaluationId}/scores`, {
+    const evaluacion = await llamarApiAccion<{
+      totalPoints: string | number;
+      band: string;
+    }>(`/internal/evaluations/${evaluationId}/scores`, {
       method: "PUT",
-      body: { scores: analisis.data, internalNotes },
+      body: { lineas: analisis.data },
     });
-    return { ok: true, evaluacion };
+    revalidatePath(`/baremo/${candidateId}`);
+    revalidatePath("/baremo");
+    return {
+      ok: true,
+      totalPoints: Number(evaluacion.totalPoints),
+      band: evaluacion.band,
+    };
   } catch (error) {
-    return { ok: false, error: error instanceof ErrorApi ? error.message : "No se pudo guardar" };
+    return { ok: false, error: mensajeDeApi(error, "No se pudo guardar") };
   }
+}
+
+function mensajeDeApi(error: unknown, fallback: string): string {
+  if (error instanceof ErrorApi) {
+    return error.detalles?.[0]?.message ?? error.message;
+  }
+  return fallback;
 }
 
 export async function enviarEvaluacion(
@@ -54,6 +70,9 @@ export async function enviarEvaluacion(
   try {
     await llamarApiAccion(`/internal/evaluations/${evaluationId}/submit`, { method: "POST" });
     revalidatePath(`/evaluacion/${candidateId}`);
+    revalidatePath(`/baremo/${candidateId}`);
+    revalidatePath("/baremo");
+    revalidatePath("/ranking");
     return { ok: true };
   } catch (error) {
     return { ok: false, error: error instanceof ErrorApi ? error.message : "No se pudo enviar" };
@@ -74,8 +93,166 @@ export async function aprobarEvaluacion(
       body: { reason },
     });
     revalidatePath(`/evaluacion/${candidateId}`);
+    revalidatePath(`/baremo/${candidateId}`);
+    revalidatePath("/baremo");
+    revalidatePath("/ranking");
     return { ok: true };
   } catch (error) {
     return { ok: false, error: error instanceof ErrorApi ? error.message : "No se pudo aprobar" };
+  }
+}
+
+const checklistSchema = z.record(z.string(), z.boolean());
+
+const motivacionSchema = z
+  .string()
+  .trim()
+  .min(20, "La motivación es obligatoria (mínimo 20 caracteres)")
+  .max(3000, "La motivación no puede superar 3000 caracteres");
+
+const declararElegibleSchema = z.object({
+  checklist: checklistSchema,
+  motivo: motivacionSchema,
+});
+
+const declararInelegibleSchema = z.object({
+  checklist: checklistSchema,
+  motivo: motivacionSchema,
+  causales: z.array(z.enum(CAUSAL_INELEGIBILIDAD_IDS)).min(1, "Indique al menos una causal"),
+});
+
+export type ResultadoElegibilidadAccion = {
+  readonly ok: boolean;
+  readonly error?: string;
+};
+
+/** Paso 1: declara elegible y deja el expediente en evaluación (baremo). */
+export async function declararElegible(
+  candidateId: string,
+  payload: z.infer<typeof declararElegibleSchema>,
+): Promise<ResultadoElegibilidadAccion> {
+  const parsed = declararElegibleSchema.safeParse(payload);
+  if (!parsed.success) {
+    return { ok: false, error: parsed.error.issues[0]?.message ?? "Datos inválidos" };
+  }
+  for (const id of BLOQUE_ELEGIBILIDAD_IDS) {
+    if (parsed.data.checklist[id] !== true) {
+      return { ok: false, error: "El checklist de elegibilidad debe estar completo" };
+    }
+  }
+  try {
+    await llamarApiAccion(`/internal/evaluations/candidate/${candidateId}/eligibility`, {
+      method: "POST",
+      body: {
+        decision: "ELIGIBLE",
+        checklist: parsed.data.checklist,
+        motivation: parsed.data.motivo,
+        causales: [],
+      },
+    });
+    revalidatePath("/evaluacion");
+    revalidatePath("/baremo");
+    revalidatePath(`/evaluacion/${candidateId}`);
+    revalidatePath(`/expedientes/${candidateId}`);
+    return { ok: true };
+  } catch (error) {
+    return {
+      ok: false,
+      error: error instanceof ErrorApi ? error.message : "No se pudo registrar la elegibilidad",
+    };
+  }
+}
+
+/** Paso 1: declara inelegible. El expediente queda descalificado. */
+export async function declararInelegible(
+  candidateId: string,
+  payload: z.infer<typeof declararInelegibleSchema>,
+): Promise<ResultadoElegibilidadAccion> {
+  const parsed = declararInelegibleSchema.safeParse(payload);
+  if (!parsed.success) {
+    return { ok: false, error: parsed.error.issues[0]?.message ?? "Datos inválidos" };
+  }
+  try {
+    await llamarApiAccion(`/internal/evaluations/candidate/${candidateId}/eligibility`, {
+      method: "POST",
+      body: {
+        decision: "INELIGIBLE",
+        checklist: parsed.data.checklist,
+        motivation: parsed.data.motivo,
+        causales: parsed.data.causales,
+      },
+    });
+    revalidatePath("/evaluacion");
+    revalidatePath(`/evaluacion/${candidateId}`);
+    revalidatePath(`/expedientes/${candidateId}`);
+    return { ok: true };
+  } catch (error) {
+    return {
+      ok: false,
+      error: error instanceof ErrorApi ? error.message : "No se pudo registrar la inelegibilidad",
+    };
+  }
+}
+
+const RUTA_INFORME_IA = (candidateId: string) =>
+  `/internal/evaluations/candidate/${candidateId}/ai-summary`;
+
+type RespuestaInformeIa = {
+  readonly informe?: string | null;
+};
+
+/**
+ * Último informe de elegibilidad, o cadena vacía si todavía no se pidió.
+ * No es el dictamen: el evaluador confirma con declararElegible / declararInelegible.
+ */
+export async function leerInformeIaElegibilidad(
+  candidateId: string,
+): Promise<{ readonly ok: boolean; readonly texto: string; readonly error?: string }> {
+  if (!candidateId.trim()) {
+    return { ok: false, texto: "", error: "Expediente inválido" };
+  }
+  try {
+    const respuesta = await llamarApiAccion<RespuestaInformeIa>(RUTA_INFORME_IA(candidateId));
+    return {
+      ok: true,
+      texto: typeof respuesta.informe === "string" ? respuesta.informe : "",
+    };
+  } catch (error) {
+    return {
+      ok: false,
+      texto: "",
+      error: error instanceof ErrorApi ? error.message : "No se pudo cargar el Informe IA.",
+    };
+  }
+}
+
+/**
+ * Pide un informe nuevo. La API conserva los anteriores y este pasa a ser el más reciente.
+ * Puede tardar: el servicio de IA tiene hasta tres minutos.
+ */
+export async function generarInformeIaElegibilidad(
+  candidateId: string,
+): Promise<{ readonly ok: boolean; readonly texto?: string; readonly error?: string }> {
+  if (!candidateId.trim()) {
+    return { ok: false, error: "Expediente inválido" };
+  }
+  try {
+    const respuesta = await llamarApiAccion<RespuestaInformeIa>(RUTA_INFORME_IA(candidateId), {
+      method: "POST",
+      timeoutMs: 180_000,
+    });
+    const texto = typeof respuesta.informe === "string" ? respuesta.informe.trim() : "";
+    if (!texto) {
+      return { ok: false, error: "La API no devolvió contenido para el informe." };
+    }
+    return { ok: true, texto };
+  } catch (error) {
+    return {
+      ok: false,
+      error:
+        error instanceof ErrorApi
+          ? error.message
+          : "No se pudo generar el Informe IA. Intente más tarde.",
+    };
   }
 }

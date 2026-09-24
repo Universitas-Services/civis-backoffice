@@ -6,15 +6,36 @@
  */
 import { z } from "zod";
 
-export const ROLES = ["SUPER_ADMIN", "SECRETARY", "EVALUATOR", "PUBLISHER"] as const;
+/** Roles del panel — espejo de civis-api `ROLES` (sin PUBLISHER; con ADMIN). */
+export const ROLES = ["SUPER_ADMIN", "ADMIN", "SECRETARY", "REVIEWER", "EVALUATOR"] as const;
 export type Role = (typeof ROLES)[number];
 
+/** Roles operativos que un ADMIN puede crear/asignar (no ADMIN ni SUPER_ADMIN). */
+export const ROLES_MENORES = ["SECRETARY", "REVIEWER", "EVALUATOR"] as const;
+export type RoleMenor = (typeof ROLES_MENORES)[number];
+
 export const ROL_ETIQUETA: Record<Role, string> = {
-  SUPER_ADMIN: "Administrador",
+  SUPER_ADMIN: "Super administrador",
+  ADMIN: "Administrador",
   SECRETARY: "Secretaría",
+  REVIEWER: "Revisión documental",
   EVALUATOR: "Evaluación",
-  PUBLISHER: "Publicación",
 };
+
+/** Etiqueta segura si llega un rol desconocido (datos legacy). */
+export function etiquetaRol(rol: string): string {
+  return (ROL_ETIQUETA as Record<string, string>)[rol] ?? rol;
+}
+
+/**
+ * Roles que el actor puede marcar al crear/editar usuarios.
+ * SUPER_ADMIN → todos; ADMIN → solo menores; resto → ninguno.
+ */
+export function rolesAsignablesPara(rolesActor: readonly Role[]): readonly Role[] {
+  if (rolesActor.includes("SUPER_ADMIN")) return ROLES;
+  if (rolesActor.includes("ADMIN")) return ROLES_MENORES;
+  return [];
+}
 
 export const WORKFLOW_STATUS = [
   "DRAFT",
@@ -22,6 +43,7 @@ export const WORKFLOW_STATUS = [
   "READY_FOR_EVALUATION",
   "EVALUATION_IN_PROGRESS",
   "EVALUATED",
+  "DISQUALIFIED",
   "OBJECTION_PERIOD",
   "FINAL_REVIEW",
   "FINALIZED",
@@ -35,6 +57,7 @@ export const ESTADO_ETIQUETA: Record<WorkflowStatus, string> = {
   READY_FOR_EVALUATION: "Lista para evaluar",
   EVALUATION_IN_PROGRESS: "En evaluación",
   EVALUATED: "Evaluada",
+  DISQUALIFIED: "Descalificado",
   OBJECTION_PERIOD: "Período de objeciones",
   FINAL_REVIEW: "Revisión final",
   FINALIZED: "Finalizada",
@@ -90,6 +113,10 @@ export interface EntradaRanking {
   readonly position: number | null;
   readonly tied: boolean;
   readonly rubricVersion: string;
+  /** Identificador interno. Sirve para enviar al ranking público. */
+  readonly candidateId?: string;
+  /** El perfil ya está en el sitio público. */
+  readonly published?: boolean;
 }
 
 export interface ResultadoRanking {
@@ -167,66 +194,65 @@ export const aprobarPublicacionSchema = z.object({
 
 // ─────────────────────────────────────────── expedientes
 
+/** Salas admitidas al crear expediente (contrato API vigente). */
 export const CHAMBERS = [
   "CONSTITUCIONAL",
   "POLITICO_ADMINISTRATIVA",
   "ELECTORAL",
   "CASACION_CIVIL",
   "CASACION_PENAL",
+  "CASACION_SOCIAL",
   "PLENA",
-  "SOCIAL",
 ] as const;
 export type Chamber = (typeof CHAMBERS)[number];
 
-export const SALA_ETIQUETA: Record<Chamber, string> = {
+/** Etiquetas de sala; incluye valores legacy por si llegan en listados antiguos. */
+export const SALA_ETIQUETA: Record<string, string> = {
   CONSTITUCIONAL: "Constitucional",
   POLITICO_ADMINISTRATIVA: "Político-Administrativa",
   ELECTORAL: "Electoral",
   CASACION_CIVIL: "Casación Civil",
   CASACION_PENAL: "Casación Penal",
-  PLENA: "Sala Plena",
+  CASACION_SOCIAL: "Casación Social",
+  PLENA: "Plena",
   SOCIAL: "Sala Social",
 };
 
-export const DOCUMENT_CATEGORY = [
-  "CURRICULUM",
-  "ACADEMIC_TITLE",
-  "TEACHING_PROOF",
-  "PUBLICATION_PROOF",
-  "PROFESSIONAL_PROOF",
-  "IDENTITY",
-  "SWORN_STATEMENT",
-  "OTHER",
-] as const;
-export type DocumentCategory = (typeof DOCUMENT_CATEGORY)[number];
+export {
+  DOCUMENT_CATEGORY,
+  CATEGORIA_ETIQUETA,
+  type DocumentCategory,
+  BLOCK_LABEL,
+  BLOQUE_ETIQUETA,
+  BLOCK_IDS,
+  ORDEN_BLOQUES,
+  type BlockId,
+  RECAUDOS,
+  categoryDesdeSlotKey,
+  slotKeyDesdeCategory,
+  esExtraibleConIa,
+  recaudoPorSlotKey,
+  recaudoPorCategory,
+  esCategoryConocida,
+  ordenBloquesRevision,
+} from "./recaudos";
+import type { DocumentCategory } from "./recaudos";
 
-export const CATEGORIA_ETIQUETA: Record<DocumentCategory, string> = {
-  CURRICULUM: "Currículum",
-  ACADEMIC_TITLE: "Títulos académicos",
-  TEACHING_PROOF: "Constancias de docencia",
-  PUBLICATION_PROOF: "Publicaciones",
-  PROFESSIONAL_PROOF: "Trayectoria profesional",
-  IDENTITY: "Documento de identidad",
-  SWORN_STATEMENT: "Declaración jurada",
-  OTHER: "Otros soportes",
-};
-
-export const PREFIJOS_TELEFONO = [
-  "0412",
-  "0414",
-  "0416",
-  "0422",
-  "0424",
-  "0426",
-] as const;
+export const PREFIJOS_TELEFONO = ["0412", "0414", "0416", "0422", "0424", "0426"] as const;
 export type PrefijoTelefono = (typeof PREFIJOS_TELEFONO)[number];
 
+/** Alineado a civis-api: V / E / J, 6–9 dígitos. */
 export const nationalIdSchema = z
   .string()
   .trim()
   .toUpperCase()
-  .regex(/^V-\d{6,8}$/, "Formato esperado: V-12345678 (6 a 8 dígitos)")
-  .transform((v) => (v.includes("-") ? v : `V-${v.replace(/^V/, "")}`));
+  .regex(/^[VEJ]-?\d{6,9}$/, "Formato esperado: V-12345678 (también E o J; 6 a 9 dígitos)")
+  .transform((v) => {
+    const limpio = v.replace(/[^VEJ0-9]/gi, "").toUpperCase();
+    const prefijo = limpio[0] === "E" || limpio[0] === "J" || limpio[0] === "V" ? limpio[0] : "V";
+    const digitos = limpio.replace(/^[VEJ]/, "");
+    return `${prefijo}-${digitos}`;
+  });
 
 const nombrePersonaSchema = z
   .string()
@@ -241,10 +267,7 @@ const nombrePersonaSchema = z
 export const telefonoVeSchema = z
   .string()
   .trim()
-  .regex(
-    /^0(412|414|416|422|424|426) \d{7}$/,
-    "Formato esperado: 0424 1234567",
-  );
+  .regex(/^0(412|414|416|422|424|426) \d{7}$/, "Formato esperado: 0424 1234567");
 
 export const crearExpedienteSchema = z.object({
   nationalId: nationalIdSchema,
@@ -266,7 +289,7 @@ export const transicionSchema = z.object({
 export interface DocumentoExpediente {
   readonly id: string;
   readonly publicId: string;
-  readonly category: DocumentCategory;
+  readonly category: DocumentCategory | string;
   readonly originalName: string;
   readonly sizeBytes: number;
   readonly sha256: string;
@@ -275,6 +298,10 @@ export interface DocumentoExpediente {
   readonly classification: "PRIVATE" | "REDACTED" | "PUBLIC";
   readonly uploadedAt: string;
   readonly version: number;
+  /** Id del documento que este archivo sustituyó. La versión citada deja de mostrarse. */
+  readonly replacesId?: string | null;
+  /** Campos capturados en revisión documental (propuestos por IA o a mano). */
+  readonly reviewData?: Record<string, unknown> | null;
 }
 
 export interface ExpedienteListado {
@@ -282,7 +309,9 @@ export interface ExpedienteListado {
   readonly publicId: string;
   readonly firstName: string;
   readonly lastName: string;
-  readonly chamber: Chamber;
+  readonly nationalId: string;
+  /** Puede incluir el valor legacy SOCIAL en datos antiguos. */
+  readonly chamber: Chamber | string;
   readonly workflowStatus: WorkflowStatus;
   readonly publicationStatus: string;
   readonly receivedAt: string;
@@ -300,7 +329,6 @@ export interface ExpedienteListado {
 }
 
 export interface ExpedienteDetalle extends ExpedienteListado {
-  readonly nationalId: string;
   readonly email: string | null;
   readonly phone: string | null;
   readonly internalNotes: string | null;
@@ -394,6 +422,23 @@ export const CAUSAL_ETIQUETA: Record<string, string> = {
   OTHER: "Otra causal",
 };
 
+export const CAUSA_DENUNCIA_ETIQUETA: Record<string, string> = {
+  EXCLUSIVE_NATIONALITY: "Falta de nacionalidad originaria exclusiva",
+  LACK_OF_HONOR: "Carencia de reconocida honorabilidad y conducta ética",
+  INSUFFICIENT_CAREER: "Insuficiencia en la trayectoria profesional (menos de 15 años)",
+  MISSING_TITULAR_PROFESSOR: "Falta de rango de profesor titular",
+  MISSING_JUDICIAL_RANK: "Falta de jerarquía judicial mínima",
+  MISSING_POSTGRADUATE: "Carencia de formación de posgrado",
+  POLITICAL_MILITANCY: "Militancia política activa o proselitismo",
+  STATE_CONTRACTS: "Conflicto de interés por contrataciones con el Estado",
+  KINSHIP_HIGH_OFFICIALS: "Parentesco con altos funcionarios",
+  INCOMPATIBLE_MARRIAGE: "Unión conyugal incompatible",
+  KINSHIP_NOMINATION_COMMITTEE: "Parentesco con el Comité de Postulaciones",
+  FIRM_SANCTION: "Inhabilitación o sanción firme",
+  PROVEN_MENTAL_INCAPACITY: "Incapacidad mental comprobada",
+  OTHER: "Otro",
+};
+
 export interface ObjecionBandeja {
   readonly id: string;
   readonly trackingCode: string;
@@ -466,7 +511,7 @@ export const publicarInformeSchema = z.object({
 export interface DocumentoEnRevision {
   readonly id: string;
   readonly publicId: string;
-  readonly category: DocumentCategory;
+  readonly category: DocumentCategory | string;
   readonly originalName: string;
   readonly sizeBytes: number;
   readonly sha256: string;
@@ -475,13 +520,14 @@ export interface DocumentoEnRevision {
   readonly classification: "PRIVATE" | "REDACTED" | "PUBLIC";
   readonly uploadedAt: string;
   readonly version: number;
+  readonly reviewData?: Record<string, unknown> | null;
   readonly submission: {
     readonly fileNumber: string;
     readonly candidate: {
       readonly id: string;
       readonly firstName: string;
       readonly lastName: string;
-      readonly chamber: Chamber;
+      readonly chamber: Chamber | string;
     };
   };
   readonly uploadedBy: { readonly fullName: string } | null;
@@ -599,3 +645,13 @@ export interface ObjecionDetalle extends Omit<ObjecionBandeja, "_count"> {
     readonly requestedBy: { readonly fullName: string } | null;
   }[];
 }
+
+export {
+  baremoSchema,
+  type BaremoInput,
+  type BaremoListado,
+  type BaremoDetalle,
+  type BaremoCriterioDetalle,
+  type BaremoRangoDetalle,
+  puntosBaremo,
+} from "./baremo-dinamico";

@@ -4,11 +4,14 @@ import Link from "next/link";
 export function CabeceraPagina({
   titulo,
   descripcion,
+  meta,
   ruta,
   acciones,
 }: {
   readonly titulo: string;
   readonly descripcion?: string;
+  /** Bloque opcional bajo el título (p. ej. estado y datos de esta pantalla). */
+  readonly meta?: React.ReactNode;
   readonly ruta?: readonly { readonly href?: string; readonly texto: string }[];
   readonly acciones?: React.ReactNode;
 }) {
@@ -43,6 +46,7 @@ export function CabeceraPagina({
           {descripcion && (
             <p className="mt-1.5 max-w-3xl text-sm leading-relaxed text-toga-600">{descripcion}</p>
           )}
+          {meta && <div className="mt-3">{meta}</div>}
         </div>
         {acciones && <div className="flex shrink-0 flex-wrap gap-2">{acciones}</div>}
       </div>
