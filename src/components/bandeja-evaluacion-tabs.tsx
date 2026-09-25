@@ -6,17 +6,12 @@ import { Eye, FileText } from "lucide-react";
 import type { Chamber, WorkflowStatus } from "@/contracts";
 import { SALA_ETIQUETA } from "@/contracts";
 import { EstadoVacio } from "@/components/cabecera-pagina";
-import {
-  FichaDescalificacionVista,
-  imprimirFichaDescalificacion,
-} from "@/components/ficha-descalificacion";
+import { FichaDescalificacionVista } from "@/components/ficha-descalificacion";
+import { InformeFichaDescalificacion } from "@/components/informe-ficha-descalificacion";
 import { InsigniaEstado } from "@/components/insignias";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ConTooltip, TooltipProvider } from "@/components/ui/tooltip";
-import {
-  type DecisionElegibilidad,
-  type FichaDescalificacion,
-} from "@/lib/elegibilidad";
+import { type DecisionElegibilidad, type FichaDescalificacion } from "@/lib/elegibilidad";
 
 export type PendienteEvaluacion = {
   readonly id: string;
@@ -44,6 +39,10 @@ export function BandejaEvaluacionTabs({
   readonly inelegibles: readonly DecisionElegibilidad[];
 }) {
   const [fichaAbierta, setFichaAbierta] = useState<FichaDescalificacion | null>(null);
+  const [informeDe, setInformeDe] = useState<{
+    readonly candidateId: string;
+    readonly nombre: string;
+  } | null>(null);
 
   return (
     <>
@@ -80,7 +79,7 @@ export function BandejaEvaluacionTabs({
             <TablaInelegibles
               items={inelegibles}
               onVerFicha={(f) => setFichaAbierta(f)}
-              onInforme={(f) => imprimirFichaDescalificacion(f)}
+              onInforme={(candidateId, nombre) => setInformeDe({ candidateId, nombre })}
             />
           )}
         </TabsContent>
@@ -92,6 +91,9 @@ export function BandejaEvaluacionTabs({
           role="dialog"
           aria-modal="true"
           aria-labelledby="titulo-ficha-inelegible"
+          onClick={(evento) => {
+            if (evento.target === evento.currentTarget) setFichaAbierta(null);
+          }}
         >
           <div className="max-h-[90dvh] w-full max-w-2xl overflow-y-auto rounded-lg border border-toga-200 bg-white p-5 shadow-lg sm:p-6">
             <div className="mb-4 flex items-start justify-between gap-3">
@@ -106,12 +108,17 @@ export function BandejaEvaluacionTabs({
                 Cerrar
               </button>
             </div>
-            <FichaDescalificacionVista
-              ficha={fichaAbierta}
-              onGenerarInforme={() => imprimirFichaDescalificacion(fichaAbierta)}
-            />
+            <FichaDescalificacionVista ficha={fichaAbierta} />
           </div>
         </div>
+      )}
+
+      {informeDe && (
+        <InformeFichaDescalificacion
+          candidateId={informeDe.candidateId}
+          nombre={informeDe.nombre}
+          onCerrar={() => setInformeDe(null)}
+        />
       )}
     </>
   );
@@ -124,7 +131,7 @@ function TablaInelegibles({
 }: {
   readonly items: readonly DecisionElegibilidad[];
   readonly onVerFicha: (f: FichaDescalificacion) => void;
-  readonly onInforme: (f: FichaDescalificacion) => void;
+  readonly onInforme: (candidateId: string, nombre: string) => void;
 }) {
   return (
     <TooltipProvider delayDuration={200}>
@@ -181,10 +188,10 @@ function TablaInelegibles({
                           Detalle
                         </button>
                       </ConTooltip>
-                      <ConTooltip texto="Generar informe del dictamen">
+                      <ConTooltip texto="Ver el informe de descalificación">
                         <button
                           type="button"
-                          onClick={() => onInforme(ficha)}
+                          onClick={() => onInforme(d.candidateId, d.resumen.postulanteNombre)}
                           className="inline-flex items-center gap-1 rounded-md border border-toga-300 bg-white px-2.5 py-1.5 text-xs font-medium text-toga-700 hover:bg-toga-50"
                         >
                           <FileText className="h-3.5 w-3.5" aria-hidden="true" />
@@ -205,10 +212,7 @@ function TablaInelegibles({
           const ficha = d.ficha;
           if (!ficha) return null;
           return (
-            <li
-              key={d.candidateId}
-              className="rounded-lg border border-toga-200 bg-white p-4"
-            >
+            <li key={d.candidateId} className="rounded-lg border border-toga-200 bg-white p-4">
               <p className="codigo text-xs text-toga-500">{d.resumen.fileNumber}</p>
               <p className="mt-0.5 font-medium text-toga-900">{d.resumen.postulanteNombre}</p>
               <p className="mt-1 text-xs text-toga-500">{d.resumen.salaLabel}</p>
@@ -223,7 +227,7 @@ function TablaInelegibles({
                 </button>
                 <button
                   type="button"
-                  onClick={() => onInforme(ficha)}
+                  onClick={() => onInforme(d.candidateId, d.resumen.postulanteNombre)}
                   className="inline-flex items-center gap-1 rounded-md border border-toga-300 px-3 py-1.5 text-xs font-medium text-toga-700"
                 >
                   <FileText className="h-3.5 w-3.5" aria-hidden="true" />
@@ -315,15 +319,11 @@ function TablaPendientes({ items }: { readonly items: readonly PendienteEvaluaci
               href={`/evaluacion/${c.id}`}
               className="block rounded-lg border border-toga-200 bg-white p-4 hover:bg-toga-50"
             >
-              <p className="codigo text-xs text-toga-500">
-                {c.submissions[0]?.fileNumber ?? "—"}
-              </p>
+              <p className="codigo text-xs text-toga-500">{c.submissions[0]?.fileNumber ?? "—"}</p>
               <p className="mt-0.5 font-medium text-toga-900">
                 {c.firstName} {c.lastName}
               </p>
-              <p className="mt-1 text-xs text-toga-500">
-                {SALA_ETIQUETA[c.chamber] ?? c.chamber}
-              </p>
+              <p className="mt-1 text-xs text-toga-500">{SALA_ETIQUETA[c.chamber] ?? c.chamber}</p>
             </Link>
           </li>
         ))}

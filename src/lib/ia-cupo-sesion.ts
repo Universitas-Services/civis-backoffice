@@ -46,3 +46,16 @@ export function informeIaElegibilidadYaUsado(expedienteId: string): boolean {
 export function marcarInformeIaElegibilidadUsado(expedienteId: string): void {
   marcar(claveInformeElegibilidad(expedienteId));
 }
+
+function claveInformeTachas(expedienteId: string): string {
+  return `civis_informe_ia_tachas_${expedienteId}`;
+}
+
+/** Informe IA al corregir el baremo: un uso exitoso por expediente y sesión. */
+export function informeIaTachasYaUsado(expedienteId: string): boolean {
+  return leer(claveInformeTachas(expedienteId));
+}
+
+export function marcarInformeIaTachasUsado(expedienteId: string): void {
+  marcar(claveInformeTachas(expedienteId));
+}

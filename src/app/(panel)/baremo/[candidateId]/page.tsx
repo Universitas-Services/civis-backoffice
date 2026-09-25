@@ -18,8 +18,9 @@ export default async function BaremoDetalle({
 }) {
   const usuario = await exigirRol("SUPER_ADMIN", "ADMIN", "EVALUATOR");
   const { candidateId } = await params;
-  const puedeCalificar =
-    usuario.roles.includes("SUPER_ADMIN") || usuario.roles.includes("EVALUATOR");
+  const puedeCalificar = usuario.roles.some(
+    (rol) => rol === "SUPER_ADMIN" || rol === "ADMIN" || rol === "EVALUATOR",
+  );
 
   let expediente: ExpedienteDetalle;
   try {
@@ -113,7 +114,9 @@ export default async function BaremoDetalle({
 
   const puedeEditar =
     (evaluacion.status === "DRAFT" || evaluacion.status === "SUBMITTED") &&
-    (evaluacion.evaluatorId === usuario.id || usuario.roles.includes("SUPER_ADMIN"));
+    (evaluacion.evaluatorId === usuario.id ||
+      usuario.roles.includes("SUPER_ADMIN") ||
+      usuario.roles.includes("ADMIN"));
 
   return (
     <PantallaAplicarBaremo

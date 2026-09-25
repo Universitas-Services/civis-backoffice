@@ -22,7 +22,6 @@ export async function enviarAlRankingPublico(candidateIds: string[]): Promise<Es
       { method: "POST", body: { candidateIds }, timeoutMs: 60_000 },
     );
     revalidatePath("/ranking");
-    revalidatePath("/publicaciones");
     const yaEstaban = r.omitidos > 0 ? ` ${r.omitidos} ya estaban publicados.` : "";
     return { exito: `Enviados al ranking público: ${r.publicados}.${yaEstaban}` };
   } catch (error) {

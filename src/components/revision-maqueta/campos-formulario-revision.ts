@@ -581,7 +581,6 @@ export const KEYS_DJ_NO_CONTRATACION_VISIBLES = [
 export type KeyDjNoContratacionVisible = (typeof KEYS_DJ_NO_CONTRATACION_VISIBLES)[number];
 
 export const KEY_PREFIJO_CEDULA_SINTESIS = "prefijo_cedula_sintesis";
-export const KEY_PREFIJO_INPRE_SINTESIS = "prefijo_inpre_sintesis";
 
 /** Campos visibles: síntesis curricular. */
 export const KEYS_SINTESIS_CURRICULAR_VISIBLES = [
@@ -603,7 +602,6 @@ export const KEYS_SINTESIS_CURRICULAR_VISIBLES = [
 export type KeySintesisCurricularVisible = (typeof KEYS_SINTESIS_CURRICULAR_VISIBLES)[number];
 
 export const KEY_PREFIJO_CEDULA_OTRO = "prefijo_cedula_otro";
-export const KEY_PREFIJO_INPRE_OTRO = "prefijo_inpre_otro";
 
 /** Campos visibles: otro documento. */
 export const KEYS_OTRO_DOCUMENTO_VISIBLES = [
@@ -662,6 +660,17 @@ const textoInstitucion = z
   .trim()
   .min(2, "Mínimo 2 caracteres")
   .max(150, "Máximo 150 caracteres")
+  .regex(
+    /^[A-Za-zÁÉÍÓÚÜÑáéíóúüñ0-9.,\-/()#\s]+$/,
+    "Caracteres no permitidos en el nombre del registro",
+  );
+
+/** Nombre del ministerio en el certificado de antecedentes penales. */
+const textoEntidadPenales = z
+  .string()
+  .trim()
+  .min(2, "Mínimo 2 caracteres")
+  .max(500, "Máximo 500 caracteres")
   .regex(
     /^[A-Za-zÁÉÍÓÚÜÑáéíóúüñ0-9.,\-/()#\s]+$/,
     "Caracteres no permitidos en el nombre del registro",
@@ -849,7 +858,7 @@ export const formularioCertMedicaMentalSchema = z.object({
 /** Antecedentes penales: todos opcionales; formato sólo si se escribe. */
 export const formularioAntecedentesPenalesSchema = z.object({
   [KEY_PREFIJO_CEDULA_POSTULANTE_PENALES]: prefijoVe,
-  nombre_entidad_penales: opcionalEscrito(textoInstitucion),
+  nombre_entidad_penales: opcionalEscrito(textoEntidadPenales),
   nombre_quiensuscribe_penales: opcionalEscrito(letrasEspacios),
   cargo_quiensuscribe_penales: opcionalEscrito(textoInstitucion),
   designacion_quiensuscribe_penales: opcionalEscrito(textoLargo),
@@ -1250,7 +1259,6 @@ export const formularioDjNoContratacionSchema = z.object({
 /** Síntesis curricular: todos opcionales. */
 export const formularioSintesisCurricularSchema = z.object({
   [KEY_PREFIJO_CEDULA_SINTESIS]: prefijoVe,
-  [KEY_PREFIJO_INPRE_SINTESIS]: prefijoVe,
   nombre_postulante_sintesis: opcionalEscrito(letrasEspacios),
   apellido_postulante_sintesis: opcionalEscrito(letrasEspacios),
   estadocivil_postulante_sintesis: opcionalEscrito(letrasEspacios),
@@ -1270,7 +1278,6 @@ export const formularioSintesisCurricularSchema = z.object({
 /** Otro documento: todos opcionales. */
 export const formularioOtroDocumentoSchema = z.object({
   [KEY_PREFIJO_CEDULA_OTRO]: prefijoVe,
-  [KEY_PREFIJO_INPRE_OTRO]: prefijoVe,
   nombre_postulante_otro: opcionalEscrito(letrasEspacios),
   apellido_postulante_otro: opcionalEscrito(letrasEspacios),
   estadocivil_postulante_otro: opcionalEscrito(letrasEspacios),
@@ -1941,7 +1948,6 @@ function normalizarParaSintesisCurricular(
 ): Record<string, unknown> {
   return {
     [KEY_PREFIJO_CEDULA_SINTESIS]: str(valores[KEY_PREFIJO_CEDULA_SINTESIS]),
-    [KEY_PREFIJO_INPRE_SINTESIS]: str(valores[KEY_PREFIJO_INPRE_SINTESIS]),
     nombre_postulante_sintesis: str(valores.nombre_postulante_sintesis),
     apellido_postulante_sintesis: str(valores.apellido_postulante_sintesis),
     estadocivil_postulante_sintesis: str(valores.estadocivil_postulante_sintesis),
@@ -1974,7 +1980,6 @@ function normalizarParaOtroDocumento(
 ): Record<string, unknown> {
   return {
     [KEY_PREFIJO_CEDULA_OTRO]: str(valores[KEY_PREFIJO_CEDULA_OTRO]),
-    [KEY_PREFIJO_INPRE_OTRO]: str(valores[KEY_PREFIJO_INPRE_OTRO]),
     nombre_postulante_otro: str(valores.nombre_postulante_otro),
     apellido_postulante_otro: str(valores.apellido_postulante_otro),
     estadocivil_postulante_otro: str(valores.estadocivil_postulante_otro),
@@ -2888,7 +2893,6 @@ export function valoresVaciosDjNoContratacion(): ValoresFormularioRevision {
 export function valoresVaciosSintesisCurricular(): ValoresFormularioRevision {
   return {
     [KEY_PREFIJO_CEDULA_SINTESIS]: "V",
-    [KEY_PREFIJO_INPRE_SINTESIS]: "V",
     nombre_postulante_sintesis: "",
     apellido_postulante_sintesis: "",
     estadocivil_postulante_sintesis: "",
@@ -2911,7 +2915,6 @@ export function valoresVaciosSintesisCurricular(): ValoresFormularioRevision {
 export function valoresVaciosOtroDocumento(): ValoresFormularioRevision {
   return {
     [KEY_PREFIJO_CEDULA_OTRO]: "V",
-    [KEY_PREFIJO_INPRE_OTRO]: "V",
     nombre_postulante_otro: "",
     apellido_postulante_otro: "",
     estadocivil_postulante_otro: "",

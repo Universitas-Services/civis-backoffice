@@ -1,6 +1,7 @@
 "use client";
 
-import { useActionState, useEffect, useState, useTransition } from "react";
+import { useActionState, useEffect, useRef, useState, useTransition } from "react";
+import { useFormStatus } from "react-dom";
 import type { Role } from "@/contracts";
 import { etiquetaRol, rolesAsignablesPara } from "@/contracts";
 import {
@@ -12,108 +13,174 @@ import {
 import { useToast } from "@/components/toast-provider";
 import { useToastDesdeEstado } from "@/hooks/use-toast-desde-estado";
 
-export function CrearUsuario({
-  rolesActor,
-}: {
-  readonly rolesActor: readonly Role[];
-}) {
+export function CrearUsuario({ rolesActor }: { readonly rolesActor: readonly Role[] }) {
   const [abierto, setAbierto] = useState(false);
+  const [clave, setClave] = useState<string | null>(null);
   const [estado, accion] = useActionState<EstadoUsuarios, FormData>(crearUsuario, {});
   useToastDesdeEstado(estado);
+  const claveVista = useRef<string | null>(null);
+  const toast = useToast();
   const rolesDisponibles = rolesAsignablesPara(rolesActor);
 
-  return (
-    <section aria-labelledby="crear">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 id="crear" className="text-base font-semibold text-toga-900">
-          Registrar integrante del equipo
-        </h2>
-        <button
-          type="button"
-          onClick={() => setAbierto(!abierto)}
-          className="rounded-md bg-balanza-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-balanza-700"
-        >
-          {abierto ? "Cancelar" : "+ Nuevo usuario"}
-        </button>
-      </div>
+  useEffect(() => {
+    if (!estado.contrasenaTemporal || estado.contrasenaTemporal === claveVista.current) return;
+    claveVista.current = estado.contrasenaTemporal;
+    setClave(estado.contrasenaTemporal);
+    setAbierto(true);
+  }, [estado.contrasenaTemporal]);
 
-      {/* La contraseña temporal se muestra UNA vez. Si se cierra la pantalla,
-          no hay forma de recuperarla: hay que restablecerla. */}
-      {estado.contrasenaTemporal && (
-        <div className="mt-4 rounded-lg border border-balanza-600/25 bg-balanza-50 p-5">
-          <p className="text-sm font-semibold text-toga-900">{estado.exito}</p>
-          <p className="mt-2 text-sm leading-relaxed text-toga-700">
-            Ésta es la contraseña temporal. <strong>Se muestra una sola vez</strong> y no queda
-            registrada en ninguna parte. Transmítala por un canal seguro; la persona deberá
-            cambiarla en su primer ingreso.
-          </p>
-          <p className="codigo mt-3 select-all rounded-md border border-balanza-600/25 bg-white px-4 py-3 text-center text-lg font-semibold tracking-wider text-toga-900">
-            {estado.contrasenaTemporal}
-          </p>
+  function cerrar() {
+    setAbierto(false);
+    setClave(null);
+  }
+
+  async function copiarClave() {
+    if (!clave) return;
+    try {
+      await navigator.clipboard.writeText(clave);
+      toast.exito("Clave copiada.");
+    } catch {
+      toast.error("No se pudo copiar. Seleccione la clave y cópiela a mano.");
+    }
+  }
+
+  return (
+    <div className="flex justify-end">
+      <button
+        type="button"
+        onClick={() => {
+          setClave(null);
+          setAbierto(true);
+        }}
+        className="rounded-md bg-balanza-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-balanza-700"
+      >
+        Crear usuario
+      </button>
+
+      {abierto && (
+        <div
+          className="fixed inset-0 z-50 flex items-end justify-center bg-toga-900/40 p-4 sm:items-center"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="titulo-crear-usuario"
+          onClick={(evento) => {
+            if (clave) return;
+            if (evento.target === evento.currentTarget) cerrar();
+          }}
+        >
+          <div className="max-h-[90dvh] w-full max-w-lg overflow-y-auto rounded-lg border border-toga-200 bg-white p-5 shadow-lg sm:p-6">
+            {clave ? (
+              <>
+                <h2 id="titulo-crear-usuario" className="text-base font-semibold text-toga-900">
+                  {estado.exito ?? "Usuario creado."}
+                </h2>
+                <p className="mt-2 text-sm leading-relaxed text-toga-700">
+                  Ésta es la contraseña temporal. <strong>Se muestra una sola vez</strong> y no
+                  queda registrada en ninguna parte. Cópiela y transmítala por un canal seguro; la
+                  persona deberá cambiarla en su primer ingreso.
+                </p>
+                <p className="codigo mt-4 select-all rounded-md border border-toga-300 bg-toga-50 px-4 py-3 text-center text-lg font-semibold tracking-wider text-toga-900">
+                  {clave}
+                </p>
+                <div className="mt-4 flex flex-wrap justify-end gap-2">
+                  <button
+                    type="button"
+                    onClick={() => void copiarClave()}
+                    className="rounded-md bg-balanza-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-balanza-700"
+                  >
+                    Copiar clave
+                  </button>
+                  <button
+                    type="button"
+                    onClick={cerrar}
+                    className="rounded-md border border-toga-300 px-4 py-2.5 text-sm font-semibold text-toga-700 hover:bg-toga-100"
+                  >
+                    Cerrar
+                  </button>
+                </div>
+              </>
+            ) : (
+              <form action={accion}>
+                <h2 id="titulo-crear-usuario" className="text-base font-semibold text-toga-900">
+                  Crear usuario
+                </h2>
+                <div className="mt-4 grid gap-4">
+                  <div>
+                    <label htmlFor="fullName" className="block text-xs font-medium text-toga-600">
+                      Nombre completo <span className="text-balanza-700">*</span>
+                    </label>
+                    <input
+                      id="fullName"
+                      name="fullName"
+                      required
+                      autoFocus
+                      className="mt-1 w-full rounded-md border border-toga-300 px-3 py-2 text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="email" className="block text-xs font-medium text-toga-600">
+                      Correo institucional <span className="text-balanza-700">*</span>
+                    </label>
+                    <input
+                      id="email"
+                      name="email"
+                      type="email"
+                      required
+                      className="mt-1 w-full rounded-md border border-toga-300 px-3 py-2 text-sm"
+                    />
+                  </div>
+                </div>
+
+                <fieldset className="mt-4">
+                  <legend className="text-xs font-medium text-toga-600">
+                    Rol <span className="text-balanza-700">*</span>
+                  </legend>
+                  <p className="mt-1 text-xs text-toga-500">Solo un rol por usuario al crearlo.</p>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {rolesDisponibles.map((r) => (
+                      <label
+                        key={r}
+                        className="flex cursor-pointer items-center gap-2 rounded-md border border-toga-200 px-3 py-2 text-sm hover:bg-toga-50"
+                      >
+                        <input type="radio" name="roles" value={r} required />
+                        {etiquetaRol(r)}
+                      </label>
+                    ))}
+                  </div>
+                  {rolesDisponibles.length === 0 && (
+                    <p className="mt-2 text-xs text-toga-500">Su cuenta no puede asignar roles.</p>
+                  )}
+                </fieldset>
+
+                <div className="mt-5 flex flex-wrap justify-end gap-2">
+                  <button
+                    type="button"
+                    onClick={cerrar}
+                    className="rounded-md border border-toga-300 px-4 py-2.5 text-sm font-semibold text-toga-700 hover:bg-toga-100"
+                  >
+                    Cancelar
+                  </button>
+                  <BotonCrear disabled={rolesDisponibles.length === 0} />
+                </div>
+              </form>
+            )}
+          </div>
         </div>
       )}
+    </div>
+  );
+}
 
-      {abierto && !estado.contrasenaTemporal && (
-        <form action={accion} className="mt-4 rounded-lg border border-toga-200 bg-white p-5">
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div>
-              <label htmlFor="fullName" className="block text-xs font-medium text-toga-600">
-                Nombre completo <span className="text-balanza-700">*</span>
-              </label>
-              <input
-                id="fullName"
-                name="fullName"
-                required
-                className="mt-1 w-full rounded-md border border-toga-300 px-3 py-2 text-sm"
-              />
-            </div>
-            <div>
-              <label htmlFor="email" className="block text-xs font-medium text-toga-600">
-                Correo institucional <span className="text-balanza-700">*</span>
-              </label>
-              <input
-                id="email"
-                name="email"
-                type="email"
-                required
-                className="mt-1 w-full rounded-md border border-toga-300 px-3 py-2 text-sm"
-              />
-            </div>
-          </div>
-
-          <fieldset className="mt-4">
-            <legend className="text-xs font-medium text-toga-600">
-              Rol <span className="text-balanza-700">*</span>
-            </legend>
-            <p className="mt-1 text-xs text-toga-500">Solo un rol por usuario al crearlo.</p>
-            <div className="mt-2 flex flex-wrap gap-2">
-              {rolesDisponibles.map((r) => (
-                <label
-                  key={r}
-                  className="flex cursor-pointer items-center gap-2 rounded-md border border-toga-200 px-3 py-2 text-sm hover:bg-toga-50"
-                >
-                  <input type="radio" name="roles" value={r} required />
-                  {etiquetaRol(r)}
-                </label>
-              ))}
-            </div>
-            {rolesDisponibles.length === 0 && (
-              <p className="mt-2 text-xs text-toga-500">
-                Su cuenta no puede asignar roles.
-              </p>
-            )}
-          </fieldset>
-
-          <button
-            type="submit"
-            disabled={rolesDisponibles.length === 0}
-            className="mt-5 rounded-md bg-balanza-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-balanza-700 disabled:opacity-60"
-          >
-            Crear usuario
-          </button>
-        </form>
-      )}
-    </section>
+function BotonCrear({ disabled }: { readonly disabled: boolean }) {
+  const { pending } = useFormStatus();
+  return (
+    <button
+      type="submit"
+      disabled={disabled || pending}
+      className="rounded-md bg-balanza-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-balanza-700 disabled:opacity-60"
+    >
+      {pending ? "Creando…" : "Crear usuario"}
+    </button>
   );
 }
 
@@ -165,7 +232,7 @@ export function InterruptorUsuario({
   }
 
   return (
-    <div className="min-w-[16rem] rounded-md border border-toga-300 bg-white p-3">
+    <div className="mx-auto min-w-[16rem] rounded-md border border-toga-300 bg-white p-3">
       <p className="text-xs font-medium text-toga-900">
         {activo ? `Suspender a ${nombre}` : `Reactivar a ${nombre}`}
       </p>
@@ -213,11 +280,11 @@ export function InterruptorUsuario({
 }
 
 /**
- * Editor de roles.
+ * Editor de rol.
  *
- * Exige motivo porque cambia quién puede qué en el sistema. Al guardar, la
- * API cierra las sesiones abiertas de esa persona: su token declara los roles
- * viejos y seguiría abriéndole puertas que ya no le tocan.
+ * Un usuario queda con un solo rol. El conjunto anterior se reemplaza.
+ * Exige motivo porque cambia quién puede qué. Al guardar, la API cierra las
+ * sesiones abiertas de esa persona.
  */
 export function EditorRoles({
   id,
@@ -243,6 +310,7 @@ export function EditorRoles({
   const objetivoElevado = rolesActuales.some((r) => r === "SUPER_ADMIN" || r === "ADMIN");
   // ADMIN no gestiona cuentas SUPER_ADMIN ni otras ADMIN.
   const puedeEditar = esSuper || !objetivoElevado;
+  const rolActual = rolesActuales.length === 1 ? rolesActuales[0] : undefined;
 
   useEffect(() => {
     if (estado.exito) setAbierto(false);
@@ -250,7 +318,10 @@ export function EditorRoles({
 
   if (esUnoMismo) {
     return (
-      <span className="text-xs text-toga-400" title="No puede cambiar los roles de su propia cuenta">
+      <span
+        className="text-xs text-toga-400"
+        title="No puede cambiar los roles de su propia cuenta"
+      >
         Su cuenta
       </span>
     );
@@ -271,14 +342,15 @@ export function EditorRoles({
         onClick={() => setAbierto(true)}
         className="text-xs font-medium text-balanza-700 hover:underline"
       >
-        Cambiar roles
+        Cambiar rol
       </button>
     );
   }
 
   return (
-    <div className="min-w-[18rem] rounded-md border border-toga-300 bg-white p-3">
-      <p className="text-xs font-medium text-toga-900">Roles de {nombre}</p>
+    <div className="mx-auto min-w-[18rem] rounded-md border border-toga-300 bg-white p-3">
+      <p className="text-xs font-medium text-toga-900">Rol de {nombre}</p>
+      <p className="mt-1 text-xs text-toga-500">Solo un rol. El que tenía queda reemplazado.</p>
 
       <form action={accion} className="mt-2 space-y-2">
         <div className="flex flex-wrap gap-1.5">
@@ -288,10 +360,11 @@ export function EditorRoles({
               className="flex cursor-pointer items-center gap-1.5 rounded-md border border-toga-200 px-2 py-1 text-xs hover:bg-toga-50"
             >
               <input
-                type="checkbox"
+                type="radio"
                 name="roles"
                 value={r}
-                defaultChecked={rolesActuales.includes(r)}
+                required
+                defaultChecked={rolActual === r}
               />
               {etiquetaRol(r)}
             </label>

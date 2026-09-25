@@ -37,6 +37,35 @@ export function rolesAsignablesPara(rolesActor: readonly Role[]): readonly Role[
   return [];
 }
 
+/** Menor número = rango más alto. Un rol desconocido cuenta como el más bajo. */
+const RANGO_ROL: Record<Role, number> = {
+  SUPER_ADMIN: 0,
+  ADMIN: 1,
+  SECRETARY: 2,
+  REVIEWER: 3,
+  EVALUATOR: 4,
+};
+
+function rangoMasAlto(roles: readonly string[]): number {
+  if (roles.length === 0) return Number.POSITIVE_INFINITY;
+  return Math.min(...roles.map((rol) => RANGO_ROL[rol as Role] ?? Number.POSITIVE_INFINITY));
+}
+
+/**
+ * Directorio que el actor puede ver en el panel.
+ * SUPER_ADMIN ve a todos. El resto solo ve su rango y los inferiores
+ * (un ADMIN no lista superadministradores). El filtro es de interfaz:
+ * la API sigue devolviendo el directorio completo.
+ */
+export function directorioVisiblePara(
+  rolesActor: readonly Role[],
+  lista: readonly UsuarioDirectorio[],
+): readonly UsuarioDirectorio[] {
+  if (rolesActor.includes("SUPER_ADMIN")) return lista;
+  const techo = rangoMasAlto(rolesActor);
+  return lista.filter((cuenta) => rangoMasAlto(cuenta.roles) >= techo);
+}
+
 export const WORKFLOW_STATUS = [
   "DRAFT",
   "DOCUMENT_REVIEW",
@@ -302,6 +331,8 @@ export interface DocumentoExpediente {
   readonly replacesId?: string | null;
   /** Campos capturados en revisión documental (propuestos por IA o a mano). */
   readonly reviewData?: Record<string, unknown> | null;
+  /** Fecha de la revisión documental. Sin ella el dictamen no puede citar el documento. */
+  readonly reviewedAt?: string | null;
 }
 
 export interface ExpedienteListado {
@@ -605,7 +636,7 @@ export interface EvaluacionHistorial {
 }
 
 export const cambiarRolesSchema = z.object({
-  roles: z.array(z.enum(ROLES)).min(1, "Un usuario debe conservar al menos un rol"),
+  roles: z.array(z.enum(ROLES)).min(1, "Asigne un rol").max(1, "Solo puede asignar un rol"),
   reason: z.string().trim().min(10, "Indique el motivo (mínimo 10 caracteres)").max(1000),
 });
 

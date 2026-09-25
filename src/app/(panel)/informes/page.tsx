@@ -8,7 +8,7 @@ import { MarcoInformes, FichaInforme } from "@/components/gestion-informes";
 export const metadata: Metadata = { title: "Informes" };
 
 export default async function Informes() {
-  const usuario = await exigirRol("SUPER_ADMIN", "ADMIN", "EVALUATOR");
+  const usuario = await exigirRol("SUPER_ADMIN");
 
   let informes: readonly InformeListado[];
   try {
@@ -18,7 +18,7 @@ export default async function Informes() {
     throw error;
   }
 
-  const puedeGenerar = usuario.roles.some((r) => r === "SUPER_ADMIN" || r === "ADMIN");
+  const puedeGenerar = usuario.roles.includes("SUPER_ADMIN");
 
   return (
     <MarcoInformes puedeGenerar={puedeGenerar}>

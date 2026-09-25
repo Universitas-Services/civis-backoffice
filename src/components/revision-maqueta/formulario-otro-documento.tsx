@@ -9,7 +9,6 @@ import {
 } from "@/components/ui/select";
 import {
   KEY_PREFIJO_CEDULA_OTRO,
-  KEY_PREFIJO_INPRE_OTRO,
   type ErroresFormularioRevision,
   type ValoresFormularioRevision,
 } from "./campos-formulario-revision";
@@ -78,16 +77,18 @@ export function FormularioOtroDocumento({
           maxLength={8}
         />
 
-        <CampoVeNumero
+        <CampoTexto
           id="inpreabogado_postulante_otro"
           etiqueta="Número del INPREABOGADO del postulante"
           ayuda="Coloca el número del INPREABOGADO que aparece en el documento presentado"
-          prefijoKey={KEY_PREFIJO_INPRE_OTRO}
-          prefijo={String(valores[KEY_PREFIJO_INPRE_OTRO] ?? "V")}
-          digitos={String(valores.inpreabogado_postulante_otro ?? "")}
+          value={String(valores.inpreabogado_postulante_otro ?? "")}
           error={errores.inpreabogado_postulante_otro}
-          onCampo={onCampo}
+          inputMode="numeric"
           maxLength={20}
+          classNameExtra="codigo"
+          onChange={(v) =>
+            onCampo("inpreabogado_postulante_otro", v.replace(/\D/g, "").slice(0, 20))
+          }
         />
 
         <div>
@@ -158,6 +159,9 @@ function CampoTexto({
   value,
   error,
   onChange,
+  inputMode,
+  maxLength,
+  classNameExtra = "",
 }: {
   readonly id: string;
   readonly etiqueta: string;
@@ -165,6 +169,9 @@ function CampoTexto({
   readonly value: string;
   readonly error?: string;
   readonly onChange: (v: string) => void;
+  readonly inputMode?: "numeric" | "text";
+  readonly maxLength?: number;
+  readonly classNameExtra?: string;
 }) {
   return (
     <div>
@@ -175,9 +182,11 @@ function CampoTexto({
       <input
         id={id}
         type="text"
+        inputMode={inputMode}
+        maxLength={maxLength}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className={`${CAMPO}${error ? " campo-con-error" : ""}`}
+        className={`${CAMPO}${classNameExtra ? ` ${classNameExtra}` : ""}${error ? " campo-con-error" : ""}`}
         aria-invalid={Boolean(error)}
         autoComplete="off"
       />

@@ -172,6 +172,12 @@ export async function declararInelegible(
   if (!parsed.success) {
     return { ok: false, error: parsed.error.issues[0]?.message ?? "Datos inválidos" };
   }
+  if (BLOQUE_ELEGIBILIDAD_IDS.every((id) => parsed.data.checklist[id] === true)) {
+    return {
+      ok: false,
+      error: "Con el checklist completo el dictamen es de elegibilidad",
+    };
+  }
   try {
     await llamarApiAccion(`/internal/evaluations/candidate/${candidateId}/eligibility`, {
       method: "POST",
@@ -253,6 +259,64 @@ export async function generarInformeIaElegibilidad(
         error instanceof ErrorApi
           ? error.message
           : "No se pudo generar el Informe IA. Intente más tarde.",
+    };
+  }
+}
+
+const RUTA_FICHA = (candidateId: string) =>
+  `/internal/evaluations/candidate/${candidateId}/disqualification-draft`;
+
+type RespuestaFicha = {
+  readonly informe?: string | null;
+};
+
+/**
+ * Última ficha de descalificación, o `informe` null si todavía no se pidió.
+ * No declara inelegible ni elige causales: eso ya quedó en el dictamen.
+ */
+export async function leerFichaDescalificacion(
+  candidateId: string,
+): Promise<{ readonly ok: boolean; readonly informe: string | null; readonly error?: string }> {
+  if (!z.string().uuid().safeParse(candidateId).success) {
+    return { ok: false, informe: null, error: "Expediente inválido" };
+  }
+  try {
+    const respuesta = await llamarApiAccion<RespuestaFicha>(RUTA_FICHA(candidateId));
+    const informe = typeof respuesta.informe === "string" ? respuesta.informe : null;
+    return { ok: true, informe };
+  } catch (error) {
+    return {
+      ok: false,
+      informe: null,
+      error: error instanceof ErrorApi ? error.message : "No se pudo cargar la ficha.",
+    };
+  }
+}
+
+/**
+ * Pide una ficha nueva. Regenerar crea otra fila; el GET siguiente trae la última.
+ * Puede tardar: el servicio de IA tiene hasta tres minutos.
+ */
+export async function generarFichaDescalificacion(
+  candidateId: string,
+): Promise<{ readonly ok: boolean; readonly informe?: string; readonly error?: string }> {
+  if (!z.string().uuid().safeParse(candidateId).success) {
+    return { ok: false, error: "Expediente inválido" };
+  }
+  try {
+    const respuesta = await llamarApiAccion<RespuestaFicha>(RUTA_FICHA(candidateId), {
+      method: "POST",
+      timeoutMs: 180_000,
+    });
+    const informe = typeof respuesta.informe === "string" ? respuesta.informe.trim() : "";
+    if (!informe) {
+      return { ok: false, error: "La API no devolvió contenido para la ficha." };
+    }
+    return { ok: true, informe };
+  } catch (error) {
+    return {
+      ok: false,
+      error: error instanceof ErrorApi ? error.message : "No se pudo generar la ficha.",
     };
   }
 }

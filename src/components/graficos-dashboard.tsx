@@ -1,20 +1,17 @@
 import type { ResumenDashboard } from "@/contracts";
-import { ESTADO_ETIQUETA, OBJECION_ETIQUETA } from "@/contracts";
+import { ESTADO_ETIQUETA } from "@/contracts";
 import { GraficoAreaActividad } from "@/components/grafico-area-actividad";
 import { GraficoBarrasHorizontales } from "@/components/grafico-barras-horizontales";
 
 const COLOR = {
   toga: "#4a5d73",
-  balanza: "#7a1e2d",
   validado: "#047857",
-  objetado: "#64748b",
 } as const;
 
 const BAND_LABEL: Record<string, string> = {
   HIGH: "Idoneidad alta",
   MEDIUM: "Idoneidad media",
   LOW: "Idoneidad baja",
-  INELIGIBLE: "Inhabilitados",
 };
 
 function PanelGrafico({
@@ -44,23 +41,21 @@ function PanelGrafico({
 }
 
 export function GraficosDashboard({ data }: { readonly data: ResumenDashboard }) {
-  const workflow = data.workflow.map((item) => ({
-    nombre: ESTADO_ETIQUETA[item.status],
-    valor: item.count,
-    color: COLOR.toga,
-  }));
+  const workflow = data.workflow
+    .filter((item) => item.status !== "ARCHIVED")
+    .map((item) => ({
+      nombre: ESTADO_ETIQUETA[item.status],
+      valor: item.count,
+      color: COLOR.toga,
+    }));
 
-  const bands = data.bands.map((item) => ({
-    nombre: BAND_LABEL[item.band] ?? item.band,
-    valor: item.count,
-    color: item.band === "INELIGIBLE" ? COLOR.objetado : COLOR.validado,
-  }));
-
-  const objections = data.objections.map((item) => ({
-    nombre: OBJECION_ETIQUETA[item.status],
-    valor: item.count,
-    color: item.status.startsWith("RESOLVED") ? COLOR.validado : COLOR.balanza,
-  }));
+  const bands = data.bands
+    .filter((item) => item.band !== "INELIGIBLE")
+    .map((item) => ({
+      nombre: BAND_LABEL[item.band] ?? item.band,
+      valor: item.count,
+      color: COLOR.validado,
+    }));
 
   const ranking = data.topRanking.map((item) => ({
     nombre: `${item.position ?? "—"}. ${item.fullName}${item.tied ? " (empate)" : ""}`,
@@ -95,27 +90,12 @@ export function GraficosDashboard({ data }: { readonly data: ResumenDashboard })
         </PanelGrafico>
       </div>
 
-      <div className="grid gap-5 xl:grid-cols-2 xl:items-stretch">
-        <PanelGrafico
-          title="Actividad de los últimos 14 días"
-          description="Altas de postulantes y objeciones recibidas por fecha UTC."
-          estirar
-        >
-          <GraficoAreaActividad activity={data.activity} />
-        </PanelGrafico>
-
-        <PanelGrafico
-          title="Objeciones por estado"
-          description="Carga acumulada de la bandeja, incluidas las resoluciones."
-          estirar
-        >
-          <GraficoBarrasHorizontales
-            items={objections}
-            serie="Objeciones"
-            ariaLabel="Cantidad de objeciones por estado"
-          />
-        </PanelGrafico>
-      </div>
+      <PanelGrafico
+        title="Actividad de los últimos 14 días"
+        description="Altas de postulantes y objeciones recibidas por fecha UTC."
+      >
+        <GraficoAreaActividad activity={data.activity} />
+      </PanelGrafico>
 
       {ranking.length > 0 && (
         <PanelGrafico

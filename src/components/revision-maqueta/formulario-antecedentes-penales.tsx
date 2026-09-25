@@ -49,6 +49,7 @@ export function FormularioAntecedentesPenales({
           ayuda="Ejemplo: MINISTERIO DEL PODER POPULAR PARA RELACIONES INTERIORES, JUSTICIA Y PAZ"
           value={String(valores.nombre_entidad_penales ?? "")}
           error={errores.nombre_entidad_penales}
+          maxLength={500}
           onChange={(v) => onCampo("nombre_entidad_penales", v)}
         />
 

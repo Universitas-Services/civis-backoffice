@@ -171,7 +171,7 @@ export default async function Auditoria({
             </ul>
 
             <div className="mt-3 hidden overflow-hidden rounded-lg border border-toga-200 bg-white lg:block">
-              <table className="w-full text-left text-sm">
+              <table className="w-full text-center text-sm">
                 <caption className="sr-only">Eventos de la bitácora</caption>
                 <thead className="border-b-2 border-toga-300 bg-toga-50">
                   <tr>
@@ -186,9 +186,6 @@ export default async function Auditoria({
                     </th>
                     <th scope="col" className="px-4 py-3 font-semibold text-toga-700">
                       Motivo
-                    </th>
-                    <th scope="col" className="px-4 py-3 font-semibold text-toga-700">
-                      Referencia
                     </th>
                   </tr>
                 </thead>
@@ -210,9 +207,6 @@ export default async function Auditoria({
                         )}
                       </td>
                       <td className="px-4 py-3 text-toga-600">{e.reason ?? "—"}</td>
-                      <td className="codigo px-4 py-3 text-xs text-toga-400">
-                        {referenciaEvento(e)}
-                      </td>
                     </tr>
                   ))}
                 </tbody>

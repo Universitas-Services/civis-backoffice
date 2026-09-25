@@ -7,7 +7,7 @@ import { exigirRol, renovarYVolver } from "@/lib/rutas";
 import { CabeceraPagina, EstadoVacio } from "@/components/cabecera-pagina";
 import { InterruptorObjeciones } from "@/components/interruptor-objeciones";
 
-export const metadata: Metadata = { title: "Objeciones" };
+export const metadata: Metadata = { title: "Gestión de impugnaciones y objeciones ciudadanas" };
 
 const RESUELTAS = new Set(["RESOLVED_FOUNDED", "RESOLVED_UNFOUNDED", "REJECTED_INADMISSIBLE"]);
 
@@ -19,7 +19,7 @@ interface Respuesta {
 
 export default async function Objeciones() {
   const usuario = await exigirRol("SUPER_ADMIN", "ADMIN", "EVALUATOR");
-  const puedeLapso = usuario.roles.some((r) => r === "SUPER_ADMIN" || r === "ADMIN");
+  const puedeLapso = usuario.roles.some((rol) => rol === "SUPER_ADMIN" || rol === "ADMIN");
   const puedeAjustar = usuario.roles.some((r) => r === "SUPER_ADMIN" || r === "EVALUATOR");
 
   let datos: Respuesta;
@@ -59,13 +59,13 @@ export default async function Objeciones() {
   return (
     <>
       <CabeceraPagina
-        titulo="Objeciones ciudadanas"
-        descripcion="Las denuncias se agrupan por postulante. Si hay objeciones, el baremo guardado se puede corregir desde aquí."
+        titulo="Gestión de impugnaciones y objeciones ciudadanas"
+        descripcion="Revise, gestione y dé seguimiento a los reportes de incompatibilidad e inhabilitación presentados por la ciudadanía durante el lapso legal preclusivo (Art. 71 LOTSJ). Desde este panel podrá activar el botón de objeciones, revisar qué postulados presentan objeciones y cuántas objeciones."
       />
 
       <div className="px-5 py-6 sm:px-8">
         {puedeLapso && (
-          <div className="mb-6 max-w-xl">
+          <div className="mb-6">
             <InterruptorObjeciones abierto={lapsoAbierto} />
           </div>
         )}
