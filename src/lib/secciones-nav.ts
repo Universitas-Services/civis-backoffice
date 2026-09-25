@@ -10,10 +10,12 @@ import type { Role, Sesion } from "@/contracts";
  * - Crear expediente: SUPER_ADMIN + SECRETARY
  * - Revisión documental: SUPER_ADMIN + REVIEWER
  * - Evaluación: SUPER_ADMIN + EVALUATOR
- * - Objeciones: SUPER_ADMIN + ADMIN + EVALUATOR (el interruptor, solo admin)
- * - Baremo (lista y activo): SUPER_ADMIN + ADMIN + EVALUATOR
+ * - Objeciones: SUPER_ADMIN + ADMIN + EVALUATOR (el interruptor, SUPER_ADMIN + ADMIN)
+ * - Baremo (lista, activo y aplicar): SUPER_ADMIN + ADMIN + EVALUATOR
  * - Configurar baremo: solo SUPER_ADMIN (la API también lo permite al ADMIN)
- * - PUBLICACIONES / ranking publicar / informes generar: SUPER_ADMIN + ADMIN
+ * - Ranking publicar: SUPER_ADMIN + ADMIN
+ * - Informes: solo SUPER_ADMIN
+ * - ADMIN ve Panel, Expedientes, Baremo, Objeciones, Ranking interno y Usuarios
  */
 export type EntradaNav = {
   readonly href: string;
@@ -66,14 +68,9 @@ export const SECCIONES: readonly SeccionNav[] = [
     roles: ["SUPER_ADMIN", "ADMIN", "EVALUATOR"],
   },
   {
-    href: "/publicaciones",
-    texto: "Cola de publicación",
-    roles: ["SUPER_ADMIN", "ADMIN"],
-  },
-  {
     href: "/informes",
     texto: "Informes",
-    roles: ["SUPER_ADMIN", "ADMIN", "EVALUATOR"],
+    roles: ["SUPER_ADMIN"],
   },
   { href: "/usuarios", texto: "Usuarios y roles", roles: ["SUPER_ADMIN", "ADMIN"] },
   { href: "/auditoria", texto: "Bitácora", roles: ["SUPER_ADMIN"] },

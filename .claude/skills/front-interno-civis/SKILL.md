@@ -43,9 +43,13 @@ Matriz UX del panel (más estricta que algunos `@Roles` de la API):
 
 - Crear expediente: `SUPER_ADMIN` + `SECRETARY`
 - Revisión documental: `SUPER_ADMIN` + `REVIEWER`
-- Evaluación / Objeciones: `SUPER_ADMIN` + `EVALUATOR`
-- Publicaciones / publicar ranking / generar informes: `SUPER_ADMIN` + `ADMIN`
-- Usuarios: `SUPER_ADMIN` + `ADMIN` (ADMIN solo asigna roles menores)
+- Evaluación: `SUPER_ADMIN` + `EVALUATOR`
+- Objeciones: `SUPER_ADMIN` + `ADMIN` + `EVALUATOR` (el lapso, `SUPER_ADMIN` + `ADMIN`)
+- Baremo: `SUPER_ADMIN` + `ADMIN` + `EVALUATOR` (crear baremo, solo `SUPER_ADMIN`; ADMIN consulta el activo, ve postulados y aplica)
+- Ranking: `SUPER_ADMIN` + `ADMIN` + `EVALUATOR` (publicar, `SUPER_ADMIN` + `ADMIN`)
+- Informes: solo `SUPER_ADMIN`
+- `ADMIN` ve Panel, Expedientes, Baremo, Objeciones, Ranking interno y Usuarios
+- Usuarios: `SUPER_ADMIN` + `ADMIN` (ADMIN solo asigna roles menores y no lista superadministradores)
 - Bitácora: solo `SUPER_ADMIN`
 
 ## Reglas que la interfaz nunca debe contradecir

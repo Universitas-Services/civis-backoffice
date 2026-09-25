@@ -4,7 +4,7 @@ import type { ResumenDashboard } from "@/contracts";
 import { renovarYVolver } from "@/lib/rutas";
 import { llamarApi, NoAutorizado } from "@/lib/api";
 import { usuarioActual } from "@/lib/sesion";
-import { rutaInicio } from "@/lib/secciones-nav";
+import { puedeVerRuta, rutaInicio } from "@/lib/secciones-nav";
 import { redirect } from "next/navigation";
 import { GraficosDashboard } from "@/components/graficos-dashboard";
 
@@ -64,7 +64,7 @@ export default async function Dashboard() {
         Resumen del proceso según los permisos de su cuenta.
       </p>
 
-      <div className="mt-7 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="mt-7 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {resumen && (
           <>
             <Tarjeta
@@ -75,21 +75,15 @@ export default async function Dashboard() {
             />
             <Tarjeta
               valor={resumen.eligibleCount}
-              etiqueta="En competencia"
-              detalle="Con evaluación aprobada y sin causal de exclusión."
+              etiqueta="Expedientes aprobados"
+              detalle="Con el baremo aprobado y sin causal de exclusión."
               href="/ranking"
             />
             <Tarjeta
-              valor={resumen.openObjectionCount}
-              etiqueta="Objeciones abiertas"
-              detalle="Pendientes de triaje, asignación o resolución."
-              href="/objeciones"
-            />
-            <Tarjeta
-              valor={resumen.pendingPublicationCount}
-              etiqueta="Pendientes de publicar"
-              detalle="Snapshots esperando revisión y aprobación."
-              href="/publicaciones"
+              valor={resumen.objections.reduce((suma, item) => suma + item.count, 0)}
+              etiqueta="Objeciones recibidas"
+              detalle="Denuncias del sitio público. Con ellas se corrige el baremo o se declara inelegible."
+              href={puedeVerRuta(usuario, "/objeciones") ? "/objeciones" : undefined}
             />
           </>
         )}
@@ -120,21 +114,6 @@ export default async function Dashboard() {
           <GraficosDashboard data={resumen} />
         </div>
       )}
-
-      <section className="mt-10 rounded-lg border border-balanza-600/25 bg-balanza-50 p-5">
-        <h2 className="text-sm font-semibold text-toga-900">Recordatorio operativo</h2>
-        <ul className="mt-2 space-y-1.5 text-sm leading-relaxed text-toga-700">
-          <li>
-            · El puntaje lo calcula el servidor. Usted registra valores por criterio, no totales.
-          </li>
-          <li>
-            · Nada llega al público sin un snapshot aprobado por una persona distinta a quien lo
-            preparó.
-          </li>
-          <li>· Una objeción no cambia un puntaje: sólo lo hace un ajuste resuelto y aprobado.</li>
-          <li>· Toda acción sensible queda en la bitácora, con su nombre y el rol que usó.</li>
-        </ul>
-      </section>
     </div>
   );
 }

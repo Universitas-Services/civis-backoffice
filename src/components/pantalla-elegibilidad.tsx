@@ -179,6 +179,10 @@ export function PantallaElegibilidad({
   }
 
   function onAbrirInelegible() {
+    if (completo) {
+      toast.error("Con el checklist completo el dictamen es de elegibilidad.");
+      return;
+    }
     const falloMotivo = errorMotivo();
     if (falloMotivo) {
       toast.error(falloMotivo);
@@ -188,6 +192,10 @@ export function PantallaElegibilidad({
   }
 
   function confirmarInelegible() {
+    if (completo) {
+      toast.error("Con el checklist completo el dictamen es de elegibilidad.");
+      return;
+    }
     if (causales.size === 0) {
       toast.error("Marque al menos una causal de inelegibilidad.");
       return;
@@ -328,7 +336,7 @@ export function PantallaElegibilidad({
                   <div className="flex flex-wrap gap-2 pt-1">
                     <button
                       type="button"
-                      disabled={pendiente}
+                      disabled={pendiente || completo}
                       onClick={confirmarInelegible}
                       className="rounded-md bg-balanza-700 px-3 py-2 text-sm font-semibold text-white hover:bg-balanza-800 disabled:opacity-60"
                     >
@@ -376,7 +384,7 @@ export function PantallaElegibilidad({
                 <div className="flex flex-col gap-2">
                   <button
                     type="button"
-                    disabled={pendiente}
+                    disabled={pendiente || completo}
                     onClick={onAbrirInelegible}
                     className="w-full rounded-md border border-balanza-600 bg-white px-3 py-2.5 text-sm font-semibold text-balanza-700 hover:bg-balanza-50 disabled:opacity-60"
                   >

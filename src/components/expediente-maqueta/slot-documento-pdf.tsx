@@ -141,28 +141,30 @@ export function SlotDocumentoPdf({
                 {Math.round(pendiente.size / 1024)} KB
               </span>
             </span>
-            {!bloqueado && (
-              <button
-                type="button"
-                onClick={() => onPendiente(null)}
-                disabled={guardando}
-                className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-toga-600 hover:bg-toga-100 disabled:opacity-50"
-              >
-                <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
-                Quitar
-              </button>
-            )}
+            <span className="flex shrink-0 items-center gap-2">
+              {!bloqueado && (
+                <button
+                  type="button"
+                  onClick={() => onPendiente(null)}
+                  disabled={guardando}
+                  className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-toga-600 hover:bg-toga-100 disabled:opacity-50"
+                >
+                  <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
+                  Quitar
+                </button>
+              )}
+              {!bloqueado && (
+                <button
+                  type="button"
+                  onClick={onGuardar}
+                  disabled={!puedeGuardar}
+                  className="rounded-md bg-balanza-600 px-4 py-2 text-sm font-semibold text-white hover:bg-balanza-700 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {guardando ? "Guardando…" : "Guardar documento"}
+                </button>
+              )}
+            </span>
           </div>
-          {!bloqueado && (
-            <button
-              type="button"
-              onClick={onGuardar}
-              disabled={!puedeGuardar}
-              className="rounded-md bg-balanza-600 px-4 py-2 text-sm font-semibold text-white hover:bg-balanza-700 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              {guardando ? "Guardando…" : "Guardar documento"}
-            </button>
-          )}
         </div>
       ) : saturadoUnico ? null : bloqueado && !tieneGuardados ? (
         <p className="mt-4 text-sm text-toga-500">Sin documento adjunto.</p>

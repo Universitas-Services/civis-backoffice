@@ -1,24 +1,19 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import type { ExpedienteDetalle } from "@/contracts";
-import { CAUSA_DENUNCIA_ETIQUETA } from "@/contracts";
 import {
   PantallaAplicarBaremo,
   type EvaluacionBaremoVista,
 } from "@/components/pantalla-aplicar-baremo";
 import { DeclararInelegible } from "@/components/declarar-inelegible";
 import { InformeObjeciones } from "@/components/informe-objeciones";
+import { ModalObjeciones, type ObjecionVista } from "@/components/modal-objeciones";
 import { ErrorApi, llamarApi, NoAutorizado } from "@/lib/api";
 import { exigirRol, renovarYVolver } from "@/lib/rutas";
 
 export const metadata: Metadata = { title: "Ajustar baremo" };
 
-interface ResumenObjecion {
-  readonly id: string;
-  readonly causes: readonly string[];
-  readonly otherCause: string | null;
-  readonly description: string;
-  readonly evidenceUrl: string;
+interface ResumenObjecion extends ObjecionVista {
   readonly status: string;
 }
 
@@ -65,31 +60,16 @@ export default async function AjustarBaremo({
 
   return (
     <>
-      <div className="mx-auto w-full max-w-7xl px-4 pt-6 sm:px-6">
-        <section className="rounded-lg border border-toga-200 bg-white px-4 py-4">
-          <h2 className="text-sm font-semibold text-toga-900">Objeciones de {resumen.fullName}</h2>
-          <ul className="mt-3 space-y-3">
-            {resumen.items.map((item) => (
-              <li key={item.id} className="border-t border-toga-100 pt-3 text-sm text-toga-700">
-                <p className="font-medium text-toga-900">
-                  {item.causes.map((c) => CAUSA_DENUNCIA_ETIQUETA[c] ?? c).join(" · ")}
-                  {item.otherCause ? ` (${item.otherCause})` : ""}
-                </p>
-                <p className="mt-1 whitespace-pre-wrap">{item.description}</p>
-                {item.evidenceUrl && (
-                  <p className="mt-1 break-all text-xs text-toga-500">{item.evidenceUrl}</p>
-                )}
-              </li>
-            ))}
-          </ul>
-        </section>
-      </div>
       <PantallaAplicarBaremo
         expediente={expediente}
         evaluacion={evaluacion}
         puedeEditar
+        accionCabecera={
+          <ModalObjeciones key="objeciones" nombre={resumen.fullName} items={resumen.items} />
+        }
         accionExtra={
           <DeclararInelegible
+            key="inelegible"
             evaluationId={evaluacion.id}
             nombre={resumen.fullName}
             yaInelegible={evaluacion.ineligible === true}

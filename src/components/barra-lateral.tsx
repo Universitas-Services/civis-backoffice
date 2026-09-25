@@ -418,17 +418,6 @@ function IconoSeccion({
           />
         </svg>
       );
-    case "/publicaciones":
-      return (
-        <svg {...props}>
-          <path
-            d="M4 11.5 19.5 5l-3 14.5-5.2-4.2L7.5 19v-4.8L4 11.5Z"
-            stroke="currentColor"
-            strokeWidth="1.75"
-            strokeLinejoin="round"
-          />
-        </svg>
-      );
     case "/informes":
       return (
         <svg {...props}>

@@ -120,7 +120,7 @@ export async function cambiarRoles(
       body: analisis.data,
     });
     revalidatePath("/usuarios");
-    return { exito: "Roles actualizados. Se cerraron las sesiones abiertas de esa cuenta." };
+    return { exito: "Rol actualizado. Se cerraron las sesiones abiertas de esa cuenta." };
   } catch (error) {
     return { error: error instanceof ErrorApi ? error.message : "No se pudieron cambiar" };
   }

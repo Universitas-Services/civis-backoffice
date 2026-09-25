@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { Check, ChevronDown, ChevronRight } from "lucide-react";
 import {
   BLOQUE_ETIQUETA,
@@ -25,12 +25,14 @@ export function SidebarChecklistDocumentos({
   activo,
   bloqueado,
   onSeleccionar,
+  accion,
 }: {
   readonly slots: readonly SlotInstancia[];
   readonly guardados: ReadonlySet<string>;
   readonly activo?: string;
   readonly bloqueado: boolean;
   readonly onSeleccionar: (slotKey: string) => void;
+  readonly accion?: ReactNode;
 }) {
   const cargados = slots.filter((s) => guardados.has(s.slotKey)).length;
   const total = slots.length;
@@ -94,6 +96,7 @@ export function SidebarChecklistDocumentos({
   return (
     <aside className="flex flex-col rounded-lg border border-toga-200 bg-white lg:sticky lg:top-4 lg:max-h-[calc(100dvh-2rem)] lg:self-start lg:overflow-hidden">
       <div className="shrink-0 border-b border-toga-100 px-4 py-3">
+        {accion ? <div className="mb-3 flex justify-end">{accion}</div> : null}
         <p className="text-sm font-semibold text-toga-900">Documentos del expediente</p>
         <p className="mt-1 text-xs text-toga-500">
           <span className="cifra font-medium text-toga-800">{cargados}</span>

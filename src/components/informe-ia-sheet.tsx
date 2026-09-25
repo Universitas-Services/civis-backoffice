@@ -25,6 +25,8 @@ export function InformeIaSheet({
   onCambiar,
   onBorrar,
   descripcion,
+  textoVacio,
+  nivel,
   cupoSesion = false,
   generacionAgotada = false,
 }: {
@@ -36,6 +38,8 @@ export function InformeIaSheet({
   readonly onCambiar: (texto: string) => void;
   readonly onBorrar: () => void;
   readonly descripcion?: string;
+  readonly textoVacio?: string;
+  readonly nivel?: string;
   /** Si es true, la generación exitosa solo puede hacerse una vez en la sesión. */
   readonly cupoSesion?: boolean;
   readonly generacionAgotada?: boolean;
@@ -87,7 +91,14 @@ export function InformeIaSheet({
               <Sparkles className="h-4.5 w-4.5" aria-hidden="true" />
             </span>
             <div className="min-w-0">
-              <SheetTitle>Informe IA</SheetTitle>
+              <SheetTitle>
+                Informe IA
+                {nivel ? (
+                  <span className="ml-2 align-middle text-xs font-semibold tracking-wide text-balanza-700 uppercase">
+                    {nivel}
+                  </span>
+                ) : null}
+              </SheetTitle>
               <SheetDescription>
                 {descripcion ??
                   `Resumen del expediente de ${nombrePostulante}. Es un apoyo: el dictamen lo decide usted. Si lo pide otra vez, aquí se muestra el más reciente.`}
@@ -120,8 +131,8 @@ export function InformeIaSheet({
               </span>
               <h3 className="mt-4 text-base font-semibold text-toga-900">Aún no hay informe</h3>
               <p className="mt-1.5 text-sm leading-relaxed text-toga-500">
-                La IA revisa los datos y documentos que el revisor ya guardó y redacta un resumen
-                que podrá leer y editar aquí.
+                {textoVacio ??
+                  "La IA revisa los datos y documentos que el revisor ya guardó y redacta un resumen que podrá leer y editar aquí."}
               </p>
               <button
                 type="button"

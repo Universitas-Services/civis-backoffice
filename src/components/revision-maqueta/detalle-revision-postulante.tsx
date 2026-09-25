@@ -108,7 +108,10 @@ function reviewDataAValores(
       : advertencia !== undefined
         ? advertencia
         : base.advertencias;
-  return { ...base, ...resto, advertencias } as ValoresFormularioRevision;
+  const fusion = { ...base, ...resto, advertencias } as ValoresFormularioRevision;
+  delete fusion.prefijo_inpre_sintesis;
+  delete fusion.prefijo_inpre_otro;
+  return fusion;
 }
 
 export function DetalleRevisionPostulante({

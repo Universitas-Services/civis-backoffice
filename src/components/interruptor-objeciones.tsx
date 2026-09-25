@@ -25,13 +25,27 @@ export function InterruptorObjeciones({ abierto }: { readonly abierto: boolean }
   }
 
   return (
-    <div className="flex items-center justify-between gap-4 rounded-lg border border-toga-200 bg-white px-4 py-3">
+    <div className="flex items-start justify-between gap-4 rounded-lg border border-toga-200 bg-white px-4 py-4 sm:px-5">
       <div>
-        <p className="text-sm font-semibold text-toga-900">Lapso de objeciones</p>
-        <p className="mt-0.5 text-xs text-toga-500">
-          {valor
-            ? "El sitio público muestra el botón de objetar."
-            : "El sitio público no muestra el botón de objetar."}
+        <p className="text-sm font-semibold text-toga-900">Iniciar lapso de interrupciones</p>
+        <p className="mt-2 text-base leading-relaxed text-toga-600">
+          {valor ? (
+            <>
+              <span className="font-semibold text-toga-900">Recepción abierta. </span>
+              Activa visiblemente el botón [ Objetar Candidato ] en la página pública y habilita el
+              formulario seguro TACHA-EXPRESS para la carga de evidencias. Actívelo únicamente al
+              dar inicio a la ventana preclusiva de quince (15) días continuos fijada en el artículo
+              71 de la LOTSJ tras la publicación oficial de la lista de aspirantes.
+            </>
+          ) : (
+            <>
+              <span className="font-semibold text-toga-900">Recepción cerrada. </span>
+              Oculta el botón de objeción en la interfaz pública y bloquea el formulario
+              TACHA-EXPRESS para evitar la ingesta de denuncias fuera del lapso extemporáneo de
+              ley. Los ciudadanos verán un aviso informando que el lapso legal de impugnación se
+              encuentra cerrado o finalizado.
+            </>
+          )}
         </p>
       </div>
       <button

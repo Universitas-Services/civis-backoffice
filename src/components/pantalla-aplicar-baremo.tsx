@@ -81,11 +81,13 @@ export function PantallaAplicarBaremo({
   evaluacion,
   puedeEditar,
   accionExtra,
+  accionCabecera,
 }: {
   readonly expediente: ExpedienteDetalle;
   readonly evaluacion: EvaluacionBaremoVista;
   readonly puedeEditar: boolean;
   readonly accionExtra?: ReactNode;
+  readonly accionCabecera?: ReactNode;
 }) {
   const documentos = useMemo(
     () => documentosVigentes(expediente.submissions[0]?.documents ?? []),
@@ -118,7 +120,10 @@ export function PantallaAplicarBaremo({
             </h1>
             <p className="mt-1 text-sm text-toga-500">{sala}</p>
           </div>
-          <InsigniaEstado estado={expediente.workflowStatus} />
+          <div className="flex flex-wrap items-center gap-2">
+            {accionCabecera}
+            <InsigniaEstado estado={expediente.workflowStatus} />
+          </div>
         </div>
       </div>
 

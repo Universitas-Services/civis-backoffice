@@ -5,13 +5,7 @@ import { CAUSALES_INELEGIBILIDAD, type FichaDescalificacion } from "@/lib/elegib
 /**
  * Ficha de descalificación / dictamen de inelegibilidad (Paso 1).
  */
-export function FichaDescalificacionVista({
-  ficha,
-  onGenerarInforme,
-}: {
-  readonly ficha: FichaDescalificacion;
-  readonly onGenerarInforme?: () => void;
-}) {
+export function FichaDescalificacionVista({ ficha }: { readonly ficha: FichaDescalificacion }) {
   const fecha = new Date(ficha.fechaIso).toLocaleString("es-VE", {
     dateStyle: "long",
     timeStyle: "medium",
@@ -76,74 +70,6 @@ export function FichaDescalificacionVista({
         Firma del evaluador:{" "}
         <span className="font-medium text-toga-800">{ficha.evaluadorNombre}</span>
       </p>
-
-      {onGenerarInforme && (
-        <button
-          type="button"
-          onClick={onGenerarInforme}
-          className="rounded-md bg-balanza-600 px-4 py-2 text-sm font-semibold text-white hover:bg-balanza-700"
-        >
-          Generar informe
-        </button>
-      )}
     </div>
   );
-}
-
-/** Abre una ventana imprimible con el contenido de la ficha. */
-export function imprimirFichaDescalificacion(ficha: FichaDescalificacion) {
-  const fecha = new Date(ficha.fechaIso).toLocaleString("es-VE", {
-    dateStyle: "long",
-    timeStyle: "medium",
-  });
-  const causalesHtml = CAUSALES_INELEGIBILIDAD.filter((c) => ficha.causales.includes(c.id))
-    .map((c) => `<li><strong>Causal ${c.orden}.</strong> ${escapeHtml(c.texto)}</li>`)
-    .join("");
-
-  const html = `<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="utf-8" />
-  <title>Dictamen de inelegibilidad — ${escapeHtml(ficha.fileNumber)}</title>
-  <style>
-    body { font-family: Georgia, serif; color: #1a2332; margin: 2rem; line-height: 1.5; }
-    h1 { font-size: 1.25rem; }
-    h2 { font-size: 1rem; margin-top: 1.5rem; }
-    .meta { font-size: 0.9rem; }
-    .codigo { font-family: ui-monospace, monospace; }
-    ul { padding-left: 1.25rem; }
-    @media print { button { display: none; } }
-  </style>
-</head>
-<body>
-  <h1>Ficha de descalificación y dictamen de inelegibilidad (Paso 1)</h1>
-  <div class="meta">
-    <p><strong>Expediente:</strong> <span class="codigo">${escapeHtml(ficha.fileNumber)}</span></p>
-    <p><strong>Postulante:</strong> ${escapeHtml(ficha.postulanteNombre)}</p>
-    <p><strong>Cédula:</strong> <span class="codigo">${escapeHtml(ficha.nationalId)}</span></p>
-    <p><strong>Sala:</strong> ${escapeHtml(ficha.salaLabel)}</p>
-    <p><strong>Evaluador:</strong> ${escapeHtml(ficha.evaluadorNombre)}</p>
-    <p><strong>Fecha:</strong> ${escapeHtml(fecha)}</p>
-  </div>
-  <h2>Causales</h2>
-  <ul>${causalesHtml}</ul>
-  <h2>Fundamentación</h2>
-  <p>${escapeHtml(ficha.motivo).replace(/\n/g, "<br/>")}</p>
-  <p style="margin-top:2rem"><strong>Firma del evaluador:</strong> ${escapeHtml(ficha.evaluadorNombre)}</p>
-  <button type="button" onclick="window.print()">Imprimir / guardar PDF</button>
-</body>
-</html>`;
-
-  const win = window.open("", "_blank", "noopener,noreferrer,width=800,height=900");
-  if (!win) return;
-  win.document.write(html);
-  win.document.close();
-}
-
-function escapeHtml(s: string): string {
-  return s
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
 }

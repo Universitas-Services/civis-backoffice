@@ -61,19 +61,32 @@ export async function declararInelegible(evaluationId: string, motivo: string): 
   }
 }
 
-export async function generarInformeObjeciones(
+export interface AlertaTachas {
+  readonly alertaTexto: string;
+  readonly nivelAlerta: string;
+}
+
+export async function auditarTachas(
   candidateId: string,
-): Promise<{ ok: boolean; informe?: string; error?: string }> {
+): Promise<{ ok: boolean; alerta?: AlertaTachas; error?: string }> {
   try {
-    const r = await llamarApiAccion<{ informe: string }>(
-      `/internal/objections/candidate/${candidateId}/ai-summary`,
-      { method: "POST", timeoutMs: 180_000 },
-    );
-    return { ok: true, informe: r.informe };
+    const r = await llamarApiAccion<{
+      alertaTexto: string;
+      nivelAlerta: string;
+    }>(`/internal/objections/candidate/${candidateId}/tachas-audit`, {
+      method: "POST",
+      timeoutMs: 180_000,
+    });
+    revalidatePath(`/objeciones/baremo/${candidateId}`);
+    return {
+      ok: true,
+      alerta: { alertaTexto: r.alertaTexto, nivelAlerta: r.nivelAlerta },
+    };
   } catch (error) {
     return {
       ok: false,
-      error: error instanceof ErrorApi ? error.message : "No se pudo generar el informe",
+      error: error instanceof ErrorApi ? error.message : "No se pudo auditar las tachas",
     };
   }
 }
+

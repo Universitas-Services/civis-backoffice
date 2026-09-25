@@ -240,52 +240,6 @@ export function PasoCargaDocumentos({
               </div>
             )}
           </div>
-
-          <div className="rounded-lg border border-toga-200 bg-white px-5 py-4 sm:px-6">
-            {enRevision ? (
-              <p className="text-sm text-toga-600">
-                Expediente enviado a revisión. La carga documental quedó cerrada.
-              </p>
-            ) : confirmandoRevision ? (
-              <div className="space-y-3">
-                <p className="text-sm text-toga-700">
-                  ¿Confirma enviar a revisión el expediente de{" "}
-                  <span className="font-semibold">
-                    {datos.nombre} {datos.apellido}
-                  </span>
-                  ? Después no podrá cargar ni editar documentos.
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  <button
-                    type="button"
-                    onClick={confirmarEnviarRevision}
-                    disabled={enviandoRevision}
-                    className="rounded-md bg-balanza-600 px-4 py-2 text-sm font-semibold text-white hover:bg-balanza-700 disabled:opacity-60"
-                  >
-                    {enviandoRevision ? "Enviando…" : "Confirmar envío a revisión"}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setConfirmandoRevision(false)}
-                    disabled={enviandoRevision}
-                    className="rounded-md border border-toga-300 bg-white px-4 py-2 text-sm font-medium text-toga-700 hover:bg-toga-50"
-                  >
-                    Cancelar
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <div className="flex flex-wrap items-center justify-end gap-3">
-                <button
-                  type="button"
-                  onClick={pedirConfirmacionEnvio}
-                  className="rounded-md bg-balanza-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-balanza-700"
-                >
-                  Enviar a revisión
-                </button>
-              </div>
-            )}
-          </div>
         </div>
 
         <SidebarChecklistDocumentos
@@ -294,6 +248,45 @@ export function PasoCargaDocumentos({
           activo={activo}
           bloqueado={bloqueado}
           onSeleccionar={seleccionar}
+          accion={
+            enRevision ? null : confirmandoRevision ? (
+              <div className="w-full space-y-2">
+                <p className="text-left text-xs leading-relaxed text-toga-700">
+                  ¿Confirma el envío de{" "}
+                  <span className="font-semibold">
+                    {datos.nombre} {datos.apellido}
+                  </span>
+                  ? Después no podrá cargar ni editar documentos.
+                </p>
+                <div className="flex flex-wrap justify-end gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setConfirmandoRevision(false)}
+                    disabled={enviandoRevision}
+                    className="rounded-md border border-toga-300 bg-white px-3 py-1.5 text-xs font-medium text-toga-700 hover:bg-toga-50"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="button"
+                    onClick={confirmarEnviarRevision}
+                    disabled={enviandoRevision}
+                    className="rounded-md bg-balanza-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-balanza-700 disabled:opacity-60"
+                  >
+                    {enviandoRevision ? "Enviando…" : "Confirmar"}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={pedirConfirmacionEnvio}
+                className="shrink-0 rounded-md bg-balanza-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-balanza-700"
+              >
+                Enviar a revisión
+              </button>
+            )
+          }
         />
       </div>
     </div>
