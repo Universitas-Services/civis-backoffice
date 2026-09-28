@@ -6,6 +6,8 @@ import {
   generarFichaDescalificacion,
   leerFichaDescalificacion,
 } from "@/app/(panel)/evaluacion/[candidateId]/acciones";
+import { CargaIa } from "@/components/carga-ia";
+import { Spinner } from "@/components/ui/spinner";
 
 /**
  * Ficha que redacta la API, mostrada como Markdown.
@@ -63,7 +65,7 @@ export function InformeFichaDescalificacion({
       aria-modal="true"
       aria-labelledby="titulo-informe-ficha"
       onClick={(evento) => {
-        if (evento.target === evento.currentTarget) onCerrar();
+        if (evento.target === evento.currentTarget && !pendiente) onCerrar();
       }}
     >
       <div className="flex max-h-[90dvh] w-full max-w-3xl flex-col overflow-hidden rounded-lg border border-toga-200 bg-white shadow-lg">
@@ -77,47 +79,52 @@ export function InformeFichaDescalificacion({
           <button
             type="button"
             onClick={onCerrar}
-            className="rounded-md border border-toga-300 px-3 py-1.5 text-sm font-medium text-toga-700 hover:bg-toga-50"
+            disabled={pendiente}
+            className="rounded-md border border-toga-300 px-3 py-1.5 text-sm font-medium text-toga-700 hover:bg-toga-50 disabled:opacity-60"
           >
             Cerrar
           </button>
         </div>
 
         <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">
-          {error ? <p className="mb-3 whitespace-pre-wrap text-sm text-toga-800">{error}</p> : null}
+          {error && !pendiente ? (
+            <p className="mb-3 whitespace-pre-wrap text-sm text-toga-800">{error}</p>
+          ) : null}
           {cargando ? (
             <p className="text-sm text-toga-500">Cargando ficha…</p>
+          ) : pendiente ? (
+            <CargaIa activo={pendiente} etiqueta="Generando el informe" />
           ) : informe ? (
             <article className="text-justify text-sm leading-relaxed text-toga-800 [&_h1]:mb-3 [&_h1]:text-left [&_h1]:text-base [&_h1]:font-semibold [&_h2]:mt-4 [&_h2]:mb-2 [&_h2]:text-left [&_h2]:text-sm [&_h2]:font-semibold [&_h3]:mt-3 [&_h3]:mb-2 [&_h3]:text-left [&_h3]:text-sm [&_h3]:font-semibold [&_li]:mb-1 [&_ol]:mb-3 [&_ol]:list-decimal [&_ol]:pl-5 [&_p]:mb-3 [&_strong]:font-semibold [&_ul]:mb-3 [&_ul]:list-disc [&_ul]:pl-5">
               <ReactMarkdown>{informe}</ReactMarkdown>
             </article>
           ) : error ? null : (
             <p className="text-sm text-toga-600">
-              Todavía no hay informe. Generarlo pide la redacción a la API a partir del dictamen ya
+              Todavía no hay informe. Generarlo redacta el texto a partir del dictamen ya
               guardado.
             </p>
           )}
         </div>
 
         <div className="flex flex-wrap gap-2 border-t border-toga-100 px-5 py-4">
-          {informe ? null : (
+          {!informe ? (
             <button
               type="button"
               disabled={cargando || pendiente}
               onClick={generar}
-              className="rounded-md bg-balanza-600 px-3 py-2 text-sm font-semibold text-white hover:bg-balanza-700 disabled:opacity-60"
+              className="inline-flex items-center gap-1.5 rounded-md bg-balanza-600 px-3 py-2 text-sm font-semibold text-white hover:bg-balanza-700 disabled:opacity-60"
             >
+              {pendiente ? <Spinner className="text-white" /> : null}
               {pendiente ? "Generando…" : "Generar informe"}
             </button>
-          )}
-          {informe ? (
+          ) : (
             <a
               href={`/api/ficha-descalificacion/${candidateId}`}
               className="rounded-md border border-toga-300 bg-white px-3 py-2 text-sm font-medium text-toga-700 hover:bg-toga-50"
             >
               Descargar PDF
             </a>
-          ) : null}
+          )}
         </div>
       </div>
     </div>

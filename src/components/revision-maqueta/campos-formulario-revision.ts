@@ -651,8 +651,8 @@ const letrasEspacios = z
   .min(2, "Mínimo 2 caracteres")
   .max(80, "Máximo 80 caracteres")
   .regex(
-    /^[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]+(?:\s+[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]+)*$/,
-    "Sólo letras y espacios (sin números ni signos)",
+    /^[A-Za-zÁÉÍÓÚÜÑáéíóúüñ.'’\-]+(?:\s+[A-Za-zÁÉÍÓÚÜÑáéíóúüñ.'’\-]+)*$/,
+    "Sólo letras, espacios, guion, apóstrofo o punto",
   );
 
 const textoInstitucion = z
@@ -661,7 +661,7 @@ const textoInstitucion = z
   .min(2, "Mínimo 2 caracteres")
   .max(150, "Máximo 150 caracteres")
   .regex(
-    /^[A-Za-zÁÉÍÓÚÜÑáéíóúüñ0-9.,\-/()#\s]+$/,
+    /^[A-Za-zÁÉÍÓÚÜÑáéíóúüñ0-9.,;_\-/()#\s]+$/,
     "Caracteres no permitidos en el nombre del registro",
   );
 
@@ -672,7 +672,7 @@ const textoEntidadPenales = z
   .min(2, "Mínimo 2 caracteres")
   .max(500, "Máximo 500 caracteres")
   .regex(
-    /^[A-Za-zÁÉÍÓÚÜÑáéíóúüñ0-9.,\-/()#\s]+$/,
+    /^[A-Za-zÁÉÍÓÚÜÑáéíóúüñ0-9.,;_\-/()#\s]+$/,
     "Caracteres no permitidos en el nombre del registro",
   );
 
@@ -729,7 +729,7 @@ const codigoVerificacion = z
   .trim()
   .min(4, "Mínimo 4 caracteres")
   .max(80, "Máximo 80 caracteres")
-  .regex(/^[A-Za-z0-9\-_/]+$/, "Sólo letras, números y guiones");
+  .regex(/^[A-Za-z0-9.,;_\-/]+$/, "Sólo letras, números y signos de código (, . ; - _ /)");
 
 const prefijoVe = z.union([z.literal(""), z.enum(["V", "E"])]);
 

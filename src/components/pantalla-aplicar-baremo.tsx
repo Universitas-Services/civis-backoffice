@@ -337,6 +337,23 @@ function FormularioBaremo({
                             <div>
                               <label
                                 className="block text-xs font-medium text-toga-600"
+                                htmlFor={`resultado-${rango.id}`}
+                              >
+                                Resultado del postulante
+                              </label>
+                              <input
+                                id={`resultado-${rango.id}`}
+                                value={resultado}
+                                disabled={!editable}
+                                onChange={(e) =>
+                                  escribir(criterio.id, rango.id, "resultado", e.target.value)
+                                }
+                                className="mt-1 w-40 rounded-md border border-toga-300 bg-white px-3 py-2 text-sm text-toga-900 disabled:bg-toga-50"
+                              />
+                            </div>
+                            <div>
+                              <label
+                                className="block text-xs font-medium text-toga-600"
                                 htmlFor={`puntaje-${rango.id}`}
                               >
                                 Puntaje obtenido
@@ -352,23 +369,6 @@ function FormularioBaremo({
                                 className={`cifra mt-1 w-28 rounded-md border bg-white px-3 py-2 text-sm text-toga-900 ${
                                   fuera ? "campo-con-error" : "border-toga-300"
                                 }`}
-                              />
-                            </div>
-                            <div>
-                              <label
-                                className="block text-xs font-medium text-toga-600"
-                                htmlFor={`resultado-${rango.id}`}
-                              >
-                                Resultado obtenido
-                              </label>
-                              <input
-                                id={`resultado-${rango.id}`}
-                                value={resultado}
-                                disabled={!editable}
-                                onChange={(e) =>
-                                  escribir(criterio.id, rango.id, "resultado", e.target.value)
-                                }
-                                className="mt-1 w-40 rounded-md border border-toga-300 bg-white px-3 py-2 text-sm text-toga-900 disabled:bg-toga-50"
                               />
                             </div>
                           </div>
