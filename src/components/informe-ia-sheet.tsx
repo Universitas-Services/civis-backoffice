@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { Check, Copy, PencilLine, Sparkles, Trash2 } from "lucide-react";
+import { CargaIa } from "@/components/carga-ia";
+import { Spinner } from "@/components/ui/spinner";
 import {
   Sheet,
   SheetContent,
@@ -113,17 +115,7 @@ export function InformeIaSheet({
               Cargando el informe guardado…
             </p>
           ) : generando ? (
-            <div className="space-y-3" aria-live="polite" aria-busy="true">
-              <p className="flex items-center gap-2 text-sm font-medium text-toga-700">
-                <Sparkles className="h-4 w-4 animate-pulse text-balanza-600" aria-hidden="true" />
-                Analizando el expediente…
-              </p>
-              {["w-full", "w-11/12", "w-4/5", "w-full", "w-3/4", "w-10/12", "w-2/3"].map(
-                (ancho, i) => (
-                  <div key={i} className={`h-3 animate-pulse rounded bg-toga-100 ${ancho}`} />
-                ),
-              )}
-            </div>
+            <CargaIa activo={generando} etiqueta="Generando el informe" />
           ) : !hayInforme && !editando ? (
             <div className="m-auto flex max-w-sm flex-col items-center py-10 text-center">
               <span className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-balanza-50 text-balanza-700 ring-1 ring-balanza-600/15">
@@ -137,7 +129,7 @@ export function InformeIaSheet({
               <button
                 type="button"
                 onClick={onGenerar}
-                disabled={generacionAgotada}
+                disabled={generacionAgotada || generando}
                 title={
                   !cupoSesion
                     ? undefined
@@ -147,8 +139,12 @@ export function InformeIaSheet({
                 }
                 className="mt-5 inline-flex items-center gap-1.5 rounded-md bg-balanza-600 px-4 py-2 text-sm font-semibold text-white hover:bg-balanza-700 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                <Sparkles className="h-4 w-4" aria-hidden="true" />
-                {generacionAgotada ? "IA ya usada" : "Generar informe"}
+                {generando ? (
+                  <Spinner className="text-white" />
+                ) : (
+                  <Sparkles className="h-4 w-4" aria-hidden="true" />
+                )}
+                {generacionAgotada ? "IA ya usada" : generando ? "Generando…" : "Generar informe"}
               </button>
               {generacionAgotada && (
                 <p className="mt-2 text-xs text-toga-500">Generación ya usada en esta sesión.</p>
@@ -156,7 +152,8 @@ export function InformeIaSheet({
               <button
                 type="button"
                 onClick={() => setEditando(true)}
-                className="mt-2 inline-flex items-center gap-1.5 rounded-md px-4 py-2 text-sm font-medium text-toga-600 hover:text-toga-900"
+                disabled={generando}
+                className="mt-2 inline-flex items-center gap-1.5 rounded-md px-4 py-2 text-sm font-medium text-toga-600 hover:text-toga-900 disabled:opacity-50"
               >
                 <PencilLine className="h-4 w-4" aria-hidden="true" />
                 Redactar a mano
@@ -221,11 +218,11 @@ export function InformeIaSheet({
                 <button
                   type="button"
                   onClick={() => {
-                    if (generacionAgotada) return;
+                    if (generacionAgotada || generando) return;
                     setEditando(false);
                     onGenerar();
                   }}
-                  disabled={generacionAgotada}
+                  disabled={generacionAgotada || generando}
                   title={
                     !cupoSesion
                       ? undefined
@@ -235,8 +232,16 @@ export function InformeIaSheet({
                   }
                   className="inline-flex items-center gap-1.5 rounded-md border border-toga-300 bg-white px-3 py-1.5 text-sm font-medium text-toga-700 hover:bg-toga-50 disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
-                  {generacionAgotada ? "IA ya usada" : "Generar de nuevo"}
+                  {generando ? (
+                    <Spinner className="h-3.5 w-3.5" />
+                  ) : (
+                    <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
+                  )}
+                  {generacionAgotada
+                    ? "IA ya usada"
+                    : generando
+                      ? "Generando…"
+                      : "Generar de nuevo"}
                 </button>
               )}
               <button

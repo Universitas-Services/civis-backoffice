@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, FileStack, Sparkles } from "lucide-react";
+import { Spinner } from "@/components/ui/spinner";
 import {
   conteoDocsRevision,
   type DocumentoRevision,
@@ -783,7 +784,11 @@ function PanelVisualizacionYFormulario({
                   }
                   className="inline-flex items-center gap-1.5 rounded-md border border-toga-300 bg-white px-4 py-2 text-sm font-semibold text-toga-700 hover:bg-toga-50 disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  <Sparkles className="h-4 w-4" aria-hidden="true" />
+                  {rellenandoIa ? (
+                    <Spinner />
+                  ) : (
+                    <Sparkles className="h-4 w-4" aria-hidden="true" />
+                  )}
                   {rellenandoIa
                     ? "Rellenando…"
                     : extractIaUsado
