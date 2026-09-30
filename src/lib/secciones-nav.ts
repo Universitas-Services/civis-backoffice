@@ -9,13 +9,13 @@ import type { Role, Sesion } from "@/contracts";
  * Matriz UX (más estricta que algunos @Roles de la API):
  * - Crear expediente: SUPER_ADMIN + SECRETARY
  * - Revisión documental: SUPER_ADMIN + REVIEWER
- * - Evaluación: SUPER_ADMIN + EVALUATOR
+ * - Evaluación: SUPER_ADMIN + ADMIN + EVALUATOR (ADMIN resuelve escaladas de comité; el voto es del evaluador)
  * - Objeciones: SUPER_ADMIN + ADMIN + EVALUATOR (el interruptor, SUPER_ADMIN + ADMIN)
  * - Baremo (lista, activo y aplicar): SUPER_ADMIN + ADMIN + EVALUATOR
  * - Configurar baremo: solo SUPER_ADMIN (la API también lo permite al ADMIN)
  * - Ranking publicar: SUPER_ADMIN + ADMIN
  * - Informes: solo SUPER_ADMIN
- * - ADMIN ve Panel, Expedientes, Baremo, Objeciones, Ranking interno y Usuarios
+ * - ADMIN ve Panel, Expedientes, Evaluación (escaladas), Baremo, Objeciones, Ranking interno y Usuarios
  */
 export type EntradaNav = {
   readonly href: string;
@@ -43,7 +43,7 @@ export const SECCIONES: readonly SeccionNav[] = [
     texto: "Revisión documental",
     roles: ["SUPER_ADMIN", "REVIEWER"],
   },
-  { href: "/evaluacion", texto: "Evaluación", roles: ["SUPER_ADMIN", "EVALUATOR"] },
+  { href: "/evaluacion", texto: "Evaluación", roles: ["SUPER_ADMIN", "ADMIN", "EVALUATOR"] },
   {
     href: "/baremo",
     texto: "Baremo",

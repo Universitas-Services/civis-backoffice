@@ -13,7 +13,7 @@ export type FilaBaremo = {
 };
 
 /**
- * Listado de postulantes en evaluación (Paso 1 superado), listos para baremo.
+ * Listado de postulantes elegibles pendientes de puntuar (EVALUATION_IN_PROGRESS).
  */
 export function ListaBaremo({ items }: { readonly items: readonly FilaBaremo[] }) {
   if (items.length === 0) {

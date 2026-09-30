@@ -15,13 +15,10 @@ export default async function BaremoPage() {
   let activo: BaremoDetalle | null;
   let items: readonly FilaBaremo[];
   try {
-    const [baremo, enCurso, evaluados, ranking] = await Promise.all([
+    const [baremo, enCurso, ranking] = await Promise.all([
       llamarApi<BaremoDetalle | null>("/internal/baremos/active"),
       llamarApi<{ readonly items: readonly ExpedienteListado[] }>(
         "/internal/candidates?estado=EVALUATION_IN_PROGRESS&elegible=true&pageSize=100",
-      ),
-      llamarApi<{ readonly items: readonly ExpedienteListado[] }>(
-        "/internal/candidates?estado=EVALUATED&elegible=true&pageSize=100",
       ),
       llamarApi<ResultadoRanking>("/internal/ranking").catch((error: unknown) => {
         if (error instanceof NoAutorizado) throw error;
@@ -30,23 +27,16 @@ export default async function BaremoPage() {
     ]);
     const puesto = new Map(ranking.entries.map((e) => [e.publicId, e.position]));
     activo = baremo;
-    const vistos = new Set<string>();
-    const combinados = [...enCurso.items, ...evaluados.items].sort(
-      (a, b) => new Date(b.receivedAt).getTime() - new Date(a.receivedAt).getTime(),
-    );
-    items = combinados.flatMap((c) => {
-      if (vistos.has(c.id)) return [];
-      vistos.add(c.id);
-      return [
-        {
-          candidateId: c.id,
-          fileNumber: c.submissions[0]?.fileNumber ?? "—",
-          postulanteNombre: `${c.firstName} ${c.lastName}`,
-          salaLabel: SALA_ETIQUETA[c.chamber] ?? String(c.chamber),
-          ranking: puesto.get(c.publicId) ?? null,
-        },
-      ];
-    });
+    // Solo pendientes de puntuar. Los EVALUATED viven en Ranking interno.
+    items = [...enCurso.items]
+      .sort((a, b) => new Date(b.receivedAt).getTime() - new Date(a.receivedAt).getTime())
+      .map((c) => ({
+        candidateId: c.id,
+        fileNumber: c.submissions[0]?.fileNumber ?? "—",
+        postulanteNombre: `${c.firstName} ${c.lastName}`,
+        salaLabel: SALA_ETIQUETA[c.chamber] ?? String(c.chamber),
+        ranking: puesto.get(c.publicId) ?? null,
+      }));
   } catch (error) {
     if (error instanceof NoAutorizado) renovarYVolver("/baremo");
     throw error;
@@ -56,7 +46,7 @@ export default async function BaremoPage() {
     <>
       <CabeceraPagina
         titulo="Baremo"
-        descripcion="Postulantes ya declarados elegibles. El baremo en vigor se consulta en la otra pestaña."
+        descripcion="Postulantes elegibles pendientes de puntuar. Quienes ya tienen nota consolidada están en Ranking interno."
       />
       <div className="px-5 py-6 sm:px-8">
         <BaremoConsultaTabs items={items} baremo={activo} />

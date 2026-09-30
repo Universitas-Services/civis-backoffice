@@ -38,13 +38,18 @@ export function ConTooltip({
   readonly texto: string;
   readonly children: React.ReactNode;
   readonly side?: "top" | "right" | "bottom" | "left";
-  /** Si es false, el disparador sigue montado pero el cartel no aparece. */
+  /**
+   * Si es false, no se monta el Tooltip de Radix (evita estados `open`
+   * fantasma que luego muestran el cartel al reactivar).
+   */
   readonly activo?: boolean;
 }) {
+  if (!activo) return <>{children}</>;
+
   return (
     <Tooltip>
       <TooltipTrigger asChild>{children}</TooltipTrigger>
-      {activo ? <TooltipContent side={side}>{texto}</TooltipContent> : null}
+      <TooltipContent side={side}>{texto}</TooltipContent>
     </Tooltip>
   );
 }

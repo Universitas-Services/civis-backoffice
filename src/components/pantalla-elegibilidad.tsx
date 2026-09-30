@@ -4,15 +4,18 @@ import { useEffect, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
-import type { ExpedienteDetalle } from "@/contracts";
+import type { ExpedienteDetalle, RondaComiteAbierta } from "@/contracts";
 import { SALA_ETIQUETA } from "@/contracts";
 import {
   declararElegible,
   declararInelegible,
   generarInformeIaElegibilidad,
   leerInformeIaElegibilidad,
+  recusarEnComite,
 } from "@/app/(panel)/evaluacion/[candidateId]/acciones";
 import { InformeIaSheet } from "@/components/informe-ia-sheet";
+import { PanelResolucionEscalada } from "@/components/panel-resolucion-escalada";
+import { PanelTallyComite } from "@/components/panel-tally-comite";
 import { useToast } from "@/components/toast-provider";
 import { VistaDocumentosFormulario } from "@/components/vista-documentos-formulario";
 import { documentosVigentes } from "@/lib/documentos-vigentes";
@@ -38,9 +41,23 @@ import {
  */
 export function PantallaElegibilidad({
   expediente,
+  modoComite = false,
+  yaActuoEnRondaElegibilidad = false,
+  rondaEscalada = null,
+  rondaAbierta = null,
+  puedeResolverEscalada = false,
+  puedeVotarElegibilidad = true,
+  mostrarTallySuperAdmin = false,
 }: {
   readonly expediente: ExpedienteDetalle;
   readonly evaluador: { readonly id: string; readonly nombre: string };
+  readonly modoComite?: boolean;
+  readonly yaActuoEnRondaElegibilidad?: boolean;
+  readonly rondaEscalada?: RondaComiteAbierta | null;
+  readonly rondaAbierta?: RondaComiteAbierta | null;
+  readonly puedeResolverEscalada?: boolean;
+  readonly puedeVotarElegibilidad?: boolean;
+  readonly mostrarTallySuperAdmin?: boolean;
 }) {
   const router = useRouter();
   const toast = useToast();
@@ -58,7 +75,12 @@ export function PantallaElegibilidad({
     setInformeIaUsado(informeIaElegibilidadYaUsado(expediente.id));
   }, [expediente.id]);
 
+  // Informe IA: la API solo admite SUPER_ADMIN / EVALUATOR (no ADMIN).
   useEffect(() => {
+    if (!puedeVotarElegibilidad) {
+      setCargandoInforme(false);
+      return;
+    }
     let cancelado = false;
     setCargandoInforme(true);
     void (async () => {
@@ -74,7 +96,7 @@ export function PantallaElegibilidad({
     return () => {
       cancelado = true;
     };
-  }, [expediente.id, toast]);
+  }, [expediente.id, toast, puedeVotarElegibilidad]);
 
   // Comprimir sidebar apenas se entra al expediente.
   useEffect(() => {
@@ -86,9 +108,26 @@ export function PantallaElegibilidad({
   const [motivo, setMotivo] = useState("");
   const [confirmandoElegible, setConfirmandoElegible] = useState(false);
   const [panelInelegible, setPanelInelegible] = useState(false);
+  const [panelRecusacion, setPanelRecusacion] = useState(false);
+  const [motivoRecusacion, setMotivoRecusacion] = useState("");
   const [causales, setCausales] = useState<Set<CausalInelegibilidadId>>(new Set());
 
   const completo = checklistCompleto(checklist);
+  const enEscalada = Boolean(rondaEscalada && rondaEscalada.status === "ESCALATED");
+  const reopenReason =
+    rondaAbierta?.result &&
+    typeof rondaAbierta.result === "object" &&
+    !Array.isArray(rondaAbierta.result) &&
+    ((rondaAbierta.result as { reopenedReason?: string }).reopenedReason === "TIE" ||
+      (rondaAbierta.result as { reopenedReason?: string }).reopenedReason === "DEADLINE")
+      ? (rondaAbierta.result as { reopenedReason: "TIE" | "DEADLINE" }).reopenedReason
+      : null;
+  const bloqueoVotoComite =
+    !puedeVotarElegibilidad ||
+    (modoComite && yaActuoEnRondaElegibilidad) ||
+    (enEscalada && !puedeResolverEscalada);
+  const puedeEmitirVotoComite =
+    puedeVotarElegibilidad && modoComite && !yaActuoEnRondaElegibilidad && !enEscalada;
 
   function toggleBloque(id: BloqueElegibilidadId) {
     setChecklist((prev) => ({ ...prev, [id]: !prev[id] }));
@@ -153,6 +192,8 @@ export function PantallaElegibilidad({
       toast.error(falloMotivo);
       return;
     }
+    setPanelInelegible(false);
+    setPanelRecusacion(false);
     setConfirmandoElegible(true);
   }
 
@@ -172,8 +213,13 @@ export function PantallaElegibilidad({
         setConfirmandoElegible(false);
         return;
       }
-      toast.exito("Postulante declarado elegible. Continúe en Baremo.");
-      router.push("/baremo");
+      if (r.votoComite) {
+        toast.exito("Voto de elegibilidad registrado. El veredicto se cierra al alcanzar el quorum.");
+        router.push("/evaluacion");
+      } else {
+        toast.exito("Postulante declarado elegible. Continúe en Baremo.");
+        router.push("/baremo");
+      }
       router.refresh();
     });
   }
@@ -188,7 +234,35 @@ export function PantallaElegibilidad({
       toast.error(falloMotivo);
       return;
     }
+    setConfirmandoElegible(false);
+    setPanelRecusacion(false);
     setPanelInelegible(true);
+  }
+
+  function onAbrirRecusacion() {
+    setConfirmandoElegible(false);
+    setPanelInelegible(false);
+    setPanelRecusacion(true);
+  }
+
+  function confirmarRecusacion() {
+    const razon = motivoRecusacion.trim();
+    if (razon.length < 10) {
+      toast.error("El motivo de la recusación debe tener al menos 10 caracteres.");
+      return;
+    }
+    iniciar(async () => {
+      const r = await recusarEnComite(expediente.id, razon);
+      if (!r.ok) {
+        toast.error(r.error ?? "No se pudo registrar la recusación.");
+        return;
+      }
+      toast.exito(
+        "Recusación registrada. No cuenta como voto en contra del postulante.",
+      );
+      router.push("/evaluacion");
+      router.refresh();
+    });
   }
 
   function confirmarInelegible() {
@@ -215,7 +289,11 @@ export function PantallaElegibilidad({
         toast.error(r.error ?? "No se pudo registrar la inelegibilidad.");
         return;
       }
-      toast.exito("Dictamen de inelegibilidad registrado.");
+      toast.exito(
+        r.votoComite
+          ? "Voto de inelegibilidad registrado. El veredicto se cierra al alcanzar el quorum."
+          : "Dictamen de inelegibilidad registrado.",
+      );
       router.push("/evaluacion");
       router.refresh();
     });
@@ -240,7 +318,11 @@ export function PantallaElegibilidad({
             <p className="mt-1 text-sm text-toga-500">{salaLabel}</p>
           </div>
           <span className="inline-flex rounded-full bg-toga-100 px-2.5 py-1 text-xs font-medium text-toga-700">
-            En revisión de elegibilidad — Paso 1
+            {enEscalada
+              ? "Comité — ronda escalada"
+              : modoComite
+                ? "Comité — voto de elegibilidad (voto oculto)"
+                : "En revisión de elegibilidad — Paso 1"}
           </span>
         </div>
       </div>
@@ -251,6 +333,68 @@ export function PantallaElegibilidad({
         </div>
 
         <aside aria-label="Elegibilidad" className="space-y-4">
+          {enEscalada && rondaEscalada && puedeResolverEscalada ? (
+            <PanelResolucionEscalada candidateId={expediente.id} ronda={rondaEscalada} />
+          ) : null}
+          {mostrarTallySuperAdmin &&
+          rondaAbierta?.kind === "ELIGIBILITY" &&
+          rondaAbierta.status === "OPEN" ? (
+            <PanelTallyComite candidateId={expediente.id} ronda={rondaAbierta} />
+          ) : null}
+          {reopenReason && !enEscalada ? (
+            <div
+              className="rounded-lg border border-balanza-600/30 bg-balanza-50 p-4 text-sm leading-relaxed text-toga-800"
+              role="status"
+            >
+              <p className="font-semibold text-toga-900">
+                {reopenReason === "TIE"
+                  ? "Ronda reabierta por empate"
+                  : "Ronda reabierta por plazo vencido"}
+              </p>
+              <p className="mt-1">
+                Debe volver a emitir su voto o recusación en esta nueva ronda. Los votos
+                anteriores quedaron en historial.
+              </p>
+            </div>
+          ) : null}
+          {enEscalada && !puedeResolverEscalada ? (
+            <div
+              className="rounded-lg border border-balanza-600/25 bg-balanza-50/60 p-4 text-sm leading-relaxed text-toga-800"
+              role="status"
+            >
+              <p className="font-semibold text-toga-900">En espera de resolución administrativa</p>
+              <p className="mt-1">
+                Esta ronda quedó escalada (empate o plazo sin quorum). Un administrador debe
+                reabrirla. Puede revisar documentos; no puede votar hasta entonces.
+              </p>
+            </div>
+          ) : null}
+          {!enEscalada && !puedeVotarElegibilidad ? (
+            <div
+              className="rounded-lg border border-toga-200 bg-toga-50/80 p-4 text-sm leading-relaxed text-toga-800"
+              role="status"
+            >
+              <p className="font-semibold text-toga-900">Consulta administrativa</p>
+              <p className="mt-1">
+                Puede revisar el expediente. El voto de elegibilidad corresponde a los
+                evaluadores; las rondas escaladas se resuelven desde la pestaña Escaladas.
+              </p>
+            </div>
+          ) : null}
+          {bloqueoVotoComite && !enEscalada && puedeVotarElegibilidad ? (
+            <div
+              className="rounded-lg border border-balanza-600/25 bg-balanza-50/60 p-4 text-sm leading-relaxed text-toga-800"
+              role="status"
+            >
+              <p className="font-semibold text-toga-900">Voto ya registrado</p>
+              <p className="mt-1">
+                Ya emitió su actuación en esta ronda de elegibilidad. No puede volver a votar ni
+                cambiar recusación hasta que cierre el quorum. Puede revisar documentos; el
+                veredicto y el paso a baremo se definirán al cerrar la ronda.
+              </p>
+            </div>
+          ) : null}
+          {enEscalada && puedeResolverEscalada ? null : !puedeVotarElegibilidad && !enEscalada ? null : (
           <div className="rounded-lg border border-toga-200 bg-white p-4">
             <h2 className="text-sm font-semibold text-toga-900">Lista de verificación</h2>
             <p className="mt-1 text-xs text-toga-500">
@@ -263,8 +407,9 @@ export function PantallaElegibilidad({
                     <input
                       type="checkbox"
                       checked={checklist[b.id]}
+                      disabled={bloqueoVotoComite}
                       onChange={() => toggleBloque(b.id)}
-                      className="mt-0.5 h-4 w-4 shrink-0 rounded border-toga-300 text-balanza-600 focus:ring-balanza-600/30"
+                      className="mt-0.5 h-4 w-4 shrink-0 rounded border-toga-300 text-balanza-600 focus:ring-balanza-600/30 disabled:cursor-not-allowed disabled:opacity-60"
                     />
                     <span className="min-w-0">
                       <span className="flex flex-wrap items-center gap-1.5">
@@ -304,14 +449,15 @@ export function PantallaElegibilidad({
                 id="motivo-elegibilidad"
                 rows={4}
                 value={motivo}
+                disabled={bloqueoVotoComite}
                 onChange={(e) => setMotivo(e.target.value)}
                 placeholder="Fundamentación jurídica del dictamen…"
-                className="mt-2 w-full rounded-md border border-toga-300 bg-white px-3 py-2 text-sm text-toga-900 placeholder:text-toga-400 focus:border-balanza-600 focus:outline-none focus:ring-2 focus:ring-balanza-600/20"
+                className="mt-2 w-full rounded-md border border-toga-300 bg-white px-3 py-2 text-sm text-toga-900 placeholder:text-toga-400 focus:border-balanza-600 focus:outline-none focus:ring-2 focus:ring-balanza-600/20 disabled:cursor-not-allowed disabled:bg-toga-50 disabled:opacity-70"
               />
             </div>
 
             <div className="mt-4">
-              {panelInelegible ? (
+              {bloqueoVotoComite ? null : panelInelegible ? (
                 <div className="space-y-3 rounded-lg border border-balanza-600/30 bg-balanza-50/40 p-3">
                   <h3 className="text-sm font-semibold text-toga-900">
                     Causales de inelegibilidad
@@ -355,7 +501,7 @@ export function PantallaElegibilidad({
               ) : confirmandoElegible ? (
                 <div className="space-y-3 rounded-lg border border-balanza-600/25 bg-balanza-50/40 p-3">
                   <p className="text-sm text-toga-800">
-                    ¿Confirma declarar elegible a{" "}
+                    ¿Confirma {modoComite ? "votar elegible a" : "declarar elegible a"}{" "}
                     <span className="font-semibold">
                       {expediente.firstName} {expediente.lastName}
                     </span>
@@ -368,7 +514,11 @@ export function PantallaElegibilidad({
                       onClick={confirmarElegible}
                       className="rounded-md bg-balanza-600 px-3 py-2 text-sm font-semibold text-white hover:bg-balanza-700 disabled:opacity-60"
                     >
-                      {pendiente ? "Registrando…" : "Confirmar y pasar al baremo"}
+                      {pendiente
+                        ? "Registrando…"
+                        : modoComite
+                          ? "Confirmar voto elegible"
+                          : "Confirmar y pasar al baremo"}
                     </button>
                     <button
                       type="button"
@@ -380,42 +530,98 @@ export function PantallaElegibilidad({
                     </button>
                   </div>
                 </div>
+              ) : panelRecusacion ? (
+                <div className="space-y-3 rounded-lg border border-toga-300 bg-toga-50/50 p-3">
+                  <h3 className="text-sm font-semibold text-toga-900">Recusación</h3>
+                  <p className="text-xs text-toga-600">
+                    Indique el motivo (conflicto de interés u otra causa). No cuenta como
+                    voto en contra del postulante. Mínimo 10 caracteres.
+                  </p>
+                  <label htmlFor="motivo-recusacion" className="block text-sm">
+                    <span className="font-medium text-toga-800">Motivo de la recusación</span>
+                    <textarea
+                      id="motivo-recusacion"
+                      rows={3}
+                      value={motivoRecusacion}
+                      disabled={pendiente}
+                      onChange={(e) => setMotivoRecusacion(e.target.value)}
+                      placeholder="Describa el motivo de apartarse de este expediente…"
+                      className="mt-1 w-full rounded-md border border-toga-300 bg-white px-3 py-2 text-sm text-toga-900 placeholder:text-toga-400 focus:border-balanza-600 focus:outline-none focus:ring-2 focus:ring-balanza-600/20 disabled:opacity-60"
+                    />
+                  </label>
+                  <div className="flex flex-wrap gap-2 pt-1">
+                    <button
+                      type="button"
+                      disabled={pendiente || motivoRecusacion.trim().length < 10}
+                      onClick={confirmarRecusacion}
+                      className="rounded-md bg-balanza-700 px-3 py-2 text-sm font-semibold text-white hover:bg-balanza-800 disabled:opacity-60"
+                    >
+                      {pendiente ? "Registrando…" : "Confirmar recusación"}
+                    </button>
+                    <button
+                      type="button"
+                      disabled={pendiente}
+                      onClick={() => {
+                        setPanelRecusacion(false);
+                        setMotivoRecusacion("");
+                      }}
+                      className="rounded-md border border-toga-300 bg-white px-3 py-2 text-sm font-medium text-toga-700 hover:bg-toga-50"
+                    >
+                      Cancelar
+                    </button>
+                  </div>
+                </div>
               ) : (
                 <div className="flex flex-col gap-2">
                   <button
                     type="button"
-                    disabled={pendiente || completo}
+                    disabled={pendiente || completo || bloqueoVotoComite}
                     onClick={onAbrirInelegible}
                     className="w-full rounded-md border border-balanza-600 bg-white px-3 py-2.5 text-sm font-semibold text-balanza-700 hover:bg-balanza-50 disabled:opacity-60"
                   >
-                    Declarar inelegible
+                    {modoComite ? "Votar inelegible" : "Declarar inelegible"}
                   </button>
                   <button
                     type="button"
-                    disabled={pendiente || !completo}
+                    disabled={pendiente || !completo || bloqueoVotoComite}
                     onClick={onDeclararElegible}
                     className="w-full rounded-md bg-balanza-600 px-3 py-2.5 text-sm font-semibold text-white hover:bg-balanza-700 disabled:cursor-not-allowed disabled:opacity-50"
                   >
-                    Declarar elegible y pasar al baremo
+                    {modoComite
+                      ? "Votar elegible"
+                      : "Declarar elegible y pasar al baremo"}
                   </button>
+                  {modoComite && puedeEmitirVotoComite && (
+                    <button
+                      type="button"
+                      disabled={pendiente}
+                      onClick={onAbrirRecusacion}
+                      className="w-full rounded-md border border-toga-300 bg-white px-3 py-2.5 text-sm font-medium text-toga-700 hover:bg-toga-50 disabled:opacity-60"
+                    >
+                      Apartarme de este expediente (recusación)
+                    </button>
+                  )}
                 </div>
               )}
             </div>
           </div>
+          )}
         </aside>
       </div>
 
-      <InformeIaSheet
-        nombrePostulante={`${expediente.firstName} ${expediente.lastName}`}
-        informe={informeIa}
-        cargando={cargandoInforme}
-        generando={generandoIa}
-        onGenerar={onGenerarInformeIa}
-        onCambiar={onCambiarInformeIa}
-        onBorrar={onBorrarInformeIa}
-        cupoSesion
-        generacionAgotada={informeIaUsado}
-      />
+      {puedeVotarElegibilidad ? (
+        <InformeIaSheet
+          nombrePostulante={`${expediente.firstName} ${expediente.lastName}`}
+          informe={informeIa}
+          cargando={cargandoInforme}
+          generando={generandoIa}
+          onGenerar={onGenerarInformeIa}
+          onCambiar={onCambiarInformeIa}
+          onBorrar={onBorrarInformeIa}
+          cupoSesion
+          generacionAgotada={informeIaUsado}
+        />
+      ) : null}
     </div>
   );
 }

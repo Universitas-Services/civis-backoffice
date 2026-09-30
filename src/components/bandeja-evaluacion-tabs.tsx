@@ -1,14 +1,22 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Eye, FileText } from "lucide-react";
-import type { Chamber, WorkflowStatus } from "@/contracts";
+import type {
+  Chamber,
+  ReopenCommitteeReason,
+  RondaEscaladaLista,
+  WorkflowStatus,
+} from "@/contracts";
 import { SALA_ETIQUETA } from "@/contracts";
+import { reabrirRondaEscalada } from "@/app/(panel)/comite/acciones";
 import { EstadoVacio } from "@/components/cabecera-pagina";
 import { FichaDescalificacionVista } from "@/components/ficha-descalificacion";
 import { InformeFichaDescalificacion } from "@/components/informe-ficha-descalificacion";
 import { InsigniaEstado } from "@/components/insignias";
+import { useToast } from "@/components/toast-provider";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ConTooltip, TooltipProvider } from "@/components/ui/tooltip";
 import { type DecisionElegibilidad, type FichaDescalificacion } from "@/lib/elegibilidad";
@@ -25,6 +33,7 @@ export type PendienteEvaluacion = {
     readonly _count: { readonly documents: number };
   }[];
   readonly _count: { readonly objections: number };
+  readonly reopenedReason?: ReopenCommitteeReason | null;
 };
 
 /**
@@ -34,9 +43,13 @@ export type PendienteEvaluacion = {
 export function BandejaEvaluacionTabs({
   pendientes,
   inelegibles,
+  escaladas = [],
+  puedeResolverEscaladas = false,
 }: {
   readonly pendientes: readonly PendienteEvaluacion[];
   readonly inelegibles: readonly DecisionElegibilidad[];
+  readonly escaladas?: readonly RondaEscaladaLista[];
+  readonly puedeResolverEscaladas?: boolean;
 }) {
   const [fichaAbierta, setFichaAbierta] = useState<FichaDescalificacion | null>(null);
   const [informeDe, setInformeDe] = useState<{
@@ -44,14 +57,23 @@ export function BandejaEvaluacionTabs({
     readonly nombre: string;
   } | null>(null);
 
+  const defaultTab =
+    puedeResolverEscaladas && escaladas.length > 0 ? "escaladas" : "pendientes";
+
   return (
     <>
-      <Tabs defaultValue="pendientes" className="w-full">
+      <Tabs defaultValue={defaultTab} className="w-full">
         <TabsList aria-label="Bandejas de evaluación">
           <TabsTrigger value="pendientes">
             Pendientes por evaluar
             <span className="cifra ml-1.5 text-xs text-toga-500">({pendientes.length})</span>
           </TabsTrigger>
+          {puedeResolverEscaladas && (
+            <TabsTrigger value="escaladas">
+              Escaladas
+              <span className="cifra ml-1.5 text-xs text-toga-500">({escaladas.length})</span>
+            </TabsTrigger>
+          )}
           <TabsTrigger value="inelegibles">
             Inelegibles
             <span className="cifra ml-1.5 text-xs text-toga-500">({inelegibles.length})</span>
@@ -68,6 +90,19 @@ export function BandejaEvaluacionTabs({
             <TablaPendientes items={pendientes} />
           )}
         </TabsContent>
+
+        {puedeResolverEscaladas && (
+          <TabsContent value="escaladas">
+            {escaladas.length === 0 ? (
+              <EstadoVacio
+                titulo="No hay rondas escaladas"
+                detalle="Aparecen aquí cuando hay empate en votos decisivos o vence el plazo sin resolverse el quorum. Solo se pueden reabrir (no hay dictamen administrativo)."
+              />
+            ) : (
+              <TablaEscaladas items={escaladas} />
+            )}
+          </TabsContent>
+        )}
 
         <TabsContent value="inelegibles">
           {inelegibles.length === 0 ? (
@@ -277,7 +312,14 @@ function TablaPendientes({ items }: { readonly items: readonly PendienteEvaluaci
               const objs = c._count.objections;
 
               return (
-                <tr key={c.id} className="hover:bg-toga-50">
+                <tr
+                  key={c.id}
+                  className={
+                    c.reopenedReason
+                      ? "bg-balanza-50/60 hover:bg-balanza-50"
+                      : "hover:bg-toga-50"
+                  }
+                >
                   <th scope="row" className="codigo px-4 py-3 text-xs font-medium text-toga-600">
                     {fileNumber}
                   </th>
@@ -288,6 +330,13 @@ function TablaPendientes({ items }: { readonly items: readonly PendienteEvaluaci
                     >
                       {c.firstName} {c.lastName}
                     </Link>
+                    {c.reopenedReason ? (
+                      <span className="mt-1 block text-[0.65rem] font-semibold uppercase tracking-wide text-balanza-700">
+                        {c.reopenedReason === "TIE"
+                          ? "Reabierta — empate"
+                          : "Reabierta — plazo"}
+                      </span>
+                    ) : null}
                   </td>
                   <td className="px-4 py-3 text-toga-600">
                     {SALA_ETIQUETA[c.chamber] ?? c.chamber}
@@ -317,16 +366,174 @@ function TablaPendientes({ items }: { readonly items: readonly PendienteEvaluaci
           <li key={c.id}>
             <Link
               href={`/evaluacion/${c.id}`}
-              className="block rounded-lg border border-toga-200 bg-white p-4 hover:bg-toga-50"
+              className={`block rounded-lg border p-4 hover:bg-toga-50 ${
+                c.reopenedReason
+                  ? "border-balanza-600/40 bg-balanza-50/50"
+                  : "border-toga-200 bg-white"
+              }`}
             >
               <p className="codigo text-xs text-toga-500">{c.submissions[0]?.fileNumber ?? "—"}</p>
               <p className="mt-0.5 font-medium text-toga-900">
                 {c.firstName} {c.lastName}
               </p>
+              {c.reopenedReason ? (
+                <p className="mt-1 text-[0.65rem] font-semibold uppercase tracking-wide text-balanza-700">
+                  {c.reopenedReason === "TIE" ? "Reabierta — empate" : "Reabierta — plazo"}
+                </p>
+              ) : null}
               <p className="mt-1 text-xs text-toga-500">{SALA_ETIQUETA[c.chamber] ?? c.chamber}</p>
             </Link>
           </li>
         ))}
+      </ul>
+    </TooltipProvider>
+  );
+}
+
+function reasonDeResult(result: unknown): ReopenCommitteeReason | null {
+  if (!result || typeof result !== "object" || Array.isArray(result)) return null;
+  const reason = (result as { reason?: unknown }).reason;
+  return reason === "TIE" || reason === "DEADLINE" ? reason : null;
+}
+
+function motivoCorto(result: unknown): string {
+  const reason = reasonDeResult(result);
+  if (reason === "TIE") return "Empate en votos decisivos";
+  if (reason === "DEADLINE") return "Plazo vencido sin resolver el quorum";
+  if (!result || typeof result !== "object" || Array.isArray(result)) {
+    return "Requiere reapertura administrativa";
+  }
+  const motivo = (result as { motivo?: unknown }).motivo;
+  return typeof motivo === "string" && motivo.trim()
+    ? motivo
+    : "Requiere reapertura administrativa";
+}
+
+function TablaEscaladas({ items }: { readonly items: readonly RondaEscaladaLista[] }) {
+  const toast = useToast();
+  const router = useRouter();
+  const [pendiente, iniciar] = useTransition();
+
+  function reabrir(roundId: string, candidateId: string, reason: ReopenCommitteeReason) {
+    iniciar(async () => {
+      const r = await reabrirRondaEscalada(roundId, candidateId, reason);
+      if (!r.ok) {
+        toast.error(r.error ?? "No se pudo reabrir");
+        return;
+      }
+      toast.exito(r.exito ?? "Ronda reabierta.");
+      router.refresh();
+    });
+  }
+
+  return (
+    <TooltipProvider delayDuration={200}>
+      <div className="hidden overflow-hidden rounded-lg border border-toga-200 bg-white lg:block">
+        <table className="w-full text-center text-sm">
+          <caption className="sr-only">Rondas de elegibilidad escaladas</caption>
+          <thead className="border-b-2 border-toga-300 bg-toga-50">
+            <tr>
+              <th scope="col" className="px-4 py-3 font-semibold text-toga-700">
+                Expediente
+              </th>
+              <th scope="col" className="px-4 py-3 font-semibold text-toga-700">
+                Postulante
+              </th>
+              <th scope="col" className="px-4 py-3 font-semibold text-toga-700">
+                Motivo
+              </th>
+              <th scope="col" className="px-4 py-3 font-semibold text-toga-700">
+                Acciones
+              </th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-toga-100">
+            {items.map((r) => {
+              const fileNumber = r.candidate.submissions[0]?.fileNumber ?? "—";
+              const reason = reasonDeResult(r.result);
+              return (
+                <tr key={r.id} className="hover:bg-toga-50">
+                  <th scope="row" className="codigo px-4 py-3 text-xs font-medium text-toga-600">
+                    {fileNumber}
+                  </th>
+                  <td className="px-4 py-3 font-medium text-toga-900">
+                    {r.candidate.firstName} {r.candidate.lastName}
+                  </td>
+                  <td className="max-w-xs px-4 py-3 text-left text-xs text-toga-600">
+                    {motivoCorto(r.result)}
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="flex flex-wrap items-center justify-center gap-2">
+                      <Link
+                        href={`/evaluacion/${r.candidateId}`}
+                        className="rounded-md border border-toga-300 px-3 py-1.5 text-xs font-medium text-toga-700 hover:bg-toga-50"
+                      >
+                        Ver
+                      </Link>
+                      <button
+                        type="button"
+                        disabled={pendiente || reason === "DEADLINE"}
+                        onClick={() => reabrir(r.id, r.candidateId, "TIE")}
+                        className="rounded-md border border-balanza-600/40 px-3 py-1.5 text-xs font-semibold text-balanza-700 hover:bg-balanza-50 disabled:opacity-40"
+                      >
+                        Reabrir por empate
+                      </button>
+                      <button
+                        type="button"
+                        disabled={pendiente || reason === "TIE"}
+                        onClick={() => reabrir(r.id, r.candidateId, "DEADLINE")}
+                        className="rounded-md border border-toga-300 px-3 py-1.5 text-xs font-semibold text-toga-700 hover:bg-toga-50 disabled:opacity-40"
+                      >
+                        Reabrir por plazo
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+
+      <ul className="space-y-3 lg:hidden">
+        {items.map((r) => {
+          const reason = reasonDeResult(r.result);
+          return (
+            <li key={r.id} className="rounded-lg border border-toga-200 bg-white p-4">
+              <p className="codigo text-xs text-toga-500">
+                {r.candidate.submissions[0]?.fileNumber ?? "—"}
+              </p>
+              <p className="mt-0.5 font-medium text-toga-900">
+                {r.candidate.firstName} {r.candidate.lastName}
+              </p>
+              <p className="mt-1 text-xs text-toga-600">{motivoCorto(r.result)}</p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <Link
+                  href={`/evaluacion/${r.candidateId}`}
+                  className="rounded-md border border-toga-300 px-3 py-1.5 text-xs font-medium text-toga-700"
+                >
+                  Ver
+                </Link>
+                <button
+                  type="button"
+                  disabled={pendiente || reason === "DEADLINE"}
+                  onClick={() => reabrir(r.id, r.candidateId, "TIE")}
+                  className="rounded-md border border-balanza-600/40 px-3 py-1.5 text-xs font-semibold text-balanza-700 disabled:opacity-40"
+                >
+                  Empate
+                </button>
+                <button
+                  type="button"
+                  disabled={pendiente || reason === "TIE"}
+                  onClick={() => reabrir(r.id, r.candidateId, "DEADLINE")}
+                  className="rounded-md border border-toga-300 px-3 py-1.5 text-xs font-semibold text-toga-700 disabled:opacity-40"
+                >
+                  Plazo
+                </button>
+              </div>
+            </li>
+          );
+        })}
       </ul>
     </TooltipProvider>
   );

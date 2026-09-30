@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import type { BaremoDetalle, ExpedienteDetalle } from "@/contracts";
+import type { AjustesPortal, BaremoDetalle, ExpedienteDetalle, RondaComiteAbierta } from "@/contracts";
 import {
   PantallaAplicarBaremo,
   type EvaluacionBaremoVista,
 } from "@/components/pantalla-aplicar-baremo";
+import { PanelRondaComite } from "@/components/panel-ronda-comite";
 import { detallarBaremoCongelado } from "@/lib/detallar-baremo";
 import { ErrorApi, llamarApi, NoAutorizado } from "@/lib/api";
 import { exigirRol, renovarYVolver } from "@/lib/rutas";
@@ -21,10 +22,25 @@ export default async function BaremoDetalle({
   const puedeCalificar = usuario.roles.some(
     (rol) => rol === "SUPER_ADMIN" || rol === "ADMIN" || rol === "EVALUATOR",
   );
+  /** Abrir borrador / puntuar: no ADMIN puro (solo gestiona la ronda). */
+  const puedeAbrirBorrador = usuario.roles.some(
+    (rol) => rol === "SUPER_ADMIN" || rol === "EVALUATOR",
+  );
+  const puedeAbrirRonda = usuario.roles.some((rol) => rol === "SUPER_ADMIN" || rol === "ADMIN");
 
   let expediente: ExpedienteDetalle;
+  let portal: AjustesPortal = {
+    objectionsOpen: false,
+    evaluationMode: "INDIVIDUAL",
+    maxActiveEvaluators: 7,
+    quorumThreshold: 5,
+    roundDeadlineDays: 5,
+  };
   try {
-    expediente = await llamarApi<ExpedienteDetalle>(`/internal/candidates/${candidateId}`);
+    [expediente, portal] = await Promise.all([
+      llamarApi<ExpedienteDetalle>(`/internal/candidates/${candidateId}`),
+      llamarApi<AjustesPortal>("/public/portal").catch(() => portal),
+    ]);
   } catch (error) {
     if (error instanceof NoAutorizado) renovarYVolver(`/baremo/${candidateId}`);
     if (error instanceof ErrorApi && error.status === 404) notFound();
@@ -32,6 +48,7 @@ export default async function BaremoDetalle({
     throw error;
   }
 
+  const modoComite = portal.evaluationMode === "COMMITTEE";
   const enEvaluacion = expediente.workflowStatus === "EVALUATION_IN_PROGRESS";
   const yaEvaluado = expediente.workflowStatus === "EVALUATED";
   if (!enEvaluacion && !yaEvaluado) {
@@ -70,23 +87,67 @@ export default async function BaremoDetalle({
     throw error;
   }
 
+  let ronda: RondaComiteAbierta | null = null;
+  if (modoComite) {
+    try {
+      ronda = await llamarApi<RondaComiteAbierta | null>(
+        `/internal/committee/rounds/${candidateId}/open`,
+      );
+    } catch {
+      ronda = null;
+    }
+  }
+
   const enviada = historial.find((e) => e.status === "SUBMITTED" && e.baremoCongelado);
   const aprobada = historial.find((e) => e.status === "APPROVED" && e.baremoCongelado);
-  const miBorrador = historial.find(
-    (e) => e.status === "DRAFT" && e.evaluatorId === usuario.id && e.baremoCongelado,
-  );
-  let evaluacion = miBorrador ?? enviada ?? aprobada ?? null;
+  const miPropia =
+    historial.find(
+      (e) =>
+        e.evaluatorId === usuario.id &&
+        e.baremoCongelado &&
+        (e.status === "DRAFT" || e.status === "SUBMITTED"),
+    ) ?? null;
 
-  if (!evaluacion && puedeCalificar && enEvaluacion) {
-    try {
-      evaluacion = await llamarApi<EvaluacionBaremoVista>(
-        `/internal/evaluations/candidate/${candidateId}/draft`,
-        { method: "POST" },
-      );
-    } catch (error) {
-      if (error instanceof NoAutorizado) renovarYVolver(`/baremo/${candidateId}`);
-      if (error instanceof ErrorApi) return aviso("No se puede abrir el baremo", error.message);
-      throw error;
+  // Individual: borrador propio o enviada/aprobada compartida.
+  // Comité: nunca mostrar SUBMITTED ajena; si no hay propia y la ronda SCORING
+  // está abierta (o aún no hay consolidada), abrir borrador del evaluador.
+  let evaluacion: EvaluacionBaremoVista | null = null;
+
+  if (modoComite) {
+    if (miPropia) {
+      evaluacion = miPropia;
+    } else if (
+      puedeAbrirBorrador &&
+      enEvaluacion &&
+      (ronda?.kind === "SCORING" || (!ronda && !aprobada))
+    ) {
+      try {
+        evaluacion = await llamarApi<EvaluacionBaremoVista>(
+          `/internal/evaluations/candidate/${candidateId}/draft`,
+          { method: "POST" },
+        );
+      } catch (error) {
+        if (error instanceof NoAutorizado) renovarYVolver(`/baremo/${candidateId}`);
+        if (error instanceof ErrorApi) return aviso("No se puede abrir el baremo", error.message);
+        throw error;
+      }
+    } else {
+      // Ronda cerrada / consulta ADMIN: consolidada o APPROVED (solo lectura).
+      evaluacion = aprobada ?? null;
+    }
+  } else {
+    evaluacion = miPropia ?? enviada ?? aprobada ?? null;
+    if (!evaluacion && puedeAbrirBorrador && enEvaluacion) {
+      try {
+        evaluacion = await llamarApi<EvaluacionBaremoVista>(
+          `/internal/evaluations/candidate/${candidateId}/draft`,
+          { method: "POST" },
+        );
+      } catch (error) {
+        if (error instanceof NoAutorizado) renovarYVolver(`/baremo/${candidateId}`);
+        if (error instanceof ErrorApi) return aviso("No se puede abrir el baremo", error.message);
+        throw error;
+      }
     }
   }
 
@@ -112,17 +173,44 @@ export default async function BaremoDetalle({
     baremoCongelado: detallarBaremoCongelado(evaluacion.baremoCongelado, activo),
   };
 
-  const puedeEditar =
-    (evaluacion.status === "DRAFT" || evaluacion.status === "SUBMITTED") &&
-    (evaluacion.evaluatorId === usuario.id ||
-      usuario.roles.includes("SUPER_ADMIN") ||
-      usuario.roles.includes("ADMIN"));
+  const abstuvo =
+    modoComite &&
+    ronda?.participants.find((p) => p.evaluatorId === usuario.id)?.action === "ABSTAINED";
+
+  const puedeEditar = modoComite
+    ? !abstuvo &&
+      !yaEvaluado &&
+      (evaluacion.status === "DRAFT" || evaluacion.status === "SUBMITTED") &&
+      evaluacion.evaluatorId === usuario.id
+    : (evaluacion.status === "DRAFT" || evaluacion.status === "SUBMITTED") &&
+      (evaluacion.evaluatorId === usuario.id ||
+        usuario.roles.includes("SUPER_ADMIN") ||
+        usuario.roles.includes("ADMIN"));
+
+  // Abrir ronda solo si aún hay que puntuar; con EVALUATED el CTA engaña.
+  const puedeAbrirRondaActiva = puedeAbrirRonda && enEvaluacion && !yaEvaluado;
 
   return (
     <PantallaAplicarBaremo
       expediente={expediente}
       evaluacion={evaluacionConDetalle}
       puedeEditar={puedeEditar}
+      modoComite={modoComite}
+      panelComite={
+        modoComite ? (
+          <PanelRondaComite
+            key="panel-ronda-scoring"
+            candidateId={candidateId}
+            kindEsperado="SCORING"
+            ronda={ronda}
+            usuarioId={usuario.id}
+            puedeAbrir={puedeAbrirRondaActiva}
+            puedeForzarCierre={puedeAbrirRondaActiva}
+            consolidada={yaEvaluado}
+            rutaRevalidate={`/baremo/${candidateId}`}
+          />
+        ) : null
+      }
     />
   );
 }

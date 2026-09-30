@@ -1,6 +1,6 @@
 "use client";
 
-import { useLayoutEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -13,6 +13,9 @@ import {
   EVENTO_SIDEBAR_DOCUMENTO,
   reiniciarSidebar,
 } from "@/lib/sidebar-panel";
+
+/** Espera a que termine el reflujo al comprimir antes de activar tooltips. */
+const MS_TOOLTIP_TRAS_COMPRIMIR = 350;
 
 function rutaActiva(pathname: string, href: string) {
   if (href === "/baremo") {
@@ -51,6 +54,8 @@ export function BarraLateral({ usuario }: { readonly usuario: Sesion }) {
   const [documentoAbierto, setDocumentoAbierto] = useState(false);
   const [listo, setListo] = useState(false);
   const [menuAbierto, setMenuAbierto] = useState<boolean | null>(null);
+  /** Evita el chorro de tooltips al comprimir o al hidratar ya colapsado. */
+  const [tooltipsListos, setTooltipsListos] = useState(false);
 
   useLayoutEffect(() => {
     try {
@@ -94,10 +99,21 @@ export function BarraLateral({ usuario }: { readonly usuario: Sesion }) {
   }
 
   const estrecho = listo && (colapsado || documentoAbierto);
+  const tooltipsActivos = estrecho && tooltipsListos;
   const baremoAbierto = menuAbierto ?? pathname.startsWith("/baremo");
 
+  useEffect(() => {
+    if (!estrecho) {
+      setTooltipsListos(false);
+      return;
+    }
+    setTooltipsListos(false);
+    const id = window.setTimeout(() => setTooltipsListos(true), MS_TOOLTIP_TRAS_COMPRIMIR);
+    return () => window.clearTimeout(id);
+  }, [estrecho]);
+
   return (
-    <TooltipProvider delayDuration={200}>
+    <TooltipProvider delayDuration={280} skipDelayDuration={0} disableHoverableContent>
       <aside
         className={`flex w-full shrink-0 flex-col bg-balanza-600 md:sticky md:top-0 md:h-dvh md:self-start md:overflow-hidden ${
           estrecho ? "md:w-16" : "md:w-64"
@@ -141,7 +157,9 @@ export function BarraLateral({ usuario }: { readonly usuario: Sesion }) {
         <nav
           id="nav-panel"
           aria-label="Secciones del panel"
-          className="barra-lateral-nav min-h-0 flex-1 overflow-x-auto px-2 py-3 md:overflow-x-hidden md:overflow-y-auto"
+          className={`barra-lateral-nav min-h-0 flex-1 overflow-x-auto px-2 py-3 md:overflow-x-hidden md:overflow-y-auto ${
+            estrecho && !tooltipsListos ? "md:pointer-events-none" : ""
+          }`}
         >
           <ul className={`flex gap-1 ${estrecho ? "md:flex-col md:items-center" : "md:flex-col"}`}>
             {visibles.map((s) => {
@@ -180,7 +198,7 @@ export function BarraLateral({ usuario }: { readonly usuario: Sesion }) {
                       </ul>
                     )}
                     <div className={estrecho ? "hidden md:block" : "hidden"}>
-                      <ConTooltip texto={s.texto} side="right" activo={estrecho}>
+                      <ConTooltip texto={s.texto} side="right" activo={tooltipsActivos}>
                         <Link
                           href={s.href}
                           aria-label={s.texto}
@@ -210,7 +228,7 @@ export function BarraLateral({ usuario }: { readonly usuario: Sesion }) {
 
               return (
                 <li key={s.href} className={estrecho ? "md:w-full" : undefined}>
-                  <ConTooltip texto={s.texto} side="right" activo={estrecho}>
+                  <ConTooltip texto={s.texto} side="right" activo={tooltipsActivos}>
                     {enlace}
                   </ConTooltip>
                 </li>
@@ -236,7 +254,7 @@ export function BarraLateral({ usuario }: { readonly usuario: Sesion }) {
             className={estrecho ? "flex justify-center" : "mt-3 flex justify-center"}
           >
             {estrecho ? (
-              <ConTooltip texto="Cerrar sesión" side="right">
+              <ConTooltip texto="Cerrar sesión" side="right" activo={tooltipsActivos}>
                 <button
                   type="submit"
                   aria-label="Cerrar sesión"

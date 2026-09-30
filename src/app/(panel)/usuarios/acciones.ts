@@ -125,3 +125,91 @@ export async function cambiarRoles(
     return { error: error instanceof ErrorApi ? error.message : "No se pudieron cambiar" };
   }
 }
+
+/** Incluye o saca a un EVALUATOR del comité activo. */
+export async function cambiarActivoComite(
+  id: string,
+  committeeActive: boolean,
+  reason: string,
+): Promise<{ ok: boolean; error?: string }> {
+  if (reason.trim().length < 5) {
+    return { ok: false, error: "Indique el motivo (mínimo 5 caracteres)" };
+  }
+  try {
+    await llamarApiAccion(`/internal/users/${id}/committee-active`, {
+      method: "PATCH",
+      body: { committeeActive, reason },
+    });
+    revalidatePath("/usuarios");
+    return { ok: true };
+  } catch (error) {
+    return {
+      ok: false,
+      error: error instanceof ErrorApi ? error.message : "No se pudo cambiar el comité",
+    };
+  }
+}
+
+export async function guardarAjustesComite(formData: FormData): Promise<EstadoUsuarios> {
+  const evaluationMode = formData.get("evaluationMode");
+
+  if (evaluationMode !== "INDIVIDUAL" && evaluationMode !== "COMMITTEE") {
+    return { error: "Modalidad inválida" };
+  }
+
+  const maxActiveEvaluators = Number(formData.get("maxActiveEvaluators"));
+  if (
+    !Number.isInteger(maxActiveEvaluators) ||
+    maxActiveEvaluators < 1 ||
+    maxActiveEvaluators > 7
+  ) {
+    return { error: "El tope de activos debe ser un entero entre 1 y 7" };
+  }
+
+  // Individual: modalidad + tope de quien puede evaluar.
+  if (evaluationMode === "INDIVIDUAL") {
+    try {
+      await llamarApiAccion("/internal/portal", {
+        method: "PATCH",
+        body: { evaluationMode: "INDIVIDUAL", maxActiveEvaluators },
+      });
+      revalidatePath("/usuarios");
+      return { exito: "Modalidad individual y tope de activos guardados." };
+    } catch (error) {
+      return {
+        error: error instanceof ErrorApi ? error.message : "No se pudieron guardar los ajustes",
+      };
+    }
+  }
+
+  const quorumThreshold = Number(formData.get("quorumThreshold"));
+  const roundDeadlineDays = Number(formData.get("roundDeadlineDays"));
+
+  if (!Number.isInteger(quorumThreshold) || quorumThreshold < 1 || quorumThreshold > 7) {
+    return { error: "El quorum debe ser un entero entre 1 y 7" };
+  }
+  if (quorumThreshold > maxActiveEvaluators) {
+    return { error: "El quorum no puede superar el tope de activos" };
+  }
+  if (!Number.isInteger(roundDeadlineDays) || roundDeadlineDays < 1 || roundDeadlineDays > 90) {
+    return { error: "El plazo de ronda debe ser entre 1 y 90 días" };
+  }
+
+  try {
+    await llamarApiAccion("/internal/portal", {
+      method: "PATCH",
+      body: {
+        evaluationMode: "COMMITTEE",
+        maxActiveEvaluators,
+        quorumThreshold,
+        roundDeadlineDays,
+      },
+    });
+    revalidatePath("/usuarios");
+    return { exito: "Ajustes de comité guardados." };
+  } catch (error) {
+    return {
+      error: error instanceof ErrorApi ? error.message : "No se pudieron guardar los ajustes",
+    };
+  }
+}

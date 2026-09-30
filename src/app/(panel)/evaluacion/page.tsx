@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import type { Chamber, ExpedienteListado, WorkflowStatus } from "@/contracts";
+import type { Chamber, ExpedienteListado, RondaEscaladaLista, WorkflowStatus } from "@/contracts";
 import { llamarApi, NoAutorizado } from "@/lib/api";
 import { exigirRol, renovarYVolver } from "@/lib/rutas";
 import {
@@ -8,6 +8,7 @@ import {
   type DecisionElegibilidad,
   type FichaElegibilidadApi,
 } from "@/lib/elegibilidad";
+import { listarRondasEscaladas } from "@/app/(panel)/comite/acciones";
 import { CabeceraPagina } from "@/components/cabecera-pagina";
 import { BandejaEvaluacionTabs } from "@/components/bandeja-evaluacion-tabs";
 
@@ -26,6 +27,7 @@ interface Bandeja {
       readonly _count: { readonly documents: number };
     }[];
     readonly _count: { readonly objections: number };
+    readonly reopenedReason?: "TIE" | "DEADLINE" | null;
   }[];
   readonly misEvaluaciones: readonly {
     readonly id: string;
@@ -37,13 +39,18 @@ interface Bandeja {
       readonly lastName: string;
     };
   }[];
+  readonly bloqueadoSinComite?: boolean;
 }
 
 export default async function BandejaEvaluacion() {
-  await exigirRol("SUPER_ADMIN", "EVALUATOR");
+  const usuario = await exigirRol("SUPER_ADMIN", "ADMIN", "EVALUATOR");
+  const puedeResolverEscaladas = usuario.roles.some(
+    (r) => r === "SUPER_ADMIN" || r === "ADMIN",
+  );
 
   let bandeja: Bandeja;
   let inelegibles: DecisionElegibilidad[];
+  let escaladas: readonly RondaEscaladaLista[] = [];
   try {
     bandeja = await llamarApi<Bandeja>("/internal/evaluations/inbox");
     const descalificados = await llamarApi<{ readonly items: readonly ExpedienteListado[] }>(
@@ -63,6 +70,9 @@ export default async function BandejaEvaluacion() {
       }),
     );
     inelegibles = fichas;
+    if (puedeResolverEscaladas) {
+      escaladas = await listarRondasEscaladas();
+    }
   } catch (error) {
     if (error instanceof NoAutorizado) renovarYVolver("/evaluacion");
     throw error;
@@ -78,6 +88,15 @@ export default async function BandejaEvaluacion() {
       />
 
       <div className="space-y-6 px-5 py-6 sm:px-8">
+        {bandeja.bloqueadoSinComite ? (
+          <div className="rounded-lg border border-balanza-600/25 bg-balanza-50 p-5 text-sm text-toga-800">
+            <p className="font-semibold text-toga-900">No está activo en el comité</p>
+            <p className="mt-1 leading-relaxed">
+              Solo los evaluadores marcados como activos en comité pueden evaluar. Pida a un
+              administrador que lo incluya en Usuarios.
+            </p>
+          </div>
+        ) : null}
         {conObjeciones.length > 0 && (
           <section
             aria-labelledby="alertas"
@@ -113,7 +132,12 @@ export default async function BandejaEvaluacion() {
           </section>
         )}
 
-        <BandejaEvaluacionTabs pendientes={bandeja.pendientes} inelegibles={inelegibles} />
+        <BandejaEvaluacionTabs
+          pendientes={bandeja.pendientes}
+          inelegibles={inelegibles}
+          escaladas={escaladas}
+          puedeResolverEscaladas={puedeResolverEscaladas}
+        />
       </div>
     </>
   );
