@@ -1,6 +1,13 @@
 "use client";
 
-import { useMemo, useState, useTransition, useEffect, type ReactNode } from "react";
+import {
+  Fragment,
+  useMemo,
+  useState,
+  useTransition,
+  useEffect,
+  type ReactNode,
+} from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
@@ -82,12 +89,19 @@ export function PantallaAplicarBaremo({
   puedeEditar,
   accionExtra,
   accionCabecera,
+  panelComite,
+  modoComite = false,
+  rutaTrasComite = "/baremo",
 }: {
   readonly expediente: ExpedienteDetalle;
   readonly evaluacion: EvaluacionBaremoVista;
   readonly puedeEditar: boolean;
   readonly accionExtra?: ReactNode;
   readonly accionCabecera?: ReactNode;
+  readonly panelComite?: ReactNode;
+  readonly modoComite?: boolean;
+  /** Tras enviar nota en comité, a dónde volver (listado). */
+  readonly rutaTrasComite?: string;
 }) {
   const documentos = useMemo(
     () => documentosVigentes(expediente.submissions[0]?.documents ?? []),
@@ -132,18 +146,26 @@ export function PantallaAplicarBaremo({
           <VistaDocumentosFormulario documentos={documentos} anclarVisor={false} ampliar />
         </div>
         <aside aria-label="Baremo de esta evaluación" className="space-y-4">
+          {panelComite != null ? (
+            <Fragment key="panel-comite">{panelComite}</Fragment>
+          ) : null}
           {baremo ? (
-            <>
+            <div key="formulario-baremo" className="space-y-4">
               <FormularioBaremo
                 baremo={baremo}
                 evaluacion={evaluacion}
                 candidateId={expediente.id}
                 puedeEditar={puedeEditar}
+                modoComite={modoComite}
+                rutaTrasComite={rutaTrasComite}
               />
               {accionExtra}
-            </>
+            </div>
           ) : (
-            <p className="rounded-lg border border-toga-200 bg-white px-4 py-3 text-sm text-toga-600">
+            <p
+              key="sin-baremo"
+              className="rounded-lg border border-toga-200 bg-white px-4 py-3 text-sm text-toga-600"
+            >
               Esta evaluación no tiene una copia del baremo. No se puede puntuar.
             </p>
           )}
@@ -158,11 +180,15 @@ function FormularioBaremo({
   evaluacion,
   candidateId,
   puedeEditar,
+  modoComite = false,
+  rutaTrasComite = "/baremo",
 }: {
   readonly baremo: BaremoCongeladoVista;
   readonly evaluacion: EvaluacionBaremoVista;
   readonly candidateId: string;
   readonly puedeEditar: boolean;
+  readonly modoComite?: boolean;
+  readonly rutaTrasComite?: string;
 }) {
   const toast = useToast();
   const router = useRouter();
@@ -229,9 +255,18 @@ function FormularioBaremo({
       }
       setTotalServidor(r.totalPoints);
       if (r.band) setBand(r.band);
-      setEstado("APPROVED");
+      setEstado(r.status ?? (modoComite ? "SUBMITTED" : "APPROVED"));
       setFirmaGuardada(firma(lineas));
-      toast.exito("Puntuado correctamente.");
+      toast.exito(
+        modoComite
+          ? "Nota enviada al comité. El promedio se consolida cuando todos actúen."
+          : "Puntuado correctamente.",
+      );
+      if (modoComite) {
+        router.push(rutaTrasComite);
+        router.refresh();
+        return;
+      }
       router.refresh();
     });
   }
@@ -396,8 +431,19 @@ function FormularioBaremo({
           disabled={hayError || lineas.length === 0 || pendiente || !hayCambios}
           className="rounded-md bg-balanza-600 px-4 py-2 text-sm font-semibold text-white hover:bg-balanza-700 disabled:opacity-60"
         >
-          {pendiente ? "Guardando…" : "Guardar"}
+          {pendiente
+            ? "Guardando…"
+            : modoComite
+              ? "Enviar nota al comité"
+              : "Guardar"}
         </button>
+      )}
+
+      {modoComite && estado === "SUBMITTED" && !hayCambios && (
+        <p className="rounded-lg border border-toga-200 bg-toga-50 px-4 py-3 text-sm text-toga-700">
+          Su nota quedó registrada para el promedio del comité. No publica sola al ranking: al
+          cerrar la ronda se consolida una sola nota oficial.
+        </p>
       )}
 
       {estado === "APPROVED" && puedeEditar && !hayCambios && evaluacion.ineligible && (

@@ -2,7 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { ErrorApi, llamarApiAccion } from "@/lib/api";
+import { ErrorApi, llamarApi, llamarApiAccion } from "@/lib/api";
+import type { AjustesPortal } from "@/contracts";
 import { BLOQUE_ELEGIBILIDAD_IDS, CAUSAL_INELEGIBILIDAD_IDS } from "@/lib/elegibilidad";
 
 export interface Resultado {
@@ -30,6 +31,7 @@ export async function guardarLineasBaremo(
   readonly error?: string;
   readonly totalPoints?: number;
   readonly band?: string;
+  readonly status?: string;
 }> {
   const analisis = z.array(lineaBaremoSchema).min(1).safeParse(lineas);
   if (!analisis.success) {
@@ -40,16 +42,19 @@ export async function guardarLineasBaremo(
     const evaluacion = await llamarApiAccion<{
       totalPoints: string | number;
       band: string;
+      status?: string;
     }>(`/internal/evaluations/${evaluationId}/scores`, {
       method: "PUT",
       body: { lineas: analisis.data },
     });
     revalidatePath(`/baremo/${candidateId}`);
     revalidatePath("/baremo");
+    revalidatePath("/ranking");
     return {
       ok: true,
       totalPoints: Number(evaluacion.totalPoints),
       band: evaluacion.band,
+      status: evaluacion.status,
     };
   } catch (error) {
     return { ok: false, error: mensajeDeApi(error, "No se pudo guardar") };
@@ -124,7 +129,18 @@ const declararInelegibleSchema = z.object({
 export type ResultadoElegibilidadAccion = {
   readonly ok: boolean;
   readonly error?: string;
+  /** En comité el voto queda registrado; el veredicto llega al cerrar el quorum. */
+  readonly votoComite?: boolean;
 };
+
+async function esModoComite(): Promise<boolean> {
+  try {
+    const portal = await llamarApi<AjustesPortal>("/public/portal");
+    return portal.evaluationMode === "COMMITTEE";
+  } catch {
+    return false;
+  }
+}
 
 /** Paso 1: declara elegible y deja el expediente en evaluación (baremo). */
 export async function declararElegible(
@@ -141,6 +157,20 @@ export async function declararElegible(
     }
   }
   try {
+    if (await esModoComite()) {
+      await llamarApiAccion(`/internal/committee/rounds/${candidateId}/eligibility-vote`, {
+        method: "POST",
+        body: {
+          vote: "ELIGIBLE",
+          motivation: parsed.data.motivo,
+          checklist: parsed.data.checklist,
+          causales: [],
+        },
+      });
+      revalidatePath("/evaluacion");
+      revalidatePath(`/evaluacion/${candidateId}`);
+      return { ok: true, votoComite: true };
+    }
     await llamarApiAccion(`/internal/evaluations/candidate/${candidateId}/eligibility`, {
       method: "POST",
       body: {
@@ -179,6 +209,20 @@ export async function declararInelegible(
     };
   }
   try {
+    if (await esModoComite()) {
+      await llamarApiAccion(`/internal/committee/rounds/${candidateId}/eligibility-vote`, {
+        method: "POST",
+        body: {
+          vote: "INELIGIBLE",
+          motivation: parsed.data.motivo,
+          checklist: parsed.data.checklist,
+          causales: parsed.data.causales,
+        },
+      });
+      revalidatePath("/evaluacion");
+      revalidatePath(`/evaluacion/${candidateId}`);
+      return { ok: true, votoComite: true };
+    }
     await llamarApiAccion(`/internal/evaluations/candidate/${candidateId}/eligibility`, {
       method: "POST",
       body: {
@@ -196,6 +240,31 @@ export async function declararInelegible(
     return {
       ok: false,
       error: error instanceof ErrorApi ? error.message : "No se pudo registrar la inelegibilidad",
+    };
+  }
+}
+
+/** Recusación en comité: el evaluador se aparta del expediente con motivo. */
+export async function recusarEnComite(
+  candidateId: string,
+  recusalReason: string,
+): Promise<ResultadoElegibilidadAccion> {
+  const motivo = recusalReason.trim();
+  if (motivo.length < 10) {
+    return { ok: false, error: "Indique el motivo de la recusación (mínimo 10 caracteres)" };
+  }
+  try {
+    await llamarApiAccion(`/internal/committee/rounds/${candidateId}/eligibility-vote`, {
+      method: "POST",
+      body: { vote: "RECUSADO", recusalReason: motivo },
+    });
+    revalidatePath("/evaluacion");
+    revalidatePath(`/evaluacion/${candidateId}`);
+    return { ok: true, votoComite: true };
+  } catch (error) {
+    return {
+      ok: false,
+      error: error instanceof ErrorApi ? error.message : "No se pudo registrar la recusación",
     };
   }
 }

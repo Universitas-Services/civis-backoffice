@@ -20,7 +20,10 @@ interface Respuesta {
 export default async function Objeciones() {
   const usuario = await exigirRol("SUPER_ADMIN", "ADMIN", "EVALUATOR");
   const puedeLapso = usuario.roles.some((rol) => rol === "SUPER_ADMIN" || rol === "ADMIN");
-  const puedeAjustar = usuario.roles.some((r) => r === "SUPER_ADMIN" || r === "EVALUATOR");
+  // ADMIN abre la ronda de objeción; EVALUATOR/SUPER_ADMIN puntúan o votan inelegible.
+  const puedeAjustar = usuario.roles.some(
+    (r) => r === "SUPER_ADMIN" || r === "ADMIN" || r === "EVALUATOR",
+  );
 
   let datos: Respuesta;
   try {

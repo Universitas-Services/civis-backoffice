@@ -1,7 +1,8 @@
 "use client";
 
-import { useActionState, useEffect } from "react";
+import { useActionState, useEffect, useState } from "react";
 import { useFormStatus } from "react-dom";
+import { Eye, EyeOff } from "lucide-react";
 import { iniciarSesion, type EstadoLogin } from "@/app/acciones-auth";
 import { reiniciarSidebar } from "@/lib/sidebar-panel";
 
@@ -24,6 +25,7 @@ function Boton() {
 
 export function FormularioLogin() {
   const [estado, accion] = useActionState<EstadoLogin, FormData>(iniciarSesion, {});
+  const [verContrasena, setVerContrasena] = useState(false);
 
   useEffect(() => {
     reiniciarSidebar();
@@ -68,16 +70,33 @@ export function FormularioLogin() {
         <label htmlFor="password" className="block text-xs font-medium text-toga-600">
           Contraseña
         </label>
-        <input
-          id="password"
-          name="password"
-          type="password"
-          autoComplete="current-password"
-          required
-          aria-invalid={Boolean(estado.campos?.password)}
-          aria-describedby={estado.campos?.password ? "password-error" : undefined}
-          className={`${claseCampo}${estado.campos?.password ? " campo-con-error" : ""}`}
-        />
+        <div className="relative mt-1">
+          <input
+            id="password"
+            name="password"
+            type={verContrasena ? "text" : "password"}
+            autoComplete="current-password"
+            required
+            aria-invalid={Boolean(estado.campos?.password)}
+            aria-describedby={estado.campos?.password ? "password-error" : undefined}
+            className={`w-full rounded-md border border-toga-300 bg-white py-2.5 pr-11 pl-3 text-sm text-toga-900 transition-colors placeholder:text-toga-400 focus:border-balanza-600 focus:ring-2 focus:ring-balanza-600/20${
+              estado.campos?.password ? " campo-con-error" : ""
+            }`}
+          />
+          <button
+            type="button"
+            onClick={() => setVerContrasena((v) => !v)}
+            aria-label={verContrasena ? "Ocultar contraseña" : "Mostrar contraseña"}
+            aria-pressed={verContrasena}
+            className="absolute inset-y-0 right-0 inline-flex w-11 items-center justify-center rounded-r-md text-toga-500 transition-colors hover:text-toga-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-balanza-600"
+          >
+            {verContrasena ? (
+              <EyeOff className="h-4 w-4" aria-hidden="true" />
+            ) : (
+              <Eye className="h-4 w-4" aria-hidden="true" />
+            )}
+          </button>
+        </div>
         {estado.campos?.password && (
           <p id="password-error" role="alert" className="mensaje-error-campo">
             {estado.campos.password}

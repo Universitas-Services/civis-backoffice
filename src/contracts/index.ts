@@ -496,9 +496,97 @@ export interface UsuarioDirectorio {
   readonly email: string;
   readonly fullName: string;
   readonly status: "ACTIVE" | "SUSPENDED";
+  /** Participa en rondas de comité (tope configurable en portal). */
+  readonly committeeActive: boolean;
   readonly mustChangePassword: boolean;
   readonly lastLoginAt: string | null;
   readonly roles: readonly Role[];
+}
+
+export type EvaluationMode = "INDIVIDUAL" | "COMMITTEE";
+
+export interface AjustesPortal {
+  readonly objectionsOpen: boolean;
+  readonly evaluationMode: EvaluationMode;
+  readonly maxActiveEvaluators: number;
+  readonly quorumThreshold: number;
+  readonly roundDeadlineDays: number;
+}
+
+export type EvaluationRoundKind = "ELIGIBILITY" | "SCORING" | "OBJECTION";
+
+export type RoundParticipantAction =
+  | "PENDING"
+  | "SCORED"
+  | "ABSTAINED"
+  | "NO_SHOW"
+  | "RECUSED"
+  | "VOTED_INELIGIBLE";
+
+export interface ParticipanteRondaComite {
+  readonly id: string;
+  readonly evaluatorId: string;
+  readonly action: RoundParticipantAction;
+  readonly actedAt: string | null;
+  readonly evaluationId: string | null;
+  readonly evaluator: { readonly fullName: string };
+}
+
+export type ReopenCommitteeReason = "TIE" | "DEADLINE";
+
+export interface TallyRondaElegibilidad {
+  readonly actuaciones: number;
+  readonly elegibles: number;
+  readonly inelegibles: number;
+  readonly recusados: number;
+  readonly pending: number;
+  readonly quorumMet: boolean;
+  readonly quorumThreshold: number;
+}
+
+export interface RondaComiteAbierta {
+  readonly id: string;
+  readonly candidateId: string;
+  readonly kind: EvaluationRoundKind;
+  readonly status: "OPEN" | "CLOSED" | "ESCALATED";
+  readonly quorumThreshold: number;
+  readonly deadlineAt: string | null;
+  readonly participants: readonly ParticipanteRondaComite[];
+  readonly closedAt?: string | null;
+  readonly result?: unknown;
+  /** Solo SUPER_ADMIN en rondas de elegibilidad. */
+  readonly tally?: TallyRondaElegibilidad;
+}
+
+/** Ronda ELIGIBILITY ESCALATED pendiente de resolución administrativa. */
+export interface RondaEscaladaLista {
+  readonly id: string;
+  readonly candidateId: string;
+  readonly kind: EvaluationRoundKind;
+  readonly status: "ESCALATED";
+  readonly quorumThreshold: number;
+  readonly deadlineAt: string | null;
+  readonly closedAt: string | null;
+  readonly result: unknown;
+  readonly participants: readonly {
+    readonly id: string;
+    readonly evaluatorId: string;
+    readonly action: RoundParticipantAction;
+    readonly actedAt: string | null;
+    readonly evaluator: { readonly fullName: string };
+  }[];
+  readonly candidate: {
+    readonly id: string;
+    readonly firstName: string;
+    readonly lastName: string;
+    readonly chamber: Chamber;
+    readonly workflowStatus: WorkflowStatus;
+    readonly receivedAt: string;
+    readonly submissions: readonly {
+      readonly fileNumber: string;
+      readonly _count: { readonly documents: number };
+    }[];
+  };
 }
 
 export interface EventoAuditoria {
