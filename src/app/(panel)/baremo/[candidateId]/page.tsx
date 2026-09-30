@@ -133,7 +133,7 @@ export default async function BaremoDetalle({
       }
     } else {
       // Ronda cerrada / consulta ADMIN: consolidada o APPROVED (solo lectura).
-      evaluacion = aprobada;
+      evaluacion = aprobada ?? null;
     }
   } else {
     evaluacion = miPropia ?? enviada ?? aprobada ?? null;
