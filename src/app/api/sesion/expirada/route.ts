@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { COOKIE_RECIEN_RENOVADA, COOKIE_SESION, origenPanel } from "@/lib/config";
-import { OPCIONES_COOKIE } from "@/lib/sesion";
+import { origenPanel } from "@/lib/config";
+import { limpiarCookiesSesion } from "@/lib/sesion";
 
 /**
  * Cierre limpio tras un 401 persistente (ya se intentó renovar).
@@ -22,22 +22,6 @@ function basePublica(request: Request): string {
 export async function GET(request: Request): Promise<NextResponse> {
   const base = basePublica(request);
   const salida = NextResponse.redirect(new URL("/login?sesion=expirada", base));
-
-  // Borrar marca anti-bucle y sesión del panel.
-  salida.cookies.set(COOKIE_RECIEN_RENOVADA, "", {
-    httpOnly: true,
-    secure: OPCIONES_COOKIE.secure,
-    sameSite: OPCIONES_COOKIE.sameSite,
-    path: "/",
-    maxAge: 0,
-  });
-  salida.cookies.set(COOKIE_SESION, "", {
-    httpOnly: true,
-    secure: OPCIONES_COOKIE.secure,
-    sameSite: OPCIONES_COOKIE.sameSite,
-    path: "/",
-    maxAge: 0,
-  });
-
+  limpiarCookiesSesion(salida);
   return salida;
 }

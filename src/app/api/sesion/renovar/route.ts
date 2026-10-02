@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { COOKIE_RECIEN_RENOVADA, COOKIE_SESION, origenPanel } from "@/lib/config";
 import { renovarSesionTras401 } from "@/lib/auth-refresh";
-import { cerrarSesion, cifrarSesion, leerSesion, OPCIONES_COOKIE } from "@/lib/sesion";
+import { cifrarSesion, leerSesion, limpiarCookiesSesion, OPCIONES_COOKIE } from "@/lib/sesion";
 
 /**
  * Renovación del token de acceso.
@@ -34,14 +34,16 @@ export async function GET(request: Request): Promise<NextResponse> {
 
   const sesion = await leerSesion();
   if (!sesion?.refreshCookie) {
-    await cerrarSesion();
-    return NextResponse.redirect(new URL("/login", base));
+    const salida = NextResponse.redirect(new URL("/login", base));
+    limpiarCookiesSesion(salida);
+    return salida;
   }
 
   const tokens = await renovarSesionTras401(sesion.accessToken, sesion.refreshCookie);
   if (!tokens) {
-    await cerrarSesion();
-    return NextResponse.redirect(new URL("/login?sesion=expirada", base));
+    const salida = NextResponse.redirect(new URL("/login?sesion=expirada", base));
+    limpiarCookiesSesion(salida);
+    return salida;
   }
 
   const cookie = await cifrarSesion({

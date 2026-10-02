@@ -146,7 +146,7 @@ export function PantallaAplicarBaremo({
           <VistaDocumentosFormulario documentos={documentos} anclarVisor={false} ampliar />
         </div>
         <aside aria-label="Baremo de esta evaluación" className="space-y-4">
-          {panelComite != null ? (
+          {panelComite !== null && panelComite !== undefined ? (
             <Fragment key="panel-comite">{panelComite}</Fragment>
           ) : null}
           {baremo ? (
@@ -214,12 +214,9 @@ function FormularioBaremo({
   const hayError = criterios.some((criterio) => {
     const marcas = seleccion[criterio.id] ?? {};
     const elegidos = criterio.rangos.filter((r) => marcas[r.id] !== undefined);
-    if (
-      elegidos.some((r) => !puntajeValido(marcas[r.id]?.puntaje ?? "", r.minPoints, r.maxPoints))
-    ) {
-      return true;
-    }
-    return sumaCriterio(marcas, elegidos) > puntosBaremo(criterio.points);
+    return elegidos.some(
+      (r) => !puntajeValido(marcas[r.id]?.puntaje ?? "", r.minPoints, r.maxPoints),
+    );
   });
 
   const lineas = lineasDe(seleccion);
@@ -313,15 +310,24 @@ function FormularioBaremo({
             {criterio.description && (
               <p className="mt-1 text-sm leading-relaxed text-toga-600">{criterio.description}</p>
             )}
-            <p
-              className={`mt-2 text-sm ${sumaExcede ? "font-medium text-red-700" : "text-toga-600"}`}
-            >
-              Suma de este criterio: <span className="cifra">{suma}</span> /{" "}
-              <span className="cifra">{tope}</span>
+            <p className="mt-2 text-sm text-toga-600">
+              Suma de rangos: <span className="cifra">{suma}</span>
+              {sumaExcede ? (
+                <>
+                  {" "}
+                  → cuenta <span className="cifra font-medium text-toga-900">{tope}</span> (tope del
+                  criterio)
+                </>
+              ) : (
+                <>
+                  {" "}
+                  / <span className="cifra">{tope}</span>
+                </>
+              )}
             </p>
             {sumaExcede && (
-              <p className="mensaje-error-campo">
-                La suma de los puntajes no puede superar los puntos del criterio.
+              <p className="mt-1 text-xs text-toga-500">
+                La suma supera el criterio: al guardar aportará {tope} pts al total.
               </p>
             )}
 
