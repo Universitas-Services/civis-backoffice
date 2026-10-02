@@ -35,13 +35,13 @@ export async function exigirRol(...roles: readonly Role[]): Promise<Sesion> {
  * refresh tampoco vale, ese handler manda al login.
  *
  * Si ya renovamos hace un instante (`cp_bo_recien_renovada`) y la API sigue
- * en 401, vamos a login: evita ERR_TOO_MANY_REDIRECTS.
+ * en 401, NO borramos cookies aquí (ilégal en RSC → React #441): redirigimos
+ * a /api/sesion/expirada, que limpia marca + sesión y manda al login.
  */
 export async function renovarYVolver(ruta: string): Promise<never> {
   const store = await cookies();
   if (store.get(COOKIE_RECIEN_RENOVADA)?.value === "1") {
-    store.delete(COOKIE_RECIEN_RENOVADA);
-    redirect("/login?sesion=expirada");
+    redirect("/api/sesion/expirada");
   }
   redirect(`/api/sesion/renovar?volver=${encodeURIComponent(ruta)}`);
 }

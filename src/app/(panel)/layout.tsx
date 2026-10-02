@@ -8,9 +8,9 @@ import { usuarioActual } from "@/lib/sesion";
 export default async function PanelLayout({ children }: { readonly children: React.ReactNode }) {
   // Renovar en Route Handler: el layout no puede escribir cookies.
   if (await accessNecesitaRenovacion()) {
-    const pathname = (await headers()).get("x-pathname") ?? "/dashboard";
+    const pathname = (await headers()).get("x-pathname") ?? "/inicio";
     const volver =
-      pathname.startsWith("/") && !pathname.startsWith("//") ? pathname : "/dashboard";
+      pathname.startsWith("/") && !pathname.startsWith("//") ? pathname : "/inicio";
     redirect(`/api/sesion/renovar?volver=${encodeURIComponent(volver)}`);
   }
 

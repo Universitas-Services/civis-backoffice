@@ -29,8 +29,8 @@ function basePublica(request: Request): string {
 export async function GET(request: Request): Promise<NextResponse> {
   const url = new URL(request.url);
   const base = basePublica(request);
-  const crudo = url.searchParams.get("volver") ?? "/dashboard";
-  const volver = crudo.startsWith("/") && !crudo.startsWith("//") ? crudo : "/dashboard";
+  const crudo = url.searchParams.get("volver") ?? "/inicio";
+  const volver = crudo.startsWith("/") && !crudo.startsWith("//") ? crudo : "/inicio";
 
   const sesion = await leerSesion();
   if (!sesion?.refreshCookie) {

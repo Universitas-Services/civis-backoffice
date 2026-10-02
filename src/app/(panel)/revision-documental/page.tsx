@@ -39,8 +39,36 @@ export default async function RevisionDocumental({
     datos = await llamarApi<Respuesta>(`/internal/candidates?${query}`);
   } catch (error) {
     if (error instanceof NoAutorizado) renovarYVolver("/revision-documental");
-    if (error instanceof ErrorApi) throw error;
-    throw error;
+    if (error instanceof ErrorApi) {
+      return (
+        <>
+          <CabeceraPagina
+            titulo="Revisión documental"
+            descripcion="Postulantes enviados a revisión documental. Elija un expediente para ver y revisar sus documentos."
+          />
+          <div className="px-5 py-6 sm:px-8">
+            <EstadoVacio
+              titulo="No se pudo cargar la cola de revisión"
+              detalle={error.message || "La API no respondió correctamente. Intente de nuevo en unos momentos."}
+            />
+          </div>
+        </>
+      );
+    }
+    return (
+      <>
+        <CabeceraPagina
+          titulo="Revisión documental"
+          descripcion="Postulantes enviados a revisión documental. Elija un expediente para ver y revisar sus documentos."
+        />
+        <div className="px-5 py-6 sm:px-8">
+          <EstadoVacio
+            titulo="No se pudo contactar la API"
+            detalle="Compruebe que el backend esté en marcha y que API_INTERNAL_URL sea correcta."
+          />
+        </div>
+      </>
+    );
   }
 
   const postulantes = datos.items.map(postulanteDesdeListado);

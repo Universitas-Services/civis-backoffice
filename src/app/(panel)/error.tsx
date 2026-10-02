@@ -35,7 +35,7 @@ export default function ErrorPanel({
             Reintentar
           </button>
           <Link
-            href="/dashboard"
+            href="/inicio"
             className="rounded-md border border-toga-300 bg-white px-5 py-2.5 text-sm font-semibold text-toga-700 hover:bg-toga-100"
           >
             Volver al panel
