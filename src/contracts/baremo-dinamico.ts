@@ -2,8 +2,8 @@ import { z } from "zod";
 
 /**
  * Espejo de civis-api `baremo-dinamico.ts`.
- * Los rangos de un criterio son alternativas: se elige uno, y su máximo
- * no puede superar los puntos del criterio.
+ * En creación: suma de criterios ≤ total del baremo; min≤max por rango.
+ * Un rango puede superar los puntos del criterio; al aplicar se topa el aporte.
  */
 const puntos = z
   .number("Indique el puntaje")
@@ -23,24 +23,12 @@ export const baremoRangoSchema = z
     path: ["minPoints"],
   });
 
-export const baremoCriterioSchema = z
-  .object({
-    name: z.string().trim().min(1, "Indique el nombre del criterio").max(200),
-    description: z.string().trim().max(2000).optional(),
-    points: puntos,
-    rangos: z.array(baremoRangoSchema).default([]),
-  })
-  .superRefine((c, ctx) => {
-    c.rangos.forEach((r, i) => {
-      if (r.maxPoints > c.points) {
-        ctx.addIssue({
-          code: "custom",
-          path: ["rangos", i, "maxPoints"],
-          message: `El máximo del rango (${r.maxPoints}) excede los puntos del criterio (${c.points})`,
-        });
-      }
-    });
-  });
+export const baremoCriterioSchema = z.object({
+  name: z.string().trim().min(1, "Indique el nombre del criterio").max(200),
+  description: z.string().trim().max(2000).optional(),
+  points: puntos,
+  rangos: z.array(baremoRangoSchema).default([]),
+});
 
 export const baremoSchema = z
   .object({

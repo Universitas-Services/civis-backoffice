@@ -230,8 +230,6 @@ function CriterioEditor({
 }) {
   const base = `criterios.${indice}`;
   const aviso = (campo: string) => errores.find((e) => e.field === campo)?.message;
-  const puntosTexto = criterio.points.trim();
-  const points = Number(puntosTexto);
 
   return (
     <section className="rounded-lg border border-toga-200 bg-white px-5 py-4">
@@ -324,9 +322,7 @@ function CriterioEditor({
           const min = Number(minTexto);
           const max = Number(maxTexto);
           const minMayor = minTexto !== "" && maxTexto !== "" && min > max;
-          const topeExcede =
-            maxTexto !== "" && puntosTexto !== "" && Number.isFinite(points) && max > points;
-          const maxInvalido = minMayor || topeExcede;
+          const maxInvalido = minMayor;
           const ruta = `${base}.rangos.${rIndice}`;
           return (
             <li key={rango.key} className="rounded-md border border-toga-100 bg-toga-50 px-3 py-3">
@@ -429,11 +425,6 @@ function CriterioEditor({
               />
               {minMayor && (
                 <p className="mensaje-error-campo">El mínimo no puede ser mayor que el máximo.</p>
-              )}
-              {topeExcede && (
-                <p className="mensaje-error-campo">
-                  El máximo no puede superar los puntos del criterio.
-                </p>
               )}
               {aviso(`${ruta}.minPoints`) && (
                 <p className="mensaje-error-campo">{aviso(`${ruta}.minPoints`)}</p>

@@ -1,6 +1,6 @@
 import "server-only";
 
-import { API_INTERNA, COOKIE_REFRESH_API, origenPanel } from "./config";
+import { API_INTERNA, COOKIE_REFRESH_API } from "./config";
 import { accessExpiresAtDesde } from "./ttl-access";
 import { leerSesion } from "./sesion";
 
@@ -12,9 +12,10 @@ import { leerSesion } from "./sesion";
  * reenvía solo a /auth/*. Un refresh es rotativo: reusar el valor anterior
  * revoca toda la familia (REUSE_DETECTED).
  *
- * Origin: el OriginGuard de la API exige el origen del panel en CORS_ORIGINS.
- * Se envía `BACKOFFICE_PUBLIC_URL` (origenPanel), nunca un localhost inventado
- * en producción.
+ * No enviamos `Origin`: el BFF es server-to-server y el browser nunca tiene
+ * `cp_refresh`, así que no hay CSRF por cookie hacia la API. El OriginGuard
+ * permite peticiones sin Origin/Referer. Así el refresh no depende de que
+ * BACKOFFICE_PUBLIC_URL coincida con CORS_ORIGINS (causa frecuente de 403 en prod).
  */
 
 export type TokensRenovados = {
@@ -49,16 +50,12 @@ export function extraerRefreshCookie(respuesta: Response): string | null {
 }
 
 /**
- * Cabeceras para login/refresh/logout hacia la API.
+ * Cabeceras para login/refresh/logout hacia la API (server-to-server).
  *
- * Origin = URL pública del panel (debe coincidir con CORS_ORIGINS).
- * Cookie = refresh solo cuando aplica.
+ * Solo Cookie de refresh cuando aplica. Sin Origin: ver comentario del módulo.
  */
 export function cabecerasAuthCookie(refreshCookie?: string | null): Record<string, string> {
-  return {
-    Origin: origenPanel(),
-    ...(refreshCookie ? { Cookie: refreshCookie } : {}),
-  };
+  return refreshCookie ? { Cookie: refreshCookie } : {};
 }
 
 let renovacionEnCurso: Promise<TokensRenovados | null> | null = null;
@@ -206,22 +203,35 @@ async function ejecutarRefresh(refreshCookie: string): Promise<TokensRenovados |
     },
     cache: "no-store",
     signal: AbortSignal.timeout(20_000),
-  }).catch(() => null);
+  }).catch((error: unknown) => {
+    const detalle = error instanceof Error ? error.message : "error de red";
+    console.error(`[auth-refresh] POST /auth/refresh falló: ${detalle}`);
+    return null;
+  });
 
   if (!respuesta) return null;
 
   // 200 + { accessToken: null } = sin sesión; 401 = inválido / reuso.
-  if (respuesta.status === 401 || !respuesta.ok) return null;
+  if (respuesta.status === 401 || !respuesta.ok) {
+    console.error(
+      `[auth-refresh] POST /auth/refresh status=${respuesta.status} (sin tokens en log)`,
+    );
+    return null;
+  }
 
   const datos = (await respuesta.json().catch(() => null)) as {
     accessToken?: string | null;
     expiresIn?: string;
   } | null;
 
-  if (!datos?.accessToken) return null;
+  if (!datos?.accessToken) {
+    console.error("[auth-refresh] POST /auth/refresh sin accessToken en cuerpo");
+    return null;
+  }
 
   const nuevaRefresh = extraerRefreshCookie(respuesta);
   if (!nuevaRefresh) {
+    console.error("[auth-refresh] POST /auth/refresh sin Set-Cookie de refresh");
     return null;
   }
 

@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
+import type { NextResponse } from "next/server";
 
 vi.mock("@/lib/config", () => ({
   COOKIE_RECIEN_RENOVADA: "cp_bo_recien_renovada",
@@ -10,6 +11,11 @@ vi.mock("@/lib/sesion", () => ({
   OPCIONES_COOKIE: {
     secure: false,
     sameSite: "lax" as const,
+  },
+  limpiarCookiesSesion: (respuesta: NextResponse) => {
+    const opts = { httpOnly: true, secure: false, sameSite: "lax" as const, path: "/", maxAge: 0 };
+    respuesta.cookies.set("cp_bo_recien_renovada", "", opts);
+    respuesta.cookies.set("cp_bo_session", "", opts);
   },
 }));
 

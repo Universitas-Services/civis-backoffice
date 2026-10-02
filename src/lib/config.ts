@@ -15,9 +15,9 @@ export const COOKIE_RECIEN_RENOVADA = "cp_bo_recien_renovada";
 export const COOKIE_REFRESH_API = process.env.API_REFRESH_COOKIE_NAME ?? "cp_refresh";
 
 /**
- * Origen público del panel (redirects, fallback).
+ * Origen público del panel (redirects de /api/sesion/*).
  * En Netlify: definir BACKOFFICE_PUBLIC_URL=https://civis-backoffice.netlify.app
- * (sin barra final) y el mismo valor en CORS_ORIGINS de la API.
+ * (sin barra final). Ya no se usa como Origin hacia la API.
  */
 export function origenPanel(): string {
   const configurada = process.env.BACKOFFICE_PUBLIC_URL?.replace(/\/$/, "");

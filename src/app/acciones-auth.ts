@@ -68,12 +68,12 @@ export async function iniciarSesion(
   if (respuesta.status === 403) {
     const data = (await respuesta.json().catch(() => null)) as { message?: string } | null;
     const mensaje = data?.message?.trim();
-    // OriginGuard o cuenta bloqueada por intentos — no confundir con clave mala.
+    // Cuenta bloqueada u OriginGuard si algún cliente browser pegó a /auth.
     return {
       error:
         mensaje && mensaje.length > 0
           ? mensaje
-          : "Acceso denegado. Compruebe que CORS_ORIGINS tenga exactamente https://civis-backoffice.netlify.app (sin barra final) y que BACKOFFICE_PUBLIC_URL esté definida en Netlify.",
+          : "Acceso denegado. Si el problema continúa, revise en la API el estado de la cuenta o los logs de /auth/login.",
     };
   }
   if (!respuesta.ok) {

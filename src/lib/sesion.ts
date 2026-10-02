@@ -1,9 +1,10 @@
 import "server-only";
 import { cookies } from "next/headers";
+import type { NextResponse } from "next/server";
 import { EncryptJWT, jwtDecrypt } from "jose";
 import { createHash } from "node:crypto";
 import type { Role, Sesion } from "@/contracts";
-import { COOKIE_SESION } from "./config";
+import { COOKIE_RECIEN_RENOVADA, COOKIE_SESION } from "./config";
 
 /**
  * Sesión del panel interno.
@@ -98,6 +99,28 @@ export async function usuarioActual(): Promise<Sesion | null> {
 export async function cerrarSesion(): Promise<void> {
   const store = await cookies();
   store.delete(COOKIE_SESION);
+}
+
+/**
+ * Limpia sesión y marca anti-bucle sobre un NextResponse (p. ej. redirect).
+ * Preferible a `cerrarSesion()` cuando la respuesta es un redirect propio:
+ * `cookies().delete` no siempre viaja en esa respuesta.
+ */
+export function limpiarCookiesSesion(respuesta: NextResponse): void {
+  respuesta.cookies.set(COOKIE_RECIEN_RENOVADA, "", {
+    httpOnly: true,
+    secure: OPCIONES_COOKIE.secure,
+    sameSite: OPCIONES_COOKIE.sameSite,
+    path: "/",
+    maxAge: 0,
+  });
+  respuesta.cookies.set(COOKIE_SESION, "", {
+    httpOnly: true,
+    secure: OPCIONES_COOKIE.secure,
+    sameSite: OPCIONES_COOKIE.sameSite,
+    path: "/",
+    maxAge: 0,
+  });
 }
 
 /** ¿El usuario tiene alguno de estos roles? La autorización real es de la API. */
