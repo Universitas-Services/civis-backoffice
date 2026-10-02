@@ -19,10 +19,7 @@ import { PanelTallyComite } from "@/components/panel-tally-comite";
 import { useToast } from "@/components/toast-provider";
 import { VistaDocumentosFormulario } from "@/components/vista-documentos-formulario";
 import { documentosVigentes } from "@/lib/documentos-vigentes";
-import {
-  informeIaElegibilidadYaUsado,
-  marcarInformeIaElegibilidadUsado,
-} from "@/lib/ia-cupo-sesion";
+import { esperarRetrasoInformeIa } from "@/lib/retraso-informe-ia";
 import { marcarSidebarDocumentoAbierto } from "@/lib/sidebar-panel";
 import {
   BLOQUES_ELEGIBILIDAD,
@@ -62,41 +59,27 @@ export function PantallaElegibilidad({
   const router = useRouter();
   const toast = useToast();
   const [pendiente, iniciar] = useTransition();
-  const [generandoIa, setGenerandoIa] = useState(false);
-  const [cargandoInforme, setCargandoInforme] = useState(true);
+  const [preparandoIa, setPreparandoIa] = useState(false);
+  const [informeGuardado, setInformeGuardado] = useState("");
+  const [informeVisible, setInformeVisible] = useState("");
+  const [revelado, setRevelado] = useState(false);
   const docs = documentosVigentes(expediente.submissions[0]?.documents ?? []);
   const fileNumber = expediente.submissions[0]?.fileNumber ?? "—";
   const salaLabel = SALA_ETIQUETA[expediente.chamber] ?? String(expediente.chamber);
 
-  const [informeIa, setInformeIa] = useState("");
-  const [informeIaUsado, setInformeIaUsado] = useState(false);
-
+  // Indicador del botón: GET silencioso (sin retraso ni toast de error).
   useEffect(() => {
-    setInformeIaUsado(informeIaElegibilidadYaUsado(expediente.id));
-  }, [expediente.id]);
-
-  // Informe IA: la API solo admite SUPER_ADMIN / EVALUATOR (no ADMIN).
-  useEffect(() => {
-    if (!puedeVotarElegibilidad) {
-      setCargandoInforme(false);
-      return;
-    }
+    if (!puedeVotarElegibilidad) return;
     let cancelado = false;
-    setCargandoInforme(true);
     void (async () => {
       const r = await leerInformeIaElegibilidad(expediente.id);
-      if (cancelado) return;
-      setCargandoInforme(false);
-      if (!r.ok) {
-        toast.error(r.error ?? "No se pudo cargar el Informe IA.");
-        return;
-      }
-      setInformeIa(r.texto);
+      if (cancelado || !r.ok) return;
+      if (r.texto.trim()) setInformeGuardado(r.texto);
     })();
     return () => {
       cancelado = true;
     };
-  }, [expediente.id, toast, puedeVotarElegibilidad]);
+  }, [expediente.id, puedeVotarElegibilidad]);
 
   // Comprimir sidebar apenas se entra al expediente.
   useEffect(() => {
@@ -142,32 +125,40 @@ export function PantallaElegibilidad({
     });
   }
 
-  function onCambiarInformeIa(texto: string) {
-    setInformeIa(texto);
-  }
+  /**
+   * Al abrir o al pulsar Generar: GET; si hay texto → retraso simulado;
+   * si vacío → POST una vez (409 → re-GET). No se regenera ni edita.
+   */
+  function cargarOGenerarInformeIa() {
+    if (preparandoIa) return;
+    if (revelado && informeVisible.trim()) return;
 
-  function onBorrarInformeIa() {
-    setInformeIa("");
-  }
-
-  function onGenerarInformeIa() {
-    if (generandoIa) return;
-    if (informeIaElegibilidadYaUsado(expediente.id) || informeIaUsado) {
-      toast.error("La generación con IA ya se usó en esta sesión para este expediente.");
-      return;
-    }
-    setGenerandoIa(true);
+    setPreparandoIa(true);
     void (async () => {
-      const r = await generarInformeIaElegibilidad(expediente.id);
-      setGenerandoIa(false);
-      if (!r.ok || !r.texto) {
-        toast.error(r.error ?? "No se pudo generar el Informe IA.");
-        return;
+      try {
+        const leido = await leerInformeIaElegibilidad(expediente.id);
+        let texto = leido.ok ? leido.texto.trim() : "";
+
+        if (!texto) {
+          const gen = await generarInformeIaElegibilidad(expediente.id);
+          if (!gen.ok || !gen.texto?.trim()) {
+            if (!leido.ok) {
+              toast.error(leido.error ?? "No se pudo cargar el Informe IA.");
+            } else {
+              toast.error(gen.error ?? "No se pudo generar el Informe IA.");
+            }
+            return;
+          }
+          texto = gen.texto.trim();
+        }
+
+        await esperarRetrasoInformeIa();
+        setInformeGuardado(texto);
+        setInformeVisible(texto);
+        setRevelado(true);
+      } finally {
+        setPreparandoIa(false);
       }
-      marcarInformeIaElegibilidadUsado(expediente.id);
-      setInformeIaUsado(true);
-      setInformeIa(r.texto);
-      toast.exito("Informe IA generado. Puede editarlo antes de dictaminar.");
     })();
   }
 
@@ -612,14 +603,15 @@ export function PantallaElegibilidad({
       {puedeVotarElegibilidad ? (
         <InformeIaSheet
           nombrePostulante={`${expediente.firstName} ${expediente.lastName}`}
-          informe={informeIa}
-          cargando={cargandoInforme}
-          generando={generandoIa}
-          onGenerar={onGenerarInformeIa}
-          onCambiar={onCambiarInformeIa}
-          onBorrar={onBorrarInformeIa}
-          cupoSesion
-          generacionAgotada={informeIaUsado}
+          informe={informeVisible}
+          generando={preparandoIa}
+          disponible={informeGuardado.trim().length > 0 || informeVisible.trim().length > 0}
+          soloLectura
+          descripcion={`Resumen del expediente de ${expediente.firstName} ${expediente.lastName}. Es un apoyo: el dictamen lo decide usted. El texto es el mismo para todo el comité y no se puede editar.`}
+          onAbrir={cargarOGenerarInformeIa}
+          onGenerar={cargarOGenerarInformeIa}
+          onCambiar={() => undefined}
+          onBorrar={() => undefined}
         />
       ) : null}
     </div>

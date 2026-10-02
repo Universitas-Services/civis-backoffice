@@ -9,6 +9,7 @@ import {
 } from "@/lib/auth-refresh";
 import { rutaInicio } from "@/lib/secciones-nav";
 import { cerrarSesion, guardarSesion, leerSesion } from "@/lib/sesion";
+import { accessExpiresAtDesde } from "@/lib/ttl-access";
 
 export interface EstadoLogin {
   readonly error?: string;
@@ -82,6 +83,7 @@ export async function iniciarSesion(
 
   const datos = (await respuesta.json()) as {
     accessToken: string;
+    expiresIn?: string;
     user: { id: string; email: string; fullName: string; roles: string[] };
     mustChangePassword: boolean;
   };
@@ -103,6 +105,7 @@ export async function iniciarSesion(
     },
     accessToken: datos.accessToken,
     refreshCookie,
+    accessExpiresAt: accessExpiresAtDesde(datos.expiresIn),
   });
 
   redirect(datos.mustChangePassword ? "/cambiar-contrasena" : rutaInicio(datos.user.roles));

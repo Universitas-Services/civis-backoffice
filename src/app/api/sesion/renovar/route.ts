@@ -48,6 +48,7 @@ export async function GET(request: Request): Promise<NextResponse> {
     usuario: sesion.usuario,
     accessToken: tokens.accessToken,
     refreshCookie: tokens.refreshCookie,
+    accessExpiresAt: tokens.accessExpiresAt,
   });
 
   const salida = NextResponse.redirect(new URL(volver, base));

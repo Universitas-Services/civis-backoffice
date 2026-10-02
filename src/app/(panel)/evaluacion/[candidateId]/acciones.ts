@@ -302,7 +302,7 @@ export async function leerInformeIaElegibilidad(
 }
 
 /**
- * Pide un informe nuevo. La API conserva los anteriores y este pasa a ser el más reciente.
+ * Pide el informe (one-shot en BD). Si ya existe (409), relee el guardado.
  * Puede tardar: el servicio de IA tiene hasta tres minutos.
  */
 export async function generarInformeIaElegibilidad(
@@ -322,6 +322,13 @@ export async function generarInformeIaElegibilidad(
     }
     return { ok: true, texto };
   } catch (error) {
+    if (error instanceof ErrorApi && error.status === 409) {
+      const leido = await leerInformeIaElegibilidad(candidateId);
+      if (leido.ok && leido.texto.trim()) {
+        return { ok: true, texto: leido.texto };
+      }
+      return { ok: false, error: "Ya existe un informe de elegibilidad para este postulante." };
+    }
     return {
       ok: false,
       error:
@@ -363,7 +370,7 @@ export async function leerFichaDescalificacion(
 }
 
 /**
- * Pide una ficha nueva. Regenerar crea otra fila; el GET siguiente trae la última.
+ * Pide la ficha (one-shot en BD). Si ya existe (409), relee la guardada.
  * Puede tardar: el servicio de IA tiene hasta tres minutos.
  */
 export async function generarFichaDescalificacion(
@@ -383,6 +390,13 @@ export async function generarFichaDescalificacion(
     }
     return { ok: true, informe };
   } catch (error) {
+    if (error instanceof ErrorApi && error.status === 409) {
+      const leido = await leerFichaDescalificacion(candidateId);
+      if (leido.ok && leido.informe?.trim()) {
+        return { ok: true, informe: leido.informe };
+      }
+      return { ok: false, error: "Ya existe una ficha de descalificación para este postulante." };
+    }
     return {
       ok: false,
       error: error instanceof ErrorApi ? error.message : "No se pudo generar la ficha.",

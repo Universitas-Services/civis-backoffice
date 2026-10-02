@@ -1,6 +1,7 @@
 import "server-only";
 
 import { API_INTERNA, COOKIE_REFRESH_API, origenPanel } from "./config";
+import { accessExpiresAtDesde } from "./ttl-access";
 import { leerSesion } from "./sesion";
 
 /**
@@ -19,6 +20,7 @@ import { leerSesion } from "./sesion";
 export type TokensRenovados = {
   readonly accessToken: string;
   readonly refreshCookie: string;
+  readonly accessExpiresAt: number;
 };
 
 /** Lista Set-Cookie de una Response (Node/undici). */
@@ -145,6 +147,10 @@ export async function renovarSesionTras401(
     return {
       accessToken: actual.accessToken,
       refreshCookie: actual.refreshCookie,
+      accessExpiresAt:
+        typeof actual.accessExpiresAt === "number"
+          ? actual.accessExpiresAt
+          : accessExpiresAtDesde("15m"),
     };
   }
 
@@ -165,10 +171,30 @@ export async function renovarSesionTras401(
     return {
       accessToken: otraVez.accessToken,
       refreshCookie: otraVez.refreshCookie,
+      accessExpiresAt:
+        typeof otraVez.accessExpiresAt === "number"
+          ? otraVez.accessExpiresAt
+          : accessExpiresAtDesde("15m"),
     };
   }
 
   return null;
+}
+
+/**
+ * ¿Hay que renovar el access antes de seguir en el panel?
+ *
+ * No escribe cookies: un Server Component (layout) no puede. Si es true, el
+ * layout redirige a `/api/sesion/renovar` (Route Handler).
+ */
+export async function accessNecesitaRenovacion(): Promise<boolean> {
+  const sesion = await leerSesion();
+  if (!sesion?.refreshCookie || !sesion.accessToken) return false;
+
+  const expira = sesion.accessExpiresAt;
+  if (typeof expira === "number" && Date.now() < expira) return false;
+
+  return true;
 }
 
 async function ejecutarRefresh(refreshCookie: string): Promise<TokensRenovados | null> {
@@ -189,6 +215,7 @@ async function ejecutarRefresh(refreshCookie: string): Promise<TokensRenovados |
 
   const datos = (await respuesta.json().catch(() => null)) as {
     accessToken?: string | null;
+    expiresIn?: string;
   } | null;
 
   if (!datos?.accessToken) return null;
@@ -198,5 +225,9 @@ async function ejecutarRefresh(refreshCookie: string): Promise<TokensRenovados |
     return null;
   }
 
-  return { accessToken: datos.accessToken, refreshCookie: nuevaRefresh };
+  return {
+    accessToken: datos.accessToken,
+    refreshCookie: nuevaRefresh,
+    accessExpiresAt: accessExpiresAtDesde(datos.expiresIn),
+  };
 }

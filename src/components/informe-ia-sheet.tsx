@@ -15,8 +15,8 @@ import {
 
 /**
  * Informe IA del postulante en una hoja lateral amplia, abierta desde un botón
- * flotante. El texto se lee como plano y se puede corregir en esta página.
- * Pedirlo otra vez trae el informe más reciente que guardó la API.
+ * flotante. En elegibilidad es solo lectura (texto guardado en BD). En tachas
+ * sigue permitiendo editar/borrar en sesión.
  */
 export function InformeIaSheet({
   nombrePostulante,
@@ -26,11 +26,14 @@ export function InformeIaSheet({
   onGenerar,
   onCambiar,
   onBorrar,
+  onAbrir,
   descripcion,
   textoVacio,
   nivel,
   cupoSesion = false,
   generacionAgotada = false,
+  soloLectura = false,
+  disponible,
 }: {
   readonly nombrePostulante: string;
   readonly informe: string;
@@ -39,16 +42,24 @@ export function InformeIaSheet({
   readonly onGenerar: () => void;
   readonly onCambiar: (texto: string) => void;
   readonly onBorrar: () => void;
+  /** Se llama al abrir la hoja (p. ej. cargar/revelar con retraso). */
+  readonly onAbrir?: () => void;
   readonly descripcion?: string;
   readonly textoVacio?: string;
   readonly nivel?: string;
   /** Si es true, la generación exitosa solo puede hacerse una vez en la sesión. */
   readonly cupoSesion?: boolean;
   readonly generacionAgotada?: boolean;
+  /** Sin editar, borrar ni regenerar; solo lectura + copiar. */
+  readonly soloLectura?: boolean;
+  /** Punto en el botón flotante (p. ej. hay informe en BD aún no revelado). */
+  readonly disponible?: boolean;
 }) {
   const [editando, setEditando] = useState(false);
   const [copiado, setCopiado] = useState(false);
   const hayInforme = informe.trim().length > 0;
+  const mostrarDisponible = disponible ?? hayInforme;
+  const puedeEditar = !soloLectura;
 
   async function copiar() {
     try {
@@ -66,7 +77,12 @@ export function InformeIaSheet({
   }
 
   return (
-    <Sheet onOpenChange={(abierto) => !abierto && setEditando(false)}>
+    <Sheet
+      onOpenChange={(abierto) => {
+        if (!abierto) setEditando(false);
+        else onAbrir?.();
+      }}
+    >
       <SheetTrigger asChild>
         <button
           type="button"
@@ -74,7 +90,7 @@ export function InformeIaSheet({
         >
           <span className="relative">
             <Sparkles className="h-4 w-4" aria-hidden="true" />
-            {hayInforme && (
+            {mostrarDisponible && (
               <span
                 className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-white ring-2 ring-balanza-600"
                 aria-hidden="true"
@@ -82,7 +98,7 @@ export function InformeIaSheet({
             )}
           </span>
           Informe IA
-          {hayInforme && <span className="sr-only">(generado)</span>}
+          {mostrarDisponible && <span className="sr-only">(generado)</span>}
         </button>
       </SheetTrigger>
 
@@ -103,7 +119,7 @@ export function InformeIaSheet({
               </SheetTitle>
               <SheetDescription>
                 {descripcion ??
-                  `Resumen del expediente de ${nombrePostulante}. Es un apoyo: el dictamen lo decide usted. Si lo pide otra vez, aquí se muestra el más reciente.`}
+                  `Resumen del expediente de ${nombrePostulante}. Es un apoyo: el dictamen lo decide usted.`}
               </SheetDescription>
             </div>
           </div>
@@ -115,7 +131,7 @@ export function InformeIaSheet({
               Cargando el informe guardado…
             </p>
           ) : generando ? (
-            <CargaIa activo={generando} etiqueta="Generando el informe" />
+            <CargaIa activo={generando} etiqueta="Preparando informe…" />
           ) : !hayInforme && !editando ? (
             <div className="m-auto flex max-w-sm flex-col items-center py-10 text-center">
               <span className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-balanza-50 text-balanza-700 ring-1 ring-balanza-600/15">
@@ -124,7 +140,9 @@ export function InformeIaSheet({
               <h3 className="mt-4 text-base font-semibold text-toga-900">Aún no hay informe</h3>
               <p className="mt-1.5 text-sm leading-relaxed text-toga-500">
                 {textoVacio ??
-                  "La IA revisa los datos y documentos que el revisor ya guardó y redacta un resumen que podrá leer y editar aquí."}
+                  (soloLectura
+                    ? "Si el informe no se generó al enviar a evaluación, puede pedirlo una sola vez. Quedará guardado para todo el comité."
+                    : "La IA revisa los datos y documentos que el revisor ya guardó y redacta un resumen que podrá leer y editar aquí.")}
               </p>
               <button
                 type="button"
@@ -149,21 +167,23 @@ export function InformeIaSheet({
               {generacionAgotada && (
                 <p className="mt-2 text-xs text-toga-500">Generación ya usada en esta sesión.</p>
               )}
-              <button
-                type="button"
-                onClick={() => setEditando(true)}
-                disabled={generando}
-                className="mt-2 inline-flex items-center gap-1.5 rounded-md px-4 py-2 text-sm font-medium text-toga-600 hover:text-toga-900 disabled:opacity-50"
-              >
-                <PencilLine className="h-4 w-4" aria-hidden="true" />
-                Redactar a mano
-              </button>
+              {puedeEditar ? (
+                <button
+                  type="button"
+                  onClick={() => setEditando(true)}
+                  disabled={generando}
+                  className="mt-2 inline-flex items-center gap-1.5 rounded-md px-4 py-2 text-sm font-medium text-toga-600 hover:text-toga-900 disabled:opacity-50"
+                >
+                  <PencilLine className="h-4 w-4" aria-hidden="true" />
+                  Redactar a mano
+                </button>
+              ) : null}
             </div>
           ) : null}
 
           {!cargando && !generando && (hayInforme || editando) && (
             <>
-              {editando ? (
+              {editando && puedeEditar ? (
                 <>
                   <label htmlFor="informe-ia-elegibilidad" className="sr-only">
                     Texto del Informe IA
@@ -190,17 +210,20 @@ export function InformeIaSheet({
           <div className="flex flex-wrap items-center justify-between gap-2 border-t border-toga-100 bg-toga-50/60 px-6 py-3">
             <p className="text-xs text-toga-500">
               {informe.trim().split(/\s+/).filter(Boolean).length} palabras
+              {soloLectura ? " · Solo lectura" : ""}
             </p>
             <div className="flex flex-wrap gap-2">
-              <button
-                type="button"
-                onClick={borrar}
-                disabled={!hayInforme}
-                className="inline-flex items-center gap-1.5 rounded-md border border-toga-300 bg-white px-3 py-1.5 text-sm font-medium text-toga-700 hover:bg-toga-50 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
-                Borrar
-              </button>
+              {puedeEditar ? (
+                <button
+                  type="button"
+                  onClick={borrar}
+                  disabled={!hayInforme}
+                  className="inline-flex items-center gap-1.5 rounded-md border border-toga-300 bg-white px-3 py-1.5 text-sm font-medium text-toga-700 hover:bg-toga-50 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
+                  Borrar
+                </button>
+              ) : null}
               <button
                 type="button"
                 onClick={copiar}
@@ -214,7 +237,7 @@ export function InformeIaSheet({
                 )}
                 {copiado ? "Copiado" : "Copiar"}
               </button>
-              {hayInforme && (
+              {puedeEditar && hayInforme ? (
                 <button
                   type="button"
                   onClick={() => {
@@ -243,19 +266,21 @@ export function InformeIaSheet({
                       ? "Generando…"
                       : "Generar de nuevo"}
                 </button>
-              )}
-              <button
-                type="button"
-                onClick={() => setEditando((v) => !v)}
-                className="inline-flex items-center gap-1.5 rounded-md bg-balanza-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-balanza-700"
-              >
-                {editando ? (
-                  <Check className="h-3.5 w-3.5" aria-hidden="true" />
-                ) : (
-                  <PencilLine className="h-3.5 w-3.5" aria-hidden="true" />
-                )}
-                {editando ? "Listo" : "Editar"}
-              </button>
+              ) : null}
+              {puedeEditar ? (
+                <button
+                  type="button"
+                  onClick={() => setEditando((v) => !v)}
+                  className="inline-flex items-center gap-1.5 rounded-md bg-balanza-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-balanza-700"
+                >
+                  {editando ? (
+                    <Check className="h-3.5 w-3.5" aria-hidden="true" />
+                  ) : (
+                    <PencilLine className="h-3.5 w-3.5" aria-hidden="true" />
+                  )}
+                  {editando ? "Listo" : "Editar"}
+                </button>
+              ) : null}
             </div>
           </div>
         )}
