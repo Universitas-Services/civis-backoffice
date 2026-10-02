@@ -1,9 +1,19 @@
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { BarraLateral } from "@/components/barra-lateral";
 import { ToastProvider } from "@/components/toast-provider";
+import { accessNecesitaRenovacion } from "@/lib/auth-refresh";
 import { usuarioActual } from "@/lib/sesion";
 
 export default async function PanelLayout({ children }: { readonly children: React.ReactNode }) {
+  // Renovar en Route Handler: el layout no puede escribir cookies.
+  if (await accessNecesitaRenovacion()) {
+    const pathname = (await headers()).get("x-pathname") ?? "/dashboard";
+    const volver =
+      pathname.startsWith("/") && !pathname.startsWith("//") ? pathname : "/dashboard";
+    redirect(`/api/sesion/renovar?volver=${encodeURIComponent(volver)}`);
+  }
+
   const usuario = await usuarioActual();
   // El proxy ya filtró por cookie; esto cubre el caso de cookie inválida.
   if (!usuario) redirect("/login");

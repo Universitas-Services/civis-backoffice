@@ -101,6 +101,15 @@ async function ejecutarLlamada<T>(
 
     const tokens = await renovarSesionTras401(token, sesion.refreshCookie);
     if (!tokens) {
+      // Otra request pudo ganar la carrera y ya guardar tokens nuevos.
+      const otra = await leerSesion();
+      if (
+        otra?.accessToken &&
+        otra.refreshCookie &&
+        otra.accessToken !== token
+      ) {
+        return ejecutarLlamada<T>(ruta, { ...opciones, renovarSi401: false }, false, true);
+      }
       await cerrarSesion().catch(() => undefined);
       throw new NoAutorizado();
     }
@@ -109,6 +118,7 @@ async function ejecutarLlamada<T>(
       usuario: sesion.usuario,
       accessToken: tokens.accessToken,
       refreshCookie: tokens.refreshCookie,
+      accessExpiresAt: tokens.accessExpiresAt,
     });
 
     return ejecutarLlamada<T>(ruta, { ...opciones, renovarSi401: false }, false, true);
@@ -183,6 +193,7 @@ export async function fetchAutenticado(
     usuario: sesion.usuario,
     accessToken: tokens.accessToken,
     refreshCookie: tokens.refreshCookie,
+    accessExpiresAt: tokens.accessExpiresAt,
   });
 
   return { respuesta, cookieSesionNueva };

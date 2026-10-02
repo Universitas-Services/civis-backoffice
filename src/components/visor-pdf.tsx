@@ -44,7 +44,10 @@ export function VisorPdf({
         });
         if (cancelado) return;
         if (respuesta.status === 401) {
-          setError("Sesión expirada. Vuelva a iniciar sesión para ver el documento.");
+          const volver = `${window.location.pathname}${window.location.search}`;
+          window.location.assign(
+            `/api/sesion/renovar?volver=${encodeURIComponent(volver || "/dashboard")}`,
+          );
           return;
         }
         if (!respuesta.ok) {

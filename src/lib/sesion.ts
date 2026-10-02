@@ -18,6 +18,8 @@ interface ContenidoSesion {
   readonly accessToken: string;
   /** Par `nombre=valor` de la cookie de refresh de la API (sin atributos Set-Cookie). */
   readonly refreshCookie: string | null;
+  /** Epoch ms: renovar el access antes de este instante (TTL API menos margen). */
+  readonly accessExpiresAt?: number;
 }
 
 export type { ContenidoSesion };

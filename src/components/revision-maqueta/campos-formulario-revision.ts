@@ -43,7 +43,8 @@ export const KEYS_CEDULA_VISIBLES = [
 export type KeyCedulaVisible = (typeof KEYS_CEDULA_VISIBLES)[number];
 
 /** Prefijos UI (V/E) para cédulas en formularios de revisión. */
-export const KEY_PREFIJO_CEDULA = "prefijo_cedula";
+/** Misma clave que la API (`formularios.ts` / extract). */
+export const KEY_PREFIJO_CEDULA = "prefijo_cedula_postulante";
 export const KEY_PREFIJO_CEDULA_PADRE = "prefijo_cedula_padre";
 export const KEY_PREFIJO_CEDULA_MADRE = "prefijo_cedula_madre";
 export const KEY_PREFIJO_CEDULA_DECLARANTE_OTRA = "prefijo_cedula_declarante_otranacionalidad";
@@ -751,7 +752,7 @@ const metadatosInvisiblesSchema = {
   ]),
 };
 
-function str(v: string | boolean | null | undefined): string {
+function str(v: string | number | boolean | null | undefined): string {
   return v === null || v === undefined ? "" : String(v);
 }
 

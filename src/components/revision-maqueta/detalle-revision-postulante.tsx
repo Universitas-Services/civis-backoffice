@@ -110,6 +110,25 @@ function reviewDataAValores(
         ? advertencia
         : base.advertencias;
   const fusion = { ...base, ...resto, advertencias } as ValoresFormularioRevision;
+
+  // Legado: el front usaba `prefijo_cedula`; la API / extract usan `prefijo_cedula_postulante`.
+  const prefijoLegado = resto.prefijo_cedula;
+  const prefijoActual = fusion.prefijo_cedula_postulante;
+  if (
+    (prefijoActual === null || prefijoActual === undefined || prefijoActual === "") &&
+    (typeof prefijoLegado === "string" || typeof prefijoLegado === "number")
+  ) {
+    fusion.prefijo_cedula_postulante = String(prefijoLegado);
+  }
+  delete fusion.prefijo_cedula;
+
+  // El extract tipa la cédula como number; los inputs controlados esperan string.
+  for (const [clave, valor] of Object.entries(fusion)) {
+    if (typeof valor === "number" && Number.isFinite(valor)) {
+      fusion[clave] = String(valor);
+    }
+  }
+
   delete fusion.prefijo_inpre_sintesis;
   delete fusion.prefijo_inpre_otro;
   return fusion;
@@ -230,17 +249,30 @@ export function DetalleRevisionPostulante({
       }
       marcarExtractIaUsado(documento.id);
       setExtractUsados((prev) => new Set(prev).add(documento.id));
+      const propuestos = reviewDataAValores(documento.slotKey, r.reviewData);
       setValores((prev) => ({
         ...prev,
         [documento.id]: {
           ...reviewDataAValores(documento.slotKey, documento.reviewData),
           ...(prev[documento.id] ?? {}),
-          ...reviewDataAValores(documento.slotKey, r.reviewData),
+          ...propuestos,
         } as ValoresFormularioRevision,
       }));
-      toast.exito(
-        "Campos propuestos por IA. Revise, edite si hace falta y pulse Guardar o Verificado.",
-      );
+      const rellenos = Object.entries(propuestos).filter(([clave, valor]) => {
+        if (clave === "es_documento" || clave === "calidad_legibilidad" || clave === "advertencias") {
+          return false;
+        }
+        return valor !== null && valor !== undefined && String(valor).trim() !== "";
+      }).length;
+      if (rellenos <= 1) {
+        toast.error(
+          "La IA solo pudo leer pocos datos (a menudo pasa si la foto está rotada o borrosa). Complete el resto a mano.",
+        );
+      } else {
+        toast.exito(
+          "Campos propuestos por IA. Revise, edite si hace falta y pulse Guardar o Verificado.",
+        );
+      }
     } finally {
       setRellenandoIa(false);
     }

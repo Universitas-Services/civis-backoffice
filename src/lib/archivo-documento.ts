@@ -21,8 +21,7 @@ export function esArchivoDocumentoPermitido(file: File): boolean {
   return EXT_OK.test(file.name);
 }
 
-export const TEXTO_FORMATOS_DOCUMENTO =
-  "PDF o imagen (JPEG, PNG, WEBP). La API valida el contenido del archivo.";
+export const TEXTO_FORMATOS_DOCUMENTO = "PDF o imagen (JPEG, PNG, WEBP).";
 
 const MIME_IMAGEN = new Set(["image/jpeg", "image/png", "image/webp", "image/gif"]);
 

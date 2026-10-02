@@ -1,10 +1,9 @@
-import Link from "next/link";
 import type { Metadata } from "next";
 import type { ResumenDashboard } from "@/contracts";
 import { renovarYVolver } from "@/lib/rutas";
 import { llamarApi, NoAutorizado } from "@/lib/api";
 import { usuarioActual } from "@/lib/sesion";
-import { puedeVerRuta, rutaInicio } from "@/lib/secciones-nav";
+import { rutaInicio } from "@/lib/secciones-nav";
 import { redirect } from "next/navigation";
 import { GraficosDashboard } from "@/components/graficos-dashboard";
 
@@ -14,28 +13,17 @@ function Tarjeta({
   valor,
   etiqueta,
   detalle,
-  href,
 }: {
   readonly valor: number | string;
   readonly etiqueta: string;
   readonly detalle: string;
-  readonly href?: string;
 }) {
-  const contenido = (
-    <>
+  return (
+    <div className="rounded-lg border border-toga-200 bg-white p-5">
       <p className="cifra text-3xl font-semibold tracking-tight text-toga-900">{valor}</p>
       <p className="mt-1 text-sm font-medium text-toga-700">{etiqueta}</p>
       <p className="mt-0.5 text-xs leading-relaxed text-toga-500">{detalle}</p>
-    </>
-  );
-  const clases =
-    "block rounded-lg border border-toga-200 bg-white p-5 transition-colors duration-150 hover:border-toga-400";
-  return href ? (
-    <Link href={href} className={clases}>
-      {contenido}
-    </Link>
-  ) : (
-    <div className={clases}>{contenido}</div>
+    </div>
   );
 }
 
@@ -71,19 +59,16 @@ export default async function Dashboard() {
               valor={resumen.candidateTotal}
               etiqueta="Expedientes registrados"
               detalle="Total de postulantes en todas las etapas."
-              href="/expedientes"
             />
             <Tarjeta
               valor={resumen.eligibleCount}
               etiqueta="Expedientes aprobados"
               detalle="Con el baremo aprobado y sin causal de exclusión."
-              href="/ranking"
             />
             <Tarjeta
               valor={resumen.objections.reduce((suma, item) => suma + item.count, 0)}
               etiqueta="Objeciones recibidas"
               detalle="Denuncias del sitio público. Con ellas se corrige el baremo o se declara inelegible."
-              href={puedeVerRuta(usuario, "/objeciones") ? "/objeciones" : undefined}
             />
           </>
         )}
