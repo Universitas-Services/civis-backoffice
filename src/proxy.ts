@@ -28,7 +28,8 @@ export function proxy(request: NextRequest) {
 
   if (RUTAS_PUBLICAS.some((r) => pathname.startsWith(r))) {
     if (pathname.startsWith("/login") && request.cookies.has(COOKIE_SESION)) {
-      return NextResponse.redirect(new URL("/dashboard", base));
+      // /inicio elige destino por rol (REVIEWER no tiene /dashboard).
+      return NextResponse.redirect(new URL("/inicio", base));
     }
     return NextResponse.next();
   }
