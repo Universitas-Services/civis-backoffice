@@ -23,7 +23,7 @@ export default async function Usuarios() {
     usuarios = await llamarApi<UsuarioDirectorio[]>("/internal/users");
     ajustes = await llamarApi<AjustesPortal>("/public/portal");
   } catch (error) {
-    if (error instanceof NoAutorizado) renovarYVolver("/usuarios");
+    if (error instanceof NoAutorizado) await renovarYVolver("/usuarios");
     throw error;
   }
 

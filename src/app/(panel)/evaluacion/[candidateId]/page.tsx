@@ -42,7 +42,7 @@ export default async function EvaluarElegibilidad({
       }
     }
   } catch (error) {
-    if (error instanceof NoAutorizado) renovarYVolver("/evaluacion");
+    if (error instanceof NoAutorizado) await renovarYVolver("/evaluacion");
     if (error instanceof ErrorApi && error.status === 404) notFound();
     if (error instanceof ErrorApi) {
       return (

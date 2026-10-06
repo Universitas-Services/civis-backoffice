@@ -38,7 +38,7 @@ export default async function HistorialEntidad({
   try {
     eventos = await llamarApi<EventoAuditoria[]>(`/internal/audit/entity/${tipo}/${id}`);
   } catch (error) {
-    if (error instanceof NoAutorizado) renovarYVolver("/auditoria");
+    if (error instanceof NoAutorizado) await renovarYVolver("/auditoria");
     throw error;
   }
 

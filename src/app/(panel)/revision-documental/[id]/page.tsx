@@ -23,7 +23,7 @@ export default async function RevisionDocumentalPostulante({
   try {
     expediente = await llamarApi<ExpedienteDetalle>(`/internal/candidates/${id}`);
   } catch (error) {
-    if (error instanceof NoAutorizado) renovarYVolver(`/revision-documental/${id}`);
+    if (error instanceof NoAutorizado) await renovarYVolver(`/revision-documental/${id}`);
     if (error instanceof ErrorApi && error.status === 404) notFound();
     if (error instanceof ErrorApi) {
       return avisoCarga(error.message);
@@ -35,7 +35,7 @@ export default async function RevisionDocumentalPostulante({
   try {
     historial = await llamarApi<EventoHistorial[]>(`/internal/candidates/${id}/history`);
   } catch (error) {
-    if (error instanceof NoAutorizado) renovarYVolver(`/revision-documental/${id}`);
+    if (error instanceof NoAutorizado) await renovarYVolver(`/revision-documental/${id}`);
     // Historial no crítico: seguir sin él.
   }
 

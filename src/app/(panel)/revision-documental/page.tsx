@@ -38,7 +38,7 @@ export default async function RevisionDocumental({
   try {
     datos = await llamarApi<Respuesta>(`/internal/candidates?${query}`);
   } catch (error) {
-    if (error instanceof NoAutorizado) renovarYVolver("/revision-documental");
+    if (error instanceof NoAutorizado) await renovarYVolver("/revision-documental");
     if (error instanceof ErrorApi) {
       return (
         <>

@@ -23,7 +23,7 @@ export default async function ConfiguracionBaremoPage({
   try {
     baremos = await llamarApi<BaremoListado[]>("/internal/baremos");
   } catch (error) {
-    if (error instanceof NoAutorizado) renovarYVolver("/baremo/configuracion");
+    if (error instanceof NoAutorizado) await renovarYVolver("/baremo/configuracion");
     if (error instanceof ErrorApi) throw error;
     throw error;
   }

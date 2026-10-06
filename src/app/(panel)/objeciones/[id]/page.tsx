@@ -24,7 +24,7 @@ export default async function DetalleObjecion({
     // la API registra esta lectura como `objection.opened`.
     o = await llamarApi<ObjecionDetalle>(`/internal/objections/${id}`);
   } catch (error) {
-    if (error instanceof NoAutorizado) renovarYVolver("/objeciones");
+    if (error instanceof NoAutorizado) await renovarYVolver("/objeciones");
     if (error instanceof ErrorApi && error.status === 404) notFound();
     throw error;
   }

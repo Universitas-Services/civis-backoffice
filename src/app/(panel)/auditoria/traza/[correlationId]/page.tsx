@@ -18,7 +18,7 @@ export default async function Traza({
   try {
     eventos = await llamarApi<EventoAuditoria[]>(`/internal/audit/trace/${correlationId}`);
   } catch (error) {
-    if (error instanceof NoAutorizado) renovarYVolver("/auditoria");
+    if (error instanceof NoAutorizado) await renovarYVolver("/auditoria");
     throw error;
   }
 

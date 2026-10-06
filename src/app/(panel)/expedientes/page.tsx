@@ -44,7 +44,7 @@ export default async function Expedientes({
   try {
     datos = await llamarApi<Respuesta>(`/internal/candidates?${query}`);
   } catch (error) {
-    if (error instanceof NoAutorizado) renovarYVolver("/expedientes");
+    if (error instanceof NoAutorizado) await renovarYVolver("/expedientes");
     throw error;
   }
 

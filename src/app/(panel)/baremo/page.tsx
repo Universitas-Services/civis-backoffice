@@ -38,7 +38,7 @@ export default async function BaremoPage() {
         ranking: puesto.get(c.publicId) ?? null,
       }));
   } catch (error) {
-    if (error instanceof NoAutorizado) renovarYVolver("/baremo");
+    if (error instanceof NoAutorizado) await renovarYVolver("/baremo");
     throw error;
   }
 

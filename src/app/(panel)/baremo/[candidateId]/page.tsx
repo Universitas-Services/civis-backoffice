@@ -42,7 +42,7 @@ export default async function BaremoDetalle({
       llamarApi<AjustesPortal>("/public/portal").catch(() => portal),
     ]);
   } catch (error) {
-    if (error instanceof NoAutorizado) renovarYVolver(`/baremo/${candidateId}`);
+    if (error instanceof NoAutorizado) await renovarYVolver(`/baremo/${candidateId}`);
     if (error instanceof ErrorApi && error.status === 404) notFound();
     if (error instanceof ErrorApi) return aviso("No se puede abrir el baremo", error.message);
     throw error;
@@ -65,7 +65,7 @@ export default async function BaremoDetalle({
     );
     elegible = ficha?.decision === "ELIGIBLE";
   } catch (error) {
-    if (error instanceof NoAutorizado) renovarYVolver(`/baremo/${candidateId}`);
+    if (error instanceof NoAutorizado) await renovarYVolver(`/baremo/${candidateId}`);
     if (error instanceof ErrorApi) return aviso("No se puede abrir el baremo", error.message);
     throw error;
   }
@@ -82,7 +82,7 @@ export default async function BaremoDetalle({
       `/internal/evaluations/history/${candidateId}`,
     );
   } catch (error) {
-    if (error instanceof NoAutorizado) renovarYVolver(`/baremo/${candidateId}`);
+    if (error instanceof NoAutorizado) await renovarYVolver(`/baremo/${candidateId}`);
     if (error instanceof ErrorApi) return aviso("No se puede abrir el baremo", error.message);
     throw error;
   }
@@ -127,7 +127,7 @@ export default async function BaremoDetalle({
           { method: "POST" },
         );
       } catch (error) {
-        if (error instanceof NoAutorizado) renovarYVolver(`/baremo/${candidateId}`);
+        if (error instanceof NoAutorizado) await renovarYVolver(`/baremo/${candidateId}`);
         if (error instanceof ErrorApi) return aviso("No se puede abrir el baremo", error.message);
         throw error;
       }
@@ -144,7 +144,7 @@ export default async function BaremoDetalle({
           { method: "POST" },
         );
       } catch (error) {
-        if (error instanceof NoAutorizado) renovarYVolver(`/baremo/${candidateId}`);
+        if (error instanceof NoAutorizado) await renovarYVolver(`/baremo/${candidateId}`);
         if (error instanceof ErrorApi) return aviso("No se puede abrir el baremo", error.message);
         throw error;
       }
@@ -164,7 +164,7 @@ export default async function BaremoDetalle({
   try {
     activo = await llamarApi<BaremoDetalle | null>("/internal/baremos/active");
   } catch (error) {
-    if (error instanceof NoAutorizado) renovarYVolver(`/baremo/${candidateId}`);
+    if (error instanceof NoAutorizado) await renovarYVolver(`/baremo/${candidateId}`);
     activo = null;
   }
 

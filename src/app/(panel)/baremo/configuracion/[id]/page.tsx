@@ -21,7 +21,7 @@ export default async function EditarBaremoPage({
   try {
     baremo = await llamarApi<BaremoDetalle>(`/internal/baremos/${id}`);
   } catch (error) {
-    if (error instanceof NoAutorizado) renovarYVolver(`/baremo/configuracion/${id}`);
+    if (error instanceof NoAutorizado) await renovarYVolver(`/baremo/configuracion/${id}`);
     if (error instanceof ErrorApi && error.status === 404) notFound();
     throw error;
   }

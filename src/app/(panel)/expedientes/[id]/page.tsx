@@ -33,7 +33,7 @@ export default async function DetalleExpediente({
   try {
     e = await llamarApi<ExpedienteDetalle>(`/internal/candidates/${id}`);
   } catch (error) {
-    if (error instanceof NoAutorizado) renovarYVolver("/expedientes");
+    if (error instanceof NoAutorizado) await renovarYVolver("/expedientes");
     if (error instanceof ErrorApi && error.status === 404) notFound();
     throw error;
   }
@@ -42,7 +42,7 @@ export default async function DetalleExpediente({
   try {
     historial = await llamarApi<EventoHistorial[]>(`/internal/candidates/${id}/history`);
   } catch (error) {
-    if (error instanceof NoAutorizado) renovarYVolver("/expedientes");
+    if (error instanceof NoAutorizado) await renovarYVolver("/expedientes");
   }
 
   const expediente = e.submissions[0];

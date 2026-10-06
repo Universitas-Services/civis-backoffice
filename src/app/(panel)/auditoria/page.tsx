@@ -88,7 +88,7 @@ export default async function Auditoria({
       llamarApi<Facetas>("/internal/audit/facets"),
     ]);
   } catch (error) {
-    if (error instanceof NoAutorizado) renovarYVolver("/auditoria");
+    if (error instanceof NoAutorizado) await renovarYVolver("/auditoria");
     throw error;
   }
 

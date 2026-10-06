@@ -39,7 +39,7 @@ export default async function Dashboard() {
   try {
     resumen = await llamarApi<ResumenDashboard>("/internal/dashboard");
   } catch (error) {
-    if (error instanceof NoAutorizado) renovarYVolver("/dashboard");
+    if (error instanceof NoAutorizado) await renovarYVolver("/dashboard");
     // El panel conserva navegación y recordatorios aunque las métricas fallen.
   }
 

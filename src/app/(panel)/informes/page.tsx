@@ -14,7 +14,7 @@ export default async function Informes() {
   try {
     informes = await llamarApi<InformeListado[]>("/internal/reports");
   } catch (error) {
-    if (error instanceof NoAutorizado) renovarYVolver("/informes");
+    if (error instanceof NoAutorizado) await renovarYVolver("/informes");
     throw error;
   }
 

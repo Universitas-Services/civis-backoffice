@@ -13,7 +13,7 @@ export default async function RankingInterno() {
   try {
     ranking = await llamarApi<ResultadoRanking>("/internal/ranking");
   } catch (error) {
-    if (error instanceof NoAutorizado) renovarYVolver("/ranking");
+    if (error instanceof NoAutorizado) await renovarYVolver("/ranking");
     throw error;
   }
 

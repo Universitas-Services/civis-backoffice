@@ -47,7 +47,7 @@ export default async function AjustarBaremo({
       llamarApi<AjustesPortal>("/public/portal").catch(() => portal),
     ]);
   } catch (error) {
-    if (error instanceof NoAutorizado) renovarYVolver(`/objeciones/baremo/${candidateId}`);
+    if (error instanceof NoAutorizado) await renovarYVolver(`/objeciones/baremo/${candidateId}`);
     if (error instanceof ErrorApi && error.status === 404) notFound();
     if (error instanceof ErrorApi) return aviso("No se puede ajustar el baremo", error.message);
     throw error;

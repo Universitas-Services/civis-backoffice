@@ -29,7 +29,7 @@ export default async function Objeciones() {
   try {
     datos = await llamarApi<Respuesta>("/internal/objections");
   } catch (error) {
-    if (error instanceof NoAutorizado) renovarYVolver("/objeciones");
+    if (error instanceof NoAutorizado) await renovarYVolver("/objeciones");
     throw error;
   }
 
@@ -55,7 +55,7 @@ export default async function Objeciones() {
       const portal = await llamarApi<{ objectionsOpen: boolean }>("/public/portal");
       lapsoAbierto = portal.objectionsOpen;
     } catch (error) {
-      if (error instanceof NoAutorizado) renovarYVolver("/objeciones");
+      if (error instanceof NoAutorizado) await renovarYVolver("/objeciones");
     }
   }
 

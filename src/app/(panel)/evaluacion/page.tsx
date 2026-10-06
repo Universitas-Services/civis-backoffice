@@ -74,7 +74,7 @@ export default async function BandejaEvaluacion() {
       escaladas = await listarRondasEscaladas();
     }
   } catch (error) {
-    if (error instanceof NoAutorizado) renovarYVolver("/evaluacion");
+    if (error instanceof NoAutorizado) await renovarYVolver("/evaluacion");
     throw error;
   }
 
