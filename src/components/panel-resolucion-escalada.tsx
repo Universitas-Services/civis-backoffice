@@ -74,16 +74,25 @@ export function PanelResolucionEscalada({
         <p className="mt-1 text-sm leading-relaxed text-toga-700">{texto}</p>
       </div>
 
-      <ul className="divide-y divide-toga-100 rounded-md border border-toga-200 bg-white text-sm">
-        {ronda.participants.map((p) => (
-          <li key={p.id} className="flex items-center justify-between gap-2 px-3 py-1.5">
-            <span className="text-toga-800">{p.evaluator.fullName}</span>
-            <span className="text-xs text-toga-500">
-              {ACCION_ETIQUETA[p.action] ?? p.action}
-            </span>
-          </li>
-        ))}
-      </ul>
+      {ronda.participants.length > 0 && (
+        <ul className="divide-y divide-toga-100 rounded-md border border-toga-200 bg-white text-sm">
+          {ronda.participants.map((p) => (
+            <li key={p.id} className="flex items-center justify-between gap-2 px-3 py-1.5">
+              <span className="text-toga-800">{p.evaluator.fullName}</span>
+              <span className="text-xs text-toga-500">
+                {ACCION_ETIQUETA[p.action] ?? p.action}
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
+      {ronda.resumenParticipacion &&
+        ronda.participants.length < ronda.resumenParticipacion.total && (
+          <p className="text-sm text-toga-700">
+            {ronda.resumenParticipacion.total} evaluadores en la ronda. Quién votó o se recusó solo
+            lo ve el super administrador.
+          </p>
+        )}
 
       {confirmando ? (
         <div className="space-y-2 rounded-md border border-toga-200 bg-white p-3">

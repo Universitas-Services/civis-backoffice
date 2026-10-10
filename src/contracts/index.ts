@@ -532,6 +532,14 @@ export interface ParticipanteRondaComite {
   readonly evaluator: { readonly fullName: string };
 }
 
+/**
+ * Recuento sin nombres. Quién votó, puntuó o se abstuvo sólo lo ve SUPER_ADMIN:
+ * a los demás la API les devuelve únicamente su propia participación.
+ */
+export interface ResumenParticipacion {
+  readonly total: number;
+  readonly pendientes: number;
+}
 export type ReopenCommitteeReason = "TIE" | "DEADLINE";
 
 export interface TallyRondaElegibilidad {
@@ -552,6 +560,7 @@ export interface RondaComiteAbierta {
   readonly quorumThreshold: number;
   readonly deadlineAt: string | null;
   readonly participants: readonly ParticipanteRondaComite[];
+  readonly resumenParticipacion?: ResumenParticipacion;
   readonly closedAt?: string | null;
   readonly result?: unknown;
   /** Solo SUPER_ADMIN en rondas de elegibilidad. */
@@ -575,6 +584,7 @@ export interface RondaEscaladaLista {
     readonly actedAt: string | null;
     readonly evaluator: { readonly fullName: string };
   }[];
+  readonly resumenParticipacion?: ResumenParticipacion;
   readonly candidate: {
     readonly id: string;
     readonly firstName: string;

@@ -156,7 +156,13 @@ export function PanelRondaComite({
     );
   }
 
-  const pendientes = rondaUtil.participants.filter((p) => p.action === "PENDING").length;
+  // Sin nombres para quien no es SUPER_ADMIN: la API sólo le manda su propia
+  // participación y el recuento.
+  const resumen = rondaUtil.resumenParticipacion;
+  const pendientes =
+    resumen?.pendientes ?? rondaUtil.participants.filter((p) => p.action === "PENDING").length;
+  const totalReservado =
+    resumen && rondaUtil.participants.length < resumen.total ? resumen.total : null;
   const plazo = rondaUtil.deadlineAt
     ? new Date(rondaUtil.deadlineAt).toLocaleString("es-VE", {
         dateStyle: "short",
@@ -202,6 +208,12 @@ export function PanelRondaComite({
           </li>
         ))}
       </ul>
+      {totalReservado !== null && (
+        <p className="mt-2 text-xs text-toga-500">
+          {totalReservado} evaluadores en la ronda. Quién votó, puntuó o se abstuvo solo lo ve el
+          super administrador.
+        </p>
+      )}
 
       {miParticipacion && yaActue && (
         <p className="mt-3 text-sm text-toga-600">
