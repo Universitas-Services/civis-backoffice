@@ -73,27 +73,35 @@ export default async function AjustarBaremo({
     }
   }
 
-  // Individual: edita la APPROVED. Comité: borrador/enviado propio en ronda OBJECTION.
-  let evaluacion =
-    historial.find((e) => e.status === "APPROVED" && e.baremoCongelado) ?? null;
+  // Individual: edita la APPROVED. Comité: la nota propia DE ESTA ronda de
+  // objeción; sin ronda (o sin participar en ella) se ve la consolidada.
+  let evaluacion = historial.find((e) => e.status === "APPROVED" && e.baremoCongelado) ?? null;
 
-  if (modoComite) {
-    const mio =
+  const rondaObjecion = modoComite && ronda?.kind === "OBJECTION" ? ronda : null;
+  const miParticipacion =
+    rondaObjecion?.participants.find((p) => p.evaluatorId === usuario.id) ?? null;
+
+  if (rondaObjecion && miParticipacion) {
+    // Nunca la nota de la ronda de baremo anterior: ya está registrada en una
+    // ronda cerrada y reescribirla alteraría el promedio consolidado.
+    const mia =
+      historial.find((e) => e.id === miParticipacion.evaluationId) ??
       historial.find(
         (e) =>
-          e.evaluatorId === usuario.id &&
-          e.baremoCongelado &&
-          (e.status === "DRAFT" || e.status === "SUBMITTED"),
-      ) ?? null;
-    if (mio) {
-      evaluacion = mio;
-    } else if (ronda?.kind === "OBJECTION") {
+          e.evaluatorId === usuario.id && e.roundId === rondaObjecion.id && e.status === "DRAFT",
+      ) ??
+      null;
+    if (mia?.baremoCongelado) {
+      evaluacion = mia;
+    } else if (miParticipacion.action === "PENDING") {
       try {
         evaluacion = await llamarApi<EvaluacionBaremoVista>(
           `/internal/evaluations/candidate/${candidateId}/draft`,
           { method: "POST" },
         );
       } catch (error) {
+        if (error instanceof NoAutorizado)
+          await renovarYVolver(`/objeciones/baremo/${candidateId}`);
         if (error instanceof ErrorApi) {
           return aviso("No se puede ajustar el baremo", error.message);
         }
@@ -111,14 +119,12 @@ export default async function AjustarBaremo({
     );
   }
 
-  const abstuvo =
-    modoComite &&
-    ronda?.participants.find((p) => p.evaluatorId === usuario.id)?.action === "ABSTAINED";
-
   const puedeEditar = modoComite
-    ? !abstuvo &&
-      (evaluacion.status === "DRAFT" || evaluacion.status === "SUBMITTED") &&
-      evaluacion.evaluatorId === usuario.id
+    ? miParticipacion !== null &&
+      (miParticipacion.action === "PENDING" || miParticipacion.action === "SCORED") &&
+      evaluacion.evaluatorId === usuario.id &&
+      evaluacion.roundId === rondaObjecion?.id &&
+      (evaluacion.status === "DRAFT" || evaluacion.status === "SUBMITTED")
     : true;
 
   return (
