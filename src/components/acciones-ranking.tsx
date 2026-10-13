@@ -3,7 +3,11 @@
 import { useState, useTransition } from "react";
 import type { EntradaRanking } from "@/contracts";
 import { SALA_ETIQUETA } from "@/contracts";
-import { enviarAlRankingPublico, type EstadoRanking } from "@/app/(panel)/ranking/acciones";
+import {
+  actualizarEnRankingPublico,
+  enviarAlRankingPublico,
+  type EstadoRanking,
+} from "@/app/(panel)/ranking/acciones";
 import { useToastDesdeEstado } from "@/hooks/use-toast-desde-estado";
 
 const BANDAS: Record<string, { texto: string; clases: string }> = {
@@ -41,6 +45,7 @@ export function RankingConEnvio({
   const [estado, setEstado] = useState<EstadoRanking>({});
   const [marcados, setMarcados] = useState<readonly string[]>([]);
   const [confirmar, setConfirmar] = useState<readonly EntradaRanking[] | null>(null);
+  const [aActualizar, setAActualizar] = useState<EntradaRanking | null>(null);
   useToastDesdeEstado(estado);
 
   const publicados = entries.filter((e) => e.published === true);
@@ -76,6 +81,16 @@ export function RankingConEnvio({
         setConfirmar(null);
         setMarcados([]);
       }
+    });
+  }
+
+  function actualizar() {
+    const fila = aActualizar;
+    if (!fila?.candidateId || pendiente) return;
+    iniciar(async () => {
+      const r = await actualizarEnRankingPublico(fila.candidateId!);
+      setEstado(r);
+      if (!r.error) setAActualizar(null);
     });
   }
 
@@ -134,11 +149,17 @@ export function RankingConEnvio({
         <TablaRanking
           entries={sinPublicar}
           puedePublicar={puedePublicar}
+          seleccionable
+          textoAccion="Enviar al ranking público"
+          textoAccionCorto="Enviar"
           marcados={marcados}
           todosMarcados={todosMarcados}
           onAlternar={alternar}
           onAlternarTodos={alternarTodos}
-          onEnviarUno={(fila) => pedirEnvio([fila])}
+          onEnviarUno={(fila) => {
+            setAActualizar(null);
+            pedirEnvio([fila]);
+          }}
           pendiente={pendiente}
           vacio="Nadie del ranking interno está pendiente de publicar."
         />
@@ -146,16 +167,53 @@ export function RankingConEnvio({
 
       <section>
         <h2 className="text-base font-semibold text-toga-900">Ya publicados</h2>
-        <p className="mt-1 text-sm text-toga-500">Su ficha ya está en el sitio público.</p>
+        <p className="mt-1 text-sm text-toga-500">
+          Su ficha ya está en el sitio público. Si la nota cambió y el sitio muestra la anterior,
+          use «Actualizar».
+        </p>
+        {aActualizar && (
+          <div className="mt-4 space-y-3 rounded-lg border border-balanza-600/25 bg-balanza-50/40 p-4">
+            <p className="text-sm text-toga-800">
+              ¿Actualizar la ficha pública de{" "}
+              <span className="font-semibold">{aActualizar.fullName}</span> con su nota vigente (
+              <span className="cifra font-semibold">{aActualizar.total}</span>)? El ranking público
+              se vuelve a publicar con todos los publicados.
+            </p>
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                disabled={pendiente}
+                onClick={actualizar}
+                className="rounded-md bg-balanza-600 px-3 py-2 text-sm font-semibold text-white hover:bg-balanza-700 disabled:opacity-60"
+              >
+                {pendiente ? "Actualizando…" : "Confirmar actualización"}
+              </button>
+              <button
+                type="button"
+                disabled={pendiente}
+                onClick={() => setAActualizar(null)}
+                className="rounded-md border border-toga-300 bg-white px-3 py-2 text-sm font-medium text-toga-700 hover:bg-toga-50"
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        )}
         <TablaRanking
           entries={publicados}
-          puedePublicar={false}
+          puedePublicar={puedePublicar}
+          seleccionable={false}
+          textoAccion="Actualizar en el ranking público"
+          textoAccionCorto="Actualizar"
           marcados={[]}
           todosMarcados={false}
           onAlternar={() => undefined}
           onAlternarTodos={() => undefined}
-          onEnviarUno={() => undefined}
-          pendiente={false}
+          onEnviarUno={(fila) => {
+            setConfirmar(null);
+            setAActualizar(fila);
+          }}
+          pendiente={pendiente}
           vacio="Todavía no hay postulantes publicados."
         />
       </section>
@@ -166,6 +224,9 @@ export function RankingConEnvio({
 function TablaRanking({
   entries,
   puedePublicar,
+  seleccionable,
+  textoAccion,
+  textoAccionCorto,
   marcados,
   todosMarcados,
   onAlternar,
@@ -176,6 +237,10 @@ function TablaRanking({
 }: {
   readonly entries: readonly EntradaRanking[];
   readonly puedePublicar: boolean;
+  /** Muestra las casillas para enviar varios a la vez. */
+  readonly seleccionable: boolean;
+  readonly textoAccion: string;
+  readonly textoAccionCorto: string;
   readonly marcados: readonly string[];
   readonly todosMarcados: boolean;
   readonly onAlternar: (id: string) => void;
@@ -206,22 +271,24 @@ function TablaRanking({
               <PastillaBanda band={e.band} />
               {puedePublicar && e.candidateId && (
                 <>
-                  <label className="inline-flex items-center gap-2 text-sm text-toga-700">
-                    <input
-                      type="checkbox"
-                      checked={marcados.includes(e.candidateId)}
-                      onChange={() => onAlternar(e.candidateId!)}
-                      className="h-4 w-4 accent-balanza-600"
-                    />
-                    Marcar
-                  </label>
+                  {seleccionable && (
+                    <label className="inline-flex items-center gap-2 text-sm text-toga-700">
+                      <input
+                        type="checkbox"
+                        checked={marcados.includes(e.candidateId)}
+                        onChange={() => onAlternar(e.candidateId!)}
+                        className="h-4 w-4 accent-balanza-600"
+                      />
+                      Marcar
+                    </label>
+                  )}
                   <button
                     type="button"
                     disabled={pendiente}
                     onClick={() => onEnviarUno(e)}
                     className="rounded-md border border-balanza-600 bg-white px-3 py-1.5 text-sm font-semibold text-balanza-700 hover:bg-balanza-50 disabled:opacity-60"
                   >
-                    Enviar al ranking público
+                    {textoAccion}
                   </button>
                 </>
               )}
@@ -235,7 +302,7 @@ function TablaRanking({
           <caption className="sr-only">Ranking interno de postulantes evaluados</caption>
           <thead className="border-b-2 border-toga-300 bg-toga-50">
             <tr>
-              {puedePublicar && (
+              {puedePublicar && seleccionable && (
                 <th scope="col" className="w-10 px-4 py-3">
                   <input
                     type="checkbox"
@@ -263,7 +330,7 @@ function TablaRanking({
               </th>
               {puedePublicar && (
                 <th scope="col" className="px-4 py-3 font-semibold text-toga-700">
-                  <span className="sr-only">Enviar</span>
+                  <span className="sr-only">{textoAccion}</span>
                 </th>
               )}
             </tr>
@@ -271,7 +338,7 @@ function TablaRanking({
           <tbody className="divide-y divide-toga-100">
             {entries.map((e) => (
               <tr key={e.publicId} className="hover:bg-toga-50">
-                {puedePublicar && (
+                {puedePublicar && seleccionable && (
                   <td className="px-4 py-3">
                     {e.candidateId && (
                       <input
@@ -306,8 +373,9 @@ function TablaRanking({
                         disabled={pendiente}
                         onClick={() => onEnviarUno(e)}
                         className="rounded-md border border-balanza-600 bg-white px-3 py-1.5 text-sm font-semibold text-balanza-700 hover:bg-balanza-50 disabled:opacity-60"
+                        aria-label={`${textoAccion}: ${e.fullName}`}
                       >
-                        Enviar
+                        {textoAccionCorto}
                       </button>
                     )}
                   </td>
