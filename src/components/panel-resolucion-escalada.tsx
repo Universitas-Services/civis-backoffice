@@ -2,7 +2,11 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import type { ReopenCommitteeReason, RondaComiteAbierta, RoundParticipantAction } from "@/contracts";
+import type {
+  ReopenCommitteeReason,
+  RondaComiteAbierta,
+  RoundParticipantAction,
+} from "@/contracts";
 import { reabrirRondaEscalada } from "@/app/(panel)/comite/acciones";
 import { useToast } from "@/components/toast-provider";
 
@@ -29,7 +33,8 @@ function motivoEscalada(result: unknown): { reason: ReopenCommitteeReason | null
   if (r.reason === "DEADLINE") {
     return {
       reason: "DEADLINE",
-      texto: "Venció el plazo sin resolverse el quorum o el veredicto. Reabra la ronda para un nuevo ciclo de votos.",
+      texto:
+        "Venció el plazo sin resolverse el quorum o el veredicto. Reabra la ronda para un nuevo ciclo de votos.",
     };
   }
   return { reason: null, texto: "La ronda requiere reapertura administrativa." };
@@ -79,9 +84,7 @@ export function PanelResolucionEscalada({
           {ronda.participants.map((p) => (
             <li key={p.id} className="flex items-center justify-between gap-2 px-3 py-1.5">
               <span className="text-toga-800">{p.evaluator.fullName}</span>
-              <span className="text-xs text-toga-500">
-                {ACCION_ETIQUETA[p.action] ?? p.action}
-              </span>
+              <span className="text-xs text-toga-500">{ACCION_ETIQUETA[p.action] ?? p.action}</span>
             </li>
           ))}
         </ul>
@@ -89,8 +92,8 @@ export function PanelResolucionEscalada({
       {ronda.resumenParticipacion &&
         ronda.participants.length < ronda.resumenParticipacion.total && (
           <p className="text-sm text-toga-700">
-            {ronda.resumenParticipacion.total} evaluadores en la ronda. Quién votó o se recusó solo
-            lo ve el super administrador.
+            {ronda.resumenParticipacion.total} evaluadores en la ronda. Quién votó o se recusó es
+            reservado.
           </p>
         )}
 
