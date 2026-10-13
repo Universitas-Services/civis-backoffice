@@ -30,3 +30,25 @@ export async function enviarAlRankingPublico(candidateIds: string[]): Promise<Es
     };
   }
 }
+
+/**
+ * Vuelve a publicar la ficha y el ranking de alguien que ya está en el sitio
+ * público, con su nota vigente. Para cuando la landing quedó desfasada.
+ */
+export async function actualizarEnRankingPublico(candidateId: string): Promise<EstadoRanking> {
+  try {
+    const r = await llamarApiAccion<{ refrescado: boolean; rankingVersion?: number }>(
+      `/internal/publications/candidate/${candidateId}/refrescar`,
+      { method: "POST", body: {}, timeoutMs: 60_000 },
+    );
+    revalidatePath("/ranking");
+    if (!r.refrescado) {
+      return { error: "Ese postulante ya no está en el ranking público." };
+    }
+    return { exito: `Ficha y ranking público actualizados (ranking v${r.rankingVersion}).` };
+  } catch (error) {
+    return {
+      error: error instanceof ErrorApi ? error.message : "No se pudo actualizar el ranking público",
+    };
+  }
+}
