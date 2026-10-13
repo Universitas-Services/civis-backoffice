@@ -35,10 +35,9 @@ export function ConfiguracionEvaluacion({
         Modalidad de evaluación
       </h2>
       <p className="mt-1 text-sm leading-relaxed text-toga-600">
-        Solo los evaluadores activos en comité (tope máximo 7) pueden evaluar, en individual o
-        en comité. En comité, el quorum es el mínimo de actuaciones (voto o recusación) para
-        decidir por mayoría. Cambiar de modalidad exige que no haya rondas abiertas (SUPER_ADMIN
-        puede forzar el cierre si aún no hay quorum).
+        Solo los evaluadores activos en comité (tope máximo 7) pueden evaluar, en individual o en
+        comité. En comité, el quorum es el mínimo de actuaciones (voto o recusación) para decidir
+        por mayoría. Cambiar de modalidad exige que no haya rondas abiertas.
       </p>
 
       <form action={accion} className="mt-4 grid gap-4 sm:grid-cols-2">
@@ -56,7 +55,7 @@ export function ConfiguracionEvaluacion({
           </select>
           {!esSuperAdmin && (
             <span className="mt-1 block text-xs text-toga-500">
-              Sólo SUPER_ADMIN cambia la modalidad.
+              No tiene permiso para cambiar la modalidad.
             </span>
           )}
         </label>

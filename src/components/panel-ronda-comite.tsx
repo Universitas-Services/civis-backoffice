@@ -62,9 +62,7 @@ export function PanelRondaComite({
       : null;
   const miParticipacion = rondaUtil?.participants.find((p) => p.evaluatorId === usuarioId);
   const yaActue =
-    miParticipacion &&
-    miParticipacion.action !== "PENDING" &&
-    miParticipacion.action !== undefined;
+    miParticipacion && miParticipacion.action !== "PENDING" && miParticipacion.action !== undefined;
   const puedoActuar = Boolean(rondaUtil && miParticipacion && !yaActue);
 
   function abrir() {
@@ -126,8 +124,8 @@ export function PanelRondaComite({
             Comité — ronda de {KIND_ETIQUETA[kindEsperado].toLowerCase()} cerrada
           </p>
           <p className="mt-1 text-sm leading-relaxed text-toga-700">
-            La nota del comité ya está consolidada. Consulte el Ranking interno; no hace falta
-            abrir otra ronda de baremo.
+            La nota del comité ya está consolidada. Consulte el Ranking interno; no hace falta abrir
+            otra ronda de baremo.
           </p>
         </div>
       );
@@ -140,7 +138,7 @@ export function PanelRondaComite({
         <p className="mt-1 text-sm leading-relaxed text-toga-700">
           {kindEsperado === "SCORING"
             ? "Todavía no hay ronda de baremo abierta. Al abrir el borrador se intenta abrir sola; si falla, un administrador debe abrirla."
-            : "Tras las objeciones, un administrador (o superadministrador) debe abrir la ronda para que el comité mantenga o cambie la nota, o vote inelegible."}
+            : "Tras las objeciones, un administrador debe abrir la ronda para que el comité mantenga o cambie la nota, o vote inelegible."}
         </p>
         {puedeAbrir && (
           <button
@@ -149,7 +147,9 @@ export function PanelRondaComite({
             onClick={abrir}
             className="mt-3 rounded-md bg-balanza-600 px-3 py-2 text-sm font-semibold text-white hover:bg-balanza-700 disabled:opacity-60"
           >
-            {pendiente ? "Abriendo…" : `Abrir ronda de ${KIND_ETIQUETA[kindEsperado].toLowerCase()}`}
+            {pendiente
+              ? "Abriendo…"
+              : `Abrir ronda de ${KIND_ETIQUETA[kindEsperado].toLowerCase()}`}
           </button>
         )}
       </div>
@@ -202,16 +202,13 @@ export function PanelRondaComite({
               {p.evaluator.fullName}
               {p.evaluatorId === usuarioId ? " (usted)" : ""}
             </span>
-            <span className="text-xs text-toga-500">
-              {ACCION_ETIQUETA[p.action] ?? p.action}
-            </span>
+            <span className="text-xs text-toga-500">{ACCION_ETIQUETA[p.action] ?? p.action}</span>
           </li>
         ))}
       </ul>
       {totalReservado !== null && (
         <p className="mt-2 text-xs text-toga-500">
-          {totalReservado} evaluadores en la ronda. Quién votó, puntuó o se abstuvo solo lo ve el
-          super administrador.
+          {totalReservado} evaluadores en la ronda. Quién votó, puntuó o se abstuvo es reservado.
         </p>
       )}
 
