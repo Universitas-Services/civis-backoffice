@@ -4,11 +4,7 @@ import { useActionState, useState, type ReactNode } from "react";
 import { useFormStatus } from "react-dom";
 import type { InformeListado } from "@/contracts";
 import { CabeceraPagina } from "@/components/cabecera-pagina";
-import {
-  generarInforme,
-  publicarInforme,
-  type EstadoInformes,
-} from "@/app/(panel)/informes/acciones";
+import { generarInforme, type EstadoInformes } from "@/app/(panel)/informes/acciones";
 import { useToastDesdeEstado } from "@/hooks/use-toast-desde-estado";
 
 function Boton({ texto, cargando }: { readonly texto: string; readonly cargando: string }) {
@@ -39,7 +35,7 @@ export function MarcoInformes({
     <>
       <CabeceraPagina
         titulo="Informes finales"
-        descripcion="Cada informe se genera a partir de evaluaciones aprobadas y se publica con su huella digital, para que cualquiera pueda comprobar que el documento no cambió."
+        descripcion="Cada informe se genera a partir de evaluaciones aprobadas y lleva su huella digital, para que cualquiera pueda comprobar que el documento no cambió."
         acciones={
           puedeGenerar ? (
             <button
@@ -97,22 +93,12 @@ const ESTADO: Record<string, { texto: string; clases: string }> = {
   },
 };
 
-export function FichaInforme({
-  informe,
-  puedePublicar,
-  loGeneroElMismoUsuario,
-}: {
-  readonly informe: InformeListado;
-  readonly puedePublicar: boolean;
-  readonly loGeneroElMismoUsuario: boolean;
-}) {
-  const [estado, accion] = useActionState<EstadoInformes, FormData>(
-    publicarInforme.bind(null, informe.id),
-    {},
-  );
-  useToastDesdeEstado(estado);
+/**
+ * Ficha de un informe generado. Ya no se publica en el sitio público (la
+ * landing está fuera de uso): se genera y se descarga con su huella.
+ */
+export function FichaInforme({ informe }: { readonly informe: InformeListado }) {
   const e = ESTADO[informe.status] ?? ESTADO.DRAFT!;
-  const pendiente = informe.status === "PENDING_APPROVAL";
 
   return (
     <article className="rounded-lg border border-toga-200 bg-white p-5">
@@ -151,36 +137,7 @@ export function FichaInforme({
         >
           Descargar Markdown
         </a>
-
-        {puedePublicar && pendiente && loGeneroElMismoUsuario && (
-          <p className="text-sm text-toga-600">
-            <span aria-hidden="true" className="mr-1.5">
-              🛈
-            </span>
-            Usted generó este informe: debe aprobarlo otra persona.
-          </p>
-        )}
       </div>
-
-      {puedePublicar && pendiente && !loGeneroElMismoUsuario && !estado.exito && (
-        <form action={accion} className="mt-4 space-y-3 border-t border-toga-100 pt-4">
-          <div>
-            <label htmlFor={`r-${informe.id}`} className="block text-xs font-medium text-toga-600">
-              Motivo de la aprobación <span className="text-balanza-700">*</span>
-            </label>
-            <textarea
-              id={`r-${informe.id}`}
-              name="reason"
-              rows={2}
-              required
-              minLength={10}
-              placeholder="Qué revisó antes de autorizar la publicación."
-              className="mt-1 w-full rounded-md border border-toga-300 px-3 py-2 text-sm"
-            />
-          </div>
-          <Boton texto="Aprobar y publicar" cargando="Publicando…" />
-        </form>
-      )}
     </article>
   );
 }

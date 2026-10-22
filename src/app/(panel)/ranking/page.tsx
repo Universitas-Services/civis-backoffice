@@ -1,14 +1,14 @@
 import type { Metadata } from "next";
 import type { ResultadoRanking } from "@/contracts";
 import { exigirRol, renovarYVolver } from "@/lib/rutas";
-import { RankingConEnvio } from "@/components/acciones-ranking";
+import { RankingInterno } from "@/components/ranking-interno";
 import { CabeceraPagina, EstadoVacio } from "@/components/cabecera-pagina";
 import { llamarApi, NoAutorizado } from "@/lib/api";
 
 export const metadata: Metadata = { title: "Ranking interno" };
 
-export default async function RankingInterno() {
-  const usuario = await exigirRol("SUPER_ADMIN", "EVALUATOR", "ADMIN");
+export default async function PaginaRankingInterno() {
+  const usuario = await exigirRol("SUPER_ADMIN", "EVALUATOR", "ADMIN", "VIEWER");
   let ranking: ResultadoRanking;
   try {
     ranking = await llamarApi<ResultadoRanking>("/internal/ranking");
@@ -17,14 +17,18 @@ export default async function RankingInterno() {
     throw error;
   }
 
-  const puedePublicar = usuario.roles.some((r) => r === "SUPER_ADMIN" || r === "ADMIN");
+  const esVisualizador = usuario.roles.includes("VIEWER");
   const visibles = ranking.entries.filter((e) => !e.ineligible);
 
   return (
     <>
       <CabeceraPagina
         titulo="Ranking interno"
-        descripcion="Quienes tienen baremo guardado. Arriba, los que la ciudadanía todavía no ve. Abajo, los ya publicados."
+        descripcion={
+          esVisualizador
+            ? "Postulantes con baremo guardado, por puntaje. Desde la ficha de cada uno puede dejar una opinión o presentar una objeción formal."
+            : "Postulantes con baremo guardado, por puntaje. Los visualizadores opinan y objetan desde aquí; sus objeciones llegan a la bandeja de Objeciones."
+        }
         meta={
           <p className="text-sm text-toga-500">
             <span className="cifra font-medium text-toga-800">{ranking.eligibleCount}</span> en
@@ -42,7 +46,7 @@ export default async function RankingInterno() {
             detalle="Aparecerá cuando se guarde el baremo de un postulante."
           />
         ) : (
-          <RankingConEnvio entries={visibles} puedePublicar={puedePublicar} />
+          <RankingInterno entries={visibles} esVisualizador={esVisualizador} />
         )}
       </div>
     </>

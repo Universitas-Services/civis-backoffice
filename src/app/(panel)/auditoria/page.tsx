@@ -47,6 +47,7 @@ const ACCION: Record<string, string> = {
   "evaluation.adjusted": "Ajustó un puntaje",
   "evaluation.ineligible": "Declaró inelegible por objeciones",
   "objection.received": "Se recibió una objeción",
+  "candidate.opinion_created": "Opinó sobre un postulante",
   "objection.opened": "Abrió una objeción (vio la identidad del objetante)",
   "objection.assigned": "Asignó una objeción",
   "objection.resolved": "Resolvió una objeción",

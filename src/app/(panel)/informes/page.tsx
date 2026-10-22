@@ -39,11 +39,7 @@ export default async function Informes() {
             <ul className="mt-3 space-y-4">
               {informes.map((informe) => (
                 <li key={informe.id}>
-                  <FichaInforme
-                    informe={informe}
-                    puedePublicar={puedeGenerar}
-                    loGeneroElMismoUsuario={informe.preparedBy?.fullName === usuario.fullName}
-                  />
+                  <FichaInforme informe={informe} />
                 </li>
               ))}
             </ul>

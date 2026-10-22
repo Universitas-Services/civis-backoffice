@@ -5,9 +5,8 @@ import { SALA_ETIQUETA } from "@/contracts";
 import { llamarApi, NoAutorizado } from "@/lib/api";
 import { exigirRol, renovarYVolver } from "@/lib/rutas";
 import { CabeceraPagina, EstadoVacio } from "@/components/cabecera-pagina";
-import { InterruptorObjeciones } from "@/components/interruptor-objeciones";
 
-export const metadata: Metadata = { title: "Gestión de impugnaciones y objeciones ciudadanas" };
+export const metadata: Metadata = { title: "Gestión de impugnaciones y objeciones" };
 
 const RESUELTAS = new Set(["RESOLVED_FOUNDED", "RESOLVED_UNFOUNDED", "REJECTED_INADMISSIBLE"]);
 
@@ -19,7 +18,6 @@ interface Respuesta {
 
 export default async function Objeciones() {
   const usuario = await exigirRol("SUPER_ADMIN", "ADMIN", "EVALUATOR");
-  const puedeLapso = usuario.roles.some((rol) => rol === "SUPER_ADMIN" || rol === "ADMIN");
   // ADMIN abre la ronda de objeción; EVALUATOR/SUPER_ADMIN puntúan o votan inelegible.
   const puedeAjustar = usuario.roles.some(
     (r) => r === "SUPER_ADMIN" || r === "ADMIN" || r === "EVALUATOR",
@@ -49,34 +47,18 @@ export default async function Objeciones() {
     porPostulante.set(o.candidate.id, actual);
   }
 
-  let lapsoAbierto = false;
-  if (puedeLapso) {
-    try {
-      const portal = await llamarApi<{ objectionsOpen: boolean }>("/public/portal");
-      lapsoAbierto = portal.objectionsOpen;
-    } catch (error) {
-      if (error instanceof NoAutorizado) await renovarYVolver("/objeciones");
-    }
-  }
-
   return (
     <>
       <CabeceraPagina
-        titulo="Gestión de impugnaciones y objeciones ciudadanas"
-        descripcion="Revise, gestione y dé seguimiento a los reportes de incompatibilidad e inhabilitación presentados por la ciudadanía durante el lapso legal preclusivo (Art. 71 LOTSJ). Desde este panel podrá activar el botón de objeciones, revisar qué postulados presentan objeciones y cuántas objeciones."
+        titulo="Gestión de impugnaciones y objeciones"
+        descripcion="Revise, gestione y dé seguimiento a los reportes de incompatibilidad e inhabilitación presentados por los visualizadores desde el ranking interno. Aquí verá qué postulados tienen objeciones y cuántas."
       />
 
       <div className="px-5 py-6 sm:px-8">
-        {puedeLapso && (
-          <div className="mb-6">
-            <InterruptorObjeciones abierto={lapsoAbierto} />
-          </div>
-        )}
-
         {porPostulante.size === 0 ? (
           <EstadoVacio
             titulo="No hay objeciones que mostrar"
-            detalle="Las objeciones ciudadanas llegan desde el sitio público y aparecen aquí agrupadas por postulante."
+            detalle="Las objeciones las presentan los visualizadores desde el ranking interno y aparecen aquí agrupadas por postulante."
           />
         ) : (
           <div className="overflow-hidden rounded-lg border border-toga-200 bg-white">

@@ -68,7 +68,7 @@ export default async function Dashboard() {
             <Tarjeta
               valor={resumen.objections.reduce((suma, item) => suma + item.count, 0)}
               etiqueta="Objeciones recibidas"
-              detalle="Denuncias del sitio público. Con ellas se corrige el baremo o se declara inelegible."
+              detalle="Objeciones de los visualizadores. Con ellas se corrige el baremo o se declara inelegible."
             />
           </>
         )}

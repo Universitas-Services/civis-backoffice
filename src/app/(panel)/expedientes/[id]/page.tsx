@@ -8,12 +8,7 @@ import { ErrorApi, llamarApi, NoAutorizado } from "@/lib/api";
 import { renovarYVolver } from "@/lib/rutas";
 import { tieneRol, usuarioActual } from "@/lib/sesion";
 import { CabeceraPagina } from "@/components/cabecera-pagina";
-import {
-  InsigniaBanda,
-  InsigniaEstado,
-  InsigniaPublicacion,
-  Puntaje,
-} from "@/components/insignias";
+import { InsigniaBanda, InsigniaEstado, Puntaje } from "@/components/insignias";
 import { SeccionDocumentosExpediente } from "@/components/seccion-documentos-expediente";
 import { HojaHistorialExpediente, type EventoHistorial } from "@/components/historial-expediente";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -37,6 +32,11 @@ export default async function DetalleExpediente({
     if (error instanceof ErrorApi && error.status === 404) notFound();
     throw error;
   }
+
+  // El visualizador (diputado) ve todo el expediente, pero no opera: sus
+  // únicas acciones (opinar y objetar) están en el ranking interno. Tampoco
+  // entra a la bandeja de Objeciones, así que el conteo va sin enlace.
+  const veBandejaObjeciones = tieneRol(usuario, "SUPER_ADMIN", "ADMIN", "EVALUATOR");
 
   let historial: EventoHistorial[] = [];
   try {
@@ -76,12 +76,6 @@ export default async function DetalleExpediente({
               </dd>
             </div>
             <div>
-              <dt className="text-xs text-toga-500">Publicación</dt>
-              <dd className="mt-1">
-                <InsigniaPublicacion estado={e.publicationStatus} />
-              </dd>
-            </div>
-            <div>
               <dt className="text-xs text-toga-500">Recibido</dt>
               <dd className="mt-0.5 text-toga-700">
                 {new Date(e.receivedAt).toLocaleString("es-VE", {
@@ -98,6 +92,7 @@ export default async function DetalleExpediente({
               </dt>
               <dd className="codigo mt-0.5 font-medium text-toga-900">{e.nationalId}</dd>
             </div>
+
             {e.email && (
               <div>
                 <dt className="text-xs text-toga-500">
@@ -118,12 +113,19 @@ export default async function DetalleExpediente({
               <div>
                 <dt className="text-xs text-toga-500">Objeciones</dt>
                 <dd className="mt-0.5">
-                  <Link
-                    href={`/objeciones?candidato=${e.id}`}
-                    className="font-semibold text-balanza-700 hover:underline"
-                  >
-                    <span className="cifra">{e._count?.objections ?? 0}</span> recibidas →
-                  </Link>
+                  {veBandejaObjeciones ? (
+                    <Link
+                      href={`/objeciones?candidato=${e.id}`}
+                      className="font-semibold text-balanza-700 hover:underline"
+                    >
+                      <span className="cifra">{e._count?.objections ?? 0}</span> recibidas →
+                    </Link>
+                  ) : (
+                    <span className="text-toga-900">
+                      <span className="cifra font-semibold">{e._count?.objections ?? 0}</span>{" "}
+                      recibidas
+                    </span>
+                  )}
                 </dd>
               </div>
             )}

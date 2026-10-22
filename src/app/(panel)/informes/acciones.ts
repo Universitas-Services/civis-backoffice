@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { generarInformeSchema, publicarInformeSchema } from "@/contracts";
+import { generarInformeSchema } from "@/contracts";
 import { ErrorApi, llamarApiAccion } from "@/lib/api";
 
 export interface EstadoInformes {
@@ -30,37 +30,18 @@ export async function generarInforme(
     : undefined;
 
   try {
-    const creado = await llamarApiAccion<{ version: number; sha256: string }>("/internal/reports/draft", {
-      method: "POST",
-      body: cutoffAt ? { cutoffAt } : {},
-    });
+    const creado = await llamarApiAccion<{ version: number; sha256: string }>(
+      "/internal/reports/draft",
+      {
+        method: "POST",
+        body: cutoffAt ? { cutoffAt } : {},
+      },
+    );
     revalidatePath("/informes");
     return {
       exito: `Borrador versión ${creado.version} generado. Huella ${creado.sha256.slice(0, 16)}…`,
     };
   } catch (error) {
     return { error: error instanceof ErrorApi ? error.message : "No se pudo generar" };
-  }
-}
-
-export async function publicarInforme(
-  id: string,
-  _previo: EstadoInformes,
-  formData: FormData,
-): Promise<EstadoInformes> {
-  const analisis = publicarInformeSchema.safeParse({ reason: formData.get("reason") });
-  if (!analisis.success) {
-    return { error: analisis.error.issues[0]?.message ?? "Motivo inválido" };
-  }
-
-  try {
-    await llamarApiAccion(`/internal/reports/${id}/publish`, {
-      method: "POST",
-      body: analisis.data,
-    });
-    revalidatePath("/informes");
-    return { exito: "Informe publicado. Ya es visible en el sitio público." };
-  } catch (error) {
-    return { error: error instanceof ErrorApi ? error.message : "No se pudo publicar" };
   }
 }
