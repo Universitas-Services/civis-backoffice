@@ -36,7 +36,9 @@ de que el endpoint correspondiente tenga su `@Roles()` en la API. Si sólo lo
 haces en un sitio, lo has hecho mal.
 
 Roles (espejo de civis-api): `SUPER_ADMIN`, `ADMIN`, `SECRETARY`, `REVIEWER`,
-`EVALUATOR`. Una persona puede tener varios; la bitácora registra cuál se usó
+`EVALUATOR`, `VIEWER` (visualizador: en lo legal, diputados registrados).
+`SUPER_ADMIN` es un rol reservado: ningún texto de pantalla ni mensaje de
+error debe nombrarlo ante otros roles. Una persona puede tener varios; la bitácora registra cuál se usó
 en cada acción.
 
 Matriz UX del panel (más estricta que algunos `@Roles` de la API):
@@ -44,9 +46,10 @@ Matriz UX del panel (más estricta que algunos `@Roles` de la API):
 - Crear expediente: `SUPER_ADMIN` + `SECRETARY`
 - Revisión documental: `SUPER_ADMIN` + `REVIEWER`
 - Evaluación: `SUPER_ADMIN` + `ADMIN` + `EVALUATOR` (solo evaluadores `committeeActive` votan/puntúan; ADMIN reabre escaladas por empate o plazo; SUPER_ADMIN ve conteos y puede forzar cierre sin quorum)
-- Objeciones: `SUPER_ADMIN` + `ADMIN` + `EVALUATOR` (el lapso, `SUPER_ADMIN` + `ADMIN`; abrir ronda de objeción en comité, `SUPER_ADMIN` + `ADMIN`; puntuar/votar inelegible, evaluadores activos)
+- Objeciones (bandeja y ajuste): `SUPER_ADMIN` + `ADMIN` + `EVALUATOR` (abrir ronda de objeción en comité, `SUPER_ADMIN` + `ADMIN`; puntuar/votar inelegible, evaluadores activos). No hay lapso: las objeciones las presenta el `VIEWER` desde el ranking interno, autenticado, sin código por correo
 - Baremo: `SUPER_ADMIN` + `ADMIN` + `EVALUATOR` (crear baremo, solo `SUPER_ADMIN`; ADMIN consulta el activo, ve postulados y aplica)
-- Ranking: `SUPER_ADMIN` + `ADMIN` + `EVALUATOR` (publicar, `SUPER_ADMIN` + `ADMIN`)
+- Ranking interno: `SUPER_ADMIN` + `ADMIN` + `EVALUATOR` + `VIEWER`. La landing está fuera de uso: el panel no publica en ella (sus endpoints de la API se conservan). En `/ranking/[candidateId]` todos leen las opiniones; el `VIEWER` opina (comentario, no se borra) y objeta
+- `VIEWER` ve todo el expediente (datos, documentos, historial, notas) y el Ranking interno, pero sus únicas acciones son opinar y objetar; no entra a la bandeja de Objeciones. Entra directo a `/ranking`
 - Informes: solo `SUPER_ADMIN`
 - `ADMIN` ve Panel, Expedientes, Evaluación (escaladas), Baremo, Objeciones, Ranking interno y Usuarios
 - Usuarios: `SUPER_ADMIN` + `ADMIN` (ADMIN solo asigna roles menores y no lista superadministradores)

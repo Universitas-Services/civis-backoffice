@@ -6,12 +6,22 @@
  */
 import { z } from "zod";
 
-/** Roles del panel — espejo de civis-api `ROLES` (sin PUBLISHER; con ADMIN). */
-export const ROLES = ["SUPER_ADMIN", "ADMIN", "SECRETARY", "REVIEWER", "EVALUATOR"] as const;
+/**
+ * Roles del panel — espejo de civis-api `ROLES` (sin PUBLISHER; con ADMIN).
+ * VIEWER: visualizador (diputado). Consulta, opina y objeta; no opera el proceso.
+ */
+export const ROLES = [
+  "SUPER_ADMIN",
+  "ADMIN",
+  "SECRETARY",
+  "REVIEWER",
+  "EVALUATOR",
+  "VIEWER",
+] as const;
 export type Role = (typeof ROLES)[number];
 
 /** Roles operativos que un ADMIN puede crear/asignar (no ADMIN ni SUPER_ADMIN). */
-export const ROLES_MENORES = ["SECRETARY", "REVIEWER", "EVALUATOR"] as const;
+export const ROLES_MENORES = ["SECRETARY", "REVIEWER", "EVALUATOR", "VIEWER"] as const;
 export type RoleMenor = (typeof ROLES_MENORES)[number];
 
 export const ROL_ETIQUETA: Record<Role, string> = {
@@ -20,6 +30,7 @@ export const ROL_ETIQUETA: Record<Role, string> = {
   SECRETARY: "Secretaría",
   REVIEWER: "Revisión documental",
   EVALUATOR: "Evaluación",
+  VIEWER: "Visualizador",
 };
 
 /** Etiqueta segura si llega un rol desconocido (datos legacy). */
@@ -44,6 +55,7 @@ const RANGO_ROL: Record<Role, number> = {
   SECRETARY: 2,
   REVIEWER: 3,
   EVALUATOR: 4,
+  VIEWER: 5,
 };
 
 function rangoMasAlto(roles: readonly string[]): number {
@@ -142,10 +154,71 @@ export interface EntradaRanking {
   readonly position: number | null;
   readonly tied: boolean;
   readonly rubricVersion: string;
-  /** Identificador interno. Sirve para enviar al ranking público. */
+  /** Identificador interno. Lleva a la ficha del ranking (opiniones y objeción). */
   readonly candidateId?: string;
-  /** El perfil ya está en el sitio público. */
+  /** El perfil ya está en el sitio público (landing fuera de uso). */
   readonly published?: boolean;
+  /** Opiniones de visualizadores. Opcional mientras la API no lo devuelva. */
+  readonly opinionCount?: number;
+}
+
+// ------------------------------------------------- visualizadores (diputados)
+
+/** Opinión de un visualizador: comentario sin efecto en el proceso. No se borra. */
+export const opinionSchema = z.object({
+  body: z
+    .string()
+    .trim()
+    .min(10, "La opinión debe tener al menos 10 caracteres")
+    .max(2000, "La opinión no puede superar 2000 caracteres"),
+});
+export type OpinionInput = z.infer<typeof opinionSchema>;
+
+export interface OpinionPostulante {
+  readonly id: string;
+  readonly body: string;
+  readonly createdAt: string;
+  readonly author: { readonly fullName: string };
+}
+
+/**
+ * Objeción presentada por un visualizador autenticado. La identidad la pone
+ * el servidor desde la sesión: no hay nombre, cédula, correo ni código.
+ */
+export const objecionVisualizadorSchema = z
+  .object({
+    causes: z.array(z.string()).min(1, "Seleccione al menos una causal"),
+    otherCause: z.string().trim().max(500).optional(),
+    description: z
+      .string()
+      .trim()
+      .min(50, "Describa los hechos (mínimo 50 caracteres)")
+      .max(8000, "La descripción no puede superar 8000 caracteres"),
+    evidenceUrl: z
+      .string()
+      .trim()
+      .url("El enlace de las pruebas no es válido")
+      .max(2000, "El enlace es demasiado largo"),
+  })
+  .superRefine((valor, ctx) => {
+    if (valor.causes.includes("OTHER") && !valor.otherCause?.trim()) {
+      ctx.addIssue({ code: "custom", path: ["otherCause"], message: "Indique la otra razón" });
+    }
+  });
+export type ObjecionVisualizadorInput = z.infer<typeof objecionVisualizadorSchema>;
+
+/** Estado de la objeción tal como lo ve quien la presentó. */
+export const ESTADO_PUBLICO_OBJECION: Record<string, string> = {
+  RECEIVED: "Recibida",
+  UNDER_REVIEW: "En revisión",
+  RESOLVED: "Resuelta",
+  CLOSED: "Cerrada",
+};
+
+export interface MiObjecion {
+  readonly trackingCode: string;
+  readonly receivedAt: string;
+  readonly publicStatus: string;
 }
 
 export interface ResultadoRanking {
@@ -516,12 +589,7 @@ export interface AjustesPortal {
 export type EvaluationRoundKind = "ELIGIBILITY" | "SCORING" | "OBJECTION";
 
 export type RoundParticipantAction =
-  | "PENDING"
-  | "SCORED"
-  | "ABSTAINED"
-  | "NO_SHOW"
-  | "RECUSED"
-  | "VOTED_INELIGIBLE";
+  "PENDING" | "SCORED" | "ABSTAINED" | "NO_SHOW" | "RECUSED" | "VOTED_INELIGIBLE";
 
 export interface ParticipanteRondaComite {
   readonly id: string;

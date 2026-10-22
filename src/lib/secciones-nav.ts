@@ -10,12 +10,15 @@ import type { Role, Sesion } from "@/contracts";
  * - Crear expediente: SUPER_ADMIN + SECRETARY
  * - Revisión documental: SUPER_ADMIN + REVIEWER
  * - Evaluación: SUPER_ADMIN + ADMIN + EVALUATOR (ADMIN resuelve escaladas de comité; el voto es del evaluador)
- * - Objeciones: SUPER_ADMIN + ADMIN + EVALUATOR (el interruptor, SUPER_ADMIN + ADMIN)
+ * - Objeciones (bandeja y ajuste): SUPER_ADMIN + ADMIN + EVALUATOR. Ya no hay lapso:
+ *   las objeciones las presentan los visualizadores desde el ranking interno.
  * - Baremo (lista, activo y aplicar): SUPER_ADMIN + ADMIN + EVALUATOR
  * - Configurar baremo: solo SUPER_ADMIN (la API también lo permite al ADMIN)
- * - Ranking publicar: SUPER_ADMIN + ADMIN
+ * - Ranking interno: SUPER_ADMIN + ADMIN + EVALUATOR + VIEWER. No se publica en la
+ *   landing (fuera de uso). El VIEWER opina y objeta desde la ficha del ranking.
  * - Informes: solo SUPER_ADMIN
  * - ADMIN ve Panel, Expedientes, Evaluación (escaladas), Baremo, Objeciones, Ranking interno y Usuarios
+ * - VIEWER (visualizador, diputado) ve Expedientes en solo lectura y Ranking interno
  */
 export type EntradaNav = {
   readonly href: string;
@@ -36,7 +39,7 @@ export const SECCIONES: readonly SeccionNav[] = [
   {
     href: "/expedientes",
     texto: "Expedientes",
-    roles: ["SUPER_ADMIN", "ADMIN", "SECRETARY", "REVIEWER", "EVALUATOR"],
+    roles: ["SUPER_ADMIN", "ADMIN", "SECRETARY", "REVIEWER", "EVALUATOR", "VIEWER"],
   },
   {
     href: "/revision-documental",
@@ -65,7 +68,7 @@ export const SECCIONES: readonly SeccionNav[] = [
   {
     href: "/ranking",
     texto: "Ranking interno",
-    roles: ["SUPER_ADMIN", "ADMIN", "EVALUATOR"],
+    roles: ["SUPER_ADMIN", "ADMIN", "EVALUATOR", "VIEWER"],
   },
   {
     href: "/informes",
@@ -95,6 +98,7 @@ function entradasDeRuta(): readonly EntradaNav[] {
 /**
  * Primera pantalla tras iniciar sesión.
  * El revisor no tiene panel de métricas: la API no le da ese resumen.
+ * El visualizador entra directo al ranking, que es donde opina y objeta.
  */
 export function rutaInicio(roles: readonly string[]): string {
   const vePanel = SECCIONES.find((s) => s.href === "/dashboard")?.roles.some((r) =>
@@ -102,6 +106,7 @@ export function rutaInicio(roles: readonly string[]): string {
   );
   if (vePanel) return "/dashboard";
   if (roles.includes("REVIEWER")) return "/revision-documental";
+  if (roles.includes("VIEWER")) return "/ranking";
   return "/expedientes";
 }
 

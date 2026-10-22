@@ -44,9 +44,7 @@ interface Bandeja {
 
 export default async function BandejaEvaluacion() {
   const usuario = await exigirRol("SUPER_ADMIN", "ADMIN", "EVALUATOR");
-  const puedeResolverEscaladas = usuario.roles.some(
-    (r) => r === "SUPER_ADMIN" || r === "ADMIN",
-  );
+  const puedeResolverEscaladas = usuario.roles.some((r) => r === "SUPER_ADMIN" || r === "ADMIN");
 
   let bandeja: Bandeja;
   let inelegibles: DecisionElegibilidad[];
@@ -108,11 +106,10 @@ export default async function BandejaEvaluacion() {
               </span>
               {conObjeciones.length}{" "}
               {conObjeciones.length === 1 ? "expediente tiene" : "expedientes tienen"} objeciones
-              ciudadanas
             </h2>
             <p className="mt-1.5 text-sm leading-relaxed text-toga-700">
-              Revise la objeción antes de emitir la calificación. Una objeción no cambia el
-              puntaje por sí sola: requiere resolución motivada y aprobada.
+              Revise la objeción antes de emitir la calificación. Una objeción no cambia el puntaje
+              por sí sola: requiere resolución motivada y aprobada.
             </p>
             <ul className="mt-3 flex flex-wrap gap-2">
               {conObjeciones.map((c) => (

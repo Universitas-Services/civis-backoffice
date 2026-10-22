@@ -10,27 +10,6 @@ export interface Resultado {
   readonly exito?: string;
 }
 
-export async function cambiarLapsoObjeciones(abierto: boolean): Promise<Resultado> {
-  try {
-    await llamarApiAccion("/internal/portal", {
-      method: "PATCH",
-      body: { objectionsOpen: abierto },
-    });
-    revalidatePath("/objeciones");
-    return {
-      ok: true,
-      exito: abierto
-        ? "El botón de objetar ya se muestra en el sitio público."
-        : "El botón de objetar quedó oculto en el sitio público.",
-    };
-  } catch (error) {
-    return {
-      ok: false,
-      error: error instanceof ErrorApi ? error.message : "No se pudo cambiar el lapso",
-    };
-  }
-}
-
 const motivacionSchema = z
   .string()
   .trim()
@@ -89,4 +68,3 @@ export async function auditarTachas(
     };
   }
 }
-
