@@ -8,7 +8,12 @@ import { ErrorApi, llamarApi, NoAutorizado } from "@/lib/api";
 import { renovarYVolver } from "@/lib/rutas";
 import { tieneRol, usuarioActual } from "@/lib/sesion";
 import { CabeceraPagina } from "@/components/cabecera-pagina";
-import { InsigniaBanda, InsigniaEstado, Puntaje } from "@/components/insignias";
+import {
+  InsigniaAutopostulacion,
+  InsigniaBanda,
+  InsigniaEstado,
+  Puntaje,
+} from "@/components/insignias";
 import { SeccionDocumentosExpediente } from "@/components/seccion-documentos-expediente";
 import { HojaHistorialExpediente, type EventoHistorial } from "@/components/historial-expediente";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -46,6 +51,8 @@ export default async function DetalleExpediente({
   }
 
   const expediente = e.submissions[0];
+  const devueltoAutopostulado =
+    e.origin === "AUTOPOSTULACION" && e.workflowStatus === "DRAFT" && Boolean(e.selfSubmittedAt);
   const evaluacion = e.evaluations[0];
   const puedeEvaluar =
     tieneRol(usuario, "SUPER_ADMIN", "EVALUATOR") &&
@@ -73,6 +80,7 @@ export default async function DetalleExpediente({
               <dt className="text-xs text-toga-500">Etapa del flujo</dt>
               <dd className="mt-1">
                 <InsigniaEstado estado={e.workflowStatus} />
+                {e.origin === "AUTOPOSTULACION" && <InsigniaAutopostulacion />}
               </dd>
             </div>
             <div>
@@ -149,6 +157,40 @@ export default async function DetalleExpediente({
 
       {/* Ancho completo como en «nuevo expediente» para alinear el checklist de docs. */}
       <div className="space-y-6 px-5 py-6 sm:px-8">
+        {devueltoAutopostulado && (
+          <div
+            role="note"
+            className="rounded-lg border border-balanza-600/30 bg-balanza-50 px-5 py-4 text-sm leading-relaxed text-toga-800"
+          >
+            <p className="font-semibold text-toga-900">
+              Autopostulación devuelta: contacte al postulante
+            </p>
+            <p className="mt-1">
+              Este expediente lo cargó y envió el propio postulante, y la revisión lo devolvió. Él
+              ya no puede modificarlo: acuerde las correcciones por teléfono o correo y cárguelas
+              aquí.
+            </p>
+            <p className="mt-2">
+              {e.phone && (
+                <>
+                  Teléfono: <span className="codigo font-semibold">{telefonoLegible(e.phone)}</span>
+                </>
+              )}
+              {e.phone && e.email && " · "}
+              {e.email && (
+                <>
+                  Correo:{" "}
+                  <a
+                    href={`mailto:${e.email}`}
+                    className="font-semibold text-balanza-700 underline"
+                  >
+                    {e.email}
+                  </a>
+                </>
+              )}
+            </p>
+          </div>
+        )}
         <SeccionDocumentosExpediente
           candidateId={e.id}
           submissionId={expediente?.id ?? null}
@@ -190,4 +232,9 @@ export default async function DetalleExpediente({
       </div>
     </>
   );
+}
+
+/** 04141234567 → 0414 1234567 */
+function telefonoLegible(telefono: string): string {
+  return /^\d{11}$/.test(telefono) ? `${telefono.slice(0, 4)} ${telefono.slice(4)}` : telefono;
 }

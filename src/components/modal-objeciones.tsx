@@ -17,6 +17,8 @@ export interface ObjecionVista {
   readonly otherCause: string | null;
   readonly description: string;
   readonly evidenceUrl: string;
+  /** Sólo viene si la presentó un visualizador; la ciudadana es reservada. */
+  readonly submittedBy?: { readonly fullName: string } | null;
 }
 
 /** Botón compacto que abre las denuncias del postulante en un panel lateral. */
@@ -56,6 +58,19 @@ export function ModalObjeciones({
                   <CardHeader className="gap-2 p-3 pb-2">
                     <p className="text-[0.65rem] font-medium tracking-wide text-toga-500 uppercase">
                       Denuncia {indice + 1} de {items.length}
+                    </p>
+                    <p className="text-xs text-toga-700">
+                      {item.submittedBy ? (
+                        <>
+                          Presentada por{" "}
+                          <span className="font-semibold text-toga-900">
+                            {item.submittedBy.fullName}
+                          </span>{" "}
+                          (visualizador)
+                        </>
+                      ) : (
+                        "Ciudadano (identidad reservada)"
+                      )}
                     </p>
                     <CardTitle className="text-xs leading-snug">Causas alegadas</CardTitle>
                     <ul className="flex flex-wrap gap-1.5">

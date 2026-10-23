@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { objecionVisualizadorSchema, opinionSchema } from "./index";
 
 const objecionValida = {
+  objectorNationalId: "V-12345678",
   causes: ["POLITICAL_MILITANCY"],
   description: "x".repeat(60),
   evidenceUrl: "https://ejemplo.org/pruebas.pdf",
@@ -18,8 +19,14 @@ describe("opinionSchema", () => {
 });
 
 describe("objecionVisualizadorSchema", () => {
-  it("acepta una objeción completa sin datos de identidad", () => {
+  it("acepta una objeción completa con la cédula de quien objeta", () => {
     expect(objecionVisualizadorSchema.safeParse(objecionValida).success).toBe(true);
+  });
+
+  it("exige la cédula de quien objeta", () => {
+    expect(
+      objecionVisualizadorSchema.safeParse({ ...objecionValida, objectorNationalId: "V-" }).success,
+    ).toBe(false);
   });
 
   it("exige al menos una causal", () => {
