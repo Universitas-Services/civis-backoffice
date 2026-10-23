@@ -113,6 +113,39 @@ export function FormularioObjecion({
 
   return (
     <form action={accion} className="space-y-4 rounded-lg border border-toga-200 bg-white p-4">
+      <div>
+        <label htmlFor="cedula-objetante" className="block text-sm font-medium text-toga-800">
+          Su cédula de identidad <span className="text-balanza-700">*</span>
+        </label>
+        <div className="mt-1 flex w-fit max-w-full gap-2">
+          <select
+            name="cedulaPrefijo"
+            aria-label="Tipo de cédula"
+            defaultValue="V"
+            className="rounded-md border border-toga-300 bg-white px-2 py-2 text-base"
+          >
+            <option value="V">V</option>
+            <option value="E">E</option>
+          </select>
+          <input
+            id="cedula-objetante"
+            name="cedulaDigitos"
+            inputMode="numeric"
+            autoComplete="off"
+            required
+            pattern="\d{6,9}"
+            maxLength={14}
+            placeholder="12345678"
+            onChange={(e) => {
+              e.currentTarget.value = e.currentTarget.value.replace(/\D/g, "").slice(0, 9);
+              setConfirmando(false);
+            }}
+            className="codigo w-36 rounded-md border border-toga-300 px-3 py-2 text-base"
+          />
+        </div>
+        <p className="mt-1 text-xs text-toga-500">Aparece en el documento de la denuncia.</p>
+      </div>
+
       <fieldset>
         <legend className="text-sm font-medium text-toga-800">
           Causales <span className="text-balanza-700">*</span>

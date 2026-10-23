@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { FileStack } from "lucide-react";
 import { categoryDesdeSlotKey } from "@/contracts";
 import { useToast } from "@/components/toast-provider";
@@ -17,16 +17,28 @@ export function PasoCargaDocumentos({
   submissionId,
   onEnviarRevision,
   enviandoRevision = false,
+  urlCarga,
+  guardadosIniciales,
+  accionEnvio,
 }: {
   readonly datos: DatosPostulanteMaqueta;
   readonly salaLabel: string;
   readonly submissionId: string;
   readonly onEnviarRevision: () => void;
   readonly enviandoRevision?: boolean;
+  /** Ruta que recibe el FormData. Por defecto, el proxy autenticado del panel. */
+  readonly urlCarga?: string;
+  /** Documentos ya guardados (al reanudar una carga). */
+  readonly guardadosIniciales?: Record<string, ArchivoGuardado[]>;
+  /** Sustituye el botón «Enviar a revisión» (la autopostulación verifica el correo). */
+  readonly accionEnvio?: ReactNode;
 }) {
   const toast = useToast();
   const [pendientes, setPendientes] = useState<Record<string, File | null>>({});
-  const [guardados, setGuardados] = useState<Record<string, ArchivoGuardado[]>>({});
+  const [guardados, setGuardados] = useState<Record<string, ArchivoGuardado[]>>(
+    guardadosIniciales ?? {},
+  );
+  const destino = urlCarga ?? `/api/documentos/${submissionId}`;
   const [activo, setActivo] = useState<string | undefined>();
   const [guardando, setGuardando] = useState(false);
   const [sustituyendoId, setSustituyendoId] = useState<string | null>(null);
@@ -76,7 +88,7 @@ export function PasoCargaDocumentos({
       cuerpo.append("category", category);
       cuerpo.append("file", file);
 
-      const respuesta = await fetch(`/api/documentos/${submissionId}`, {
+      const respuesta = await fetch(destino, {
         method: "POST",
         body: cuerpo,
       });
@@ -126,7 +138,7 @@ export function PasoCargaDocumentos({
       cuerpo.append("replaces", id);
       cuerpo.append("file", file);
 
-      const respuesta = await fetch(`/api/documentos/${submissionId}`, {
+      const respuesta = await fetch(destino, {
         method: "POST",
         body: cuerpo,
       });
@@ -249,7 +261,9 @@ export function PasoCargaDocumentos({
           bloqueado={bloqueado}
           onSeleccionar={seleccionar}
           accion={
-            enRevision ? null : confirmandoRevision ? (
+            enRevision ? null : accionEnvio !== undefined ? (
+              accionEnvio
+            ) : confirmandoRevision ? (
               <div className="w-full space-y-2">
                 <p className="text-left text-xs leading-relaxed text-toga-700">
                   ¿Confirma el envío de{" "}

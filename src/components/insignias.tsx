@@ -195,3 +195,12 @@ export function Puntaje({
     </span>
   );
 }
+
+/** El postulante creó y cargó su propio expediente, sin la secretaría. */
+export function InsigniaAutopostulacion() {
+  return (
+    <span className="ml-2 inline-flex rounded-full bg-balanza-50 px-2 py-0.5 text-[0.7rem] font-medium text-balanza-700 ring-1 ring-inset ring-balanza-600/25">
+      Autopostulación
+    </span>
+  );
+}

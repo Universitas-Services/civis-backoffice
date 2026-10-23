@@ -12,7 +12,9 @@ const BANDAS: Record<string, { texto: string; clases: string }> = {
 export function PastillaBanda({ band }: { readonly band: string }) {
   const b = BANDAS[band] ?? BANDAS.LOW!;
   return (
-    <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${b.clases}`}>
+    <span
+      className={`inline-flex whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-medium ${b.clases}`}
+    >
       {b.texto}
     </span>
   );
@@ -25,7 +27,7 @@ export function salaDe(chamber: string) {
 function Opiniones({ n }: { readonly n: number | undefined }) {
   if (n === undefined) return <span className="text-toga-400">—</span>;
   return (
-    <span className="cifra">
+    <span className="cifra whitespace-nowrap">
       {n} {n === 1 ? "opinión" : "opiniones"}
     </span>
   );
@@ -54,7 +56,7 @@ function AccionesFila({
     );
   }
   return (
-    <span className="inline-flex flex-wrap items-center gap-3">
+    <span className="inline-flex items-center gap-3 whitespace-nowrap">
       <Link href={`${base}#opinar`} className={enlace}>
         Opinar
       </Link>
@@ -78,7 +80,7 @@ export function RankingInterno({
 }) {
   return (
     <>
-      <ul className="space-y-3 lg:hidden">
+      <ul className="space-y-3 xl:hidden">
         {entries.map((e) => (
           <li key={e.publicId} className="rounded-lg border border-toga-200 bg-white p-4">
             <div className="flex items-start justify-between gap-3">
@@ -101,7 +103,7 @@ export function RankingInterno({
         ))}
       </ul>
 
-      <div className="hidden overflow-hidden rounded-lg border border-toga-200 bg-white lg:block">
+      <div className="hidden overflow-hidden rounded-lg border border-toga-200 bg-white xl:block">
         <table className="w-full text-left text-sm">
           <caption className="sr-only">Ranking interno de postulantes evaluados</caption>
           <thead className="border-b-2 border-toga-300 bg-toga-50">

@@ -28,6 +28,19 @@ administración. No es un sitio de consulta: es donde se opera el proceso.
 - **La autorización real la hace la API**, en cada llamada. Ocultar un enlace
   del menú es comodidad, no seguridad.
 
+## Autopostulación (páginas públicas)
+
+`/postulacion/*` es la única parte del panel sin sesión: el postulante crea su
+expediente, carga documentos y lo envía con un código de acceso
+(`CIVIS-XXXX-XXXX-XXXX`). Reglas:
+
+- El código **nunca** va en la URL. Vive cifrado en la cookie HttpOnly
+  `cp_postulacion` (`src/lib/postulacion.ts`) y viaja a la API en la cabecera
+  `X-Codigo-Postulacion`, siempre desde el servidor.
+- Tras el primer envío el acceso es de solo lectura; si la revisión devuelve
+  el expediente, lo corrige la secretaría (ve el aviso de contacto).
+- Contrato: `docs/AUTOPOSTULACION.md`.
+
 ## Navegación y roles
 
 `lib/secciones-nav.ts` filtra las secciones por rol (la barra lateral lo

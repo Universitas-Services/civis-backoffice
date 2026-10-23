@@ -17,7 +17,9 @@ import { COOKIE_SESION } from "@/lib/config";
  * La validación real —¿la sesión sirve?, ¿el rol alcanza?— la hace la API en
  * cada llamada, y cada página la comprueba con `exigirRol`.
  */
-const RUTAS_PUBLICAS = ["/login", "/api/sesion"];
+// La autopostulación es pública: el postulante entra con su código de acceso,
+// no con sesión. Sus pantallas y su proxy de subida comprueban ese código.
+const RUTAS_PUBLICAS = ["/login", "/api/sesion", "/postulacion", "/api/postulacion"];
 
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;

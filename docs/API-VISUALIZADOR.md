@@ -26,7 +26,7 @@ No hay lapso de objeciones: el visualizador puede objetar siempre. El panel ya n
 | `users.service.ts` | Sin cambios: el ADMIN ya puede asignar todo menos `SUPER_ADMIN`, y el enum ya acepta `VIEWER` |
 | `prisma/seed.ts` | Usuario de demostración `visualizador@demo.local` |
 
-El panel muestra el rol como «Visualizador» y lo ofrece al ADMIN al crear usuarios. **No** se añadió cédula al usuario: la objeción del visualizador guarda `objectorNationalId = null` y queda ligada a la cuenta por `submittedById`.
+El panel muestra el rol como «Visualizador» y lo ofrece al ADMIN al crear usuarios. La cédula no se guarda en el usuario: el visualizador la escribe en cada objeción (`objectorNationalId`, obligatoria) y la objeción queda ligada a la cuenta por `submittedById`.
 
 ## 2. Permisos de lectura
 
@@ -105,6 +105,7 @@ Rol: sólo `VIEWER`. `:id` es el **id interno** del postulante, no `publicId`.
 
 ```json
 {
+  "objectorNationalId": "V-12345678",
   "causes": ["POLITICAL_MILITANCY", "OTHER"],
   "otherCause": "Texto si marcó OTHER",
   "description": "Hechos, mínimo 50 caracteres…",
@@ -112,7 +113,7 @@ Rol: sólo `VIEWER`. `:id` es el **id interno** del postulante, no `publicId`.
 }
 ```
 
-**Validación:** las mismas reglas que `createObjectionSchema` para `causes`, `otherCause`, `description` y `evidenceUrl`. `OTHER` exige `otherCause`. **Sin** `objectorFullName`, `objectorNationalId`, `objectorEmail`, `verificationCode`, `privacyConsent`, `website` ni `captchaToken`.
+**Validación:** `objectorNationalId` obligatoria (cédula V/E de quien objeta), y las mismas reglas que `createObjectionSchema` para `causes`, `otherCause`, `description` y `evidenceUrl`. `OTHER` exige `otherCause`. **Sin** `objectorFullName`, `objectorEmail`, `verificationCode`, `privacyConsent`, `website` ni `captchaToken`.
 
 **Qué hace el servidor:**
 
@@ -121,7 +122,7 @@ Rol: sólo `VIEWER`. `:id` es el **id interno** del postulante, no `publicId`.
 3. Crea la `Objection` igual que `PublicService.createObjection`, con estos datos:
    - `objectorFullName` = `user.fullName`
    - `objectorEmail` = `user.email`
-   - `objectorNationalId` = `null` (en el PDF del acuse: «No registrada»)
+   - `objectorNationalId` = la cédula que escribe el visualizador en el formulario (aparece en el PDF)
    - `emailVerifiedAt` = ahora, porque el usuario está autenticado
    - `privacyConsentAt` = ahora
    - `submittedIp` = `ctx.ip`

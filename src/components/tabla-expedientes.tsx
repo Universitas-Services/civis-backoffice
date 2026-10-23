@@ -3,7 +3,7 @@
 import Link from "next/link";
 import type { ExpedienteListado, SuitabilityBand, WorkflowStatus } from "@/contracts";
 import { ESTADO_ETIQUETA, SALA_ETIQUETA } from "@/contracts";
-import { InsigniaEstado } from "@/components/insignias";
+import { InsigniaAutopostulacion, InsigniaEstado } from "@/components/insignias";
 import { ConTooltip, TooltipProvider } from "@/components/ui/tooltip";
 
 const BANDA_CORTA: Record<SuitabilityBand, string> = {
@@ -107,6 +107,7 @@ export function TablaExpedientes({ items }: { readonly items: readonly Expedient
                         {e.firstName} {e.lastName}
                       </Link>
                     </ConTooltip>
+                    {e.origin === "AUTOPOSTULACION" && <InsigniaAutopostulacion />}
                   </td>
                   <td className="px-4 py-3 text-toga-600">
                     <ConTooltip texto={SALA_ETIQUETA[e.chamber] ?? String(e.chamber)}>

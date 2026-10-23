@@ -173,9 +173,17 @@ export default async function FichaRanking({
                     className="flex flex-wrap items-center justify-between gap-2 px-4 py-2.5"
                   >
                     <span className="codigo text-toga-900">{m.trackingCode}</span>
-                    <span className="text-xs text-toga-500">
-                      {fecha(m.receivedAt)} ·{" "}
-                      {ESTADO_PUBLICO_OBJECION[m.publicStatus] ?? m.publicStatus}
+                    <span className="flex flex-wrap items-center gap-3 text-xs text-toga-500">
+                      <span>
+                        {fecha(m.receivedAt)} ·{" "}
+                        {ESTADO_PUBLICO_OBJECION[m.publicStatus] ?? m.publicStatus}
+                      </span>
+                      <a
+                        href={`/api/objeciones/mias/${encodeURIComponent(m.trackingCode)}/pdf`}
+                        className="rounded-md border border-toga-300 bg-white px-2.5 py-1 text-xs font-semibold text-toga-700 hover:bg-toga-50"
+                      >
+                        Descargar PDF
+                      </a>
                     </span>
                   </li>
                 ))}

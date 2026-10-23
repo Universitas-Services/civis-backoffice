@@ -60,7 +60,10 @@ export async function objetar(
   formData: FormData,
 ): Promise<EstadoObjecion> {
   const otra = formData.get("otherCause");
+  const prefijo = formData.get("cedulaPrefijo") === "E" ? "E" : "V";
+  const digitos = String(formData.get("cedulaDigitos") ?? "").replace(/\D/g, "");
   const analisis = objecionVisualizadorSchema.safeParse({
+    objectorNationalId: `${prefijo}-${digitos}`,
     causes: formData.getAll("causes").map(String),
     otherCause: typeof otra === "string" && otra.trim() ? otra : undefined,
     description: formData.get("description"),

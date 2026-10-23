@@ -187,6 +187,11 @@ export interface OpinionPostulante {
  */
 export const objecionVisualizadorSchema = z
   .object({
+    /** Cédula de quien objeta (V/E + 6 a 9 dígitos): aparece en el PDF. */
+    objectorNationalId: z
+      .string()
+      .trim()
+      .regex(/^[VE]-\d{6,9}$/, "Indique su cédula: entre 6 y 9 dígitos"),
     causes: z.array(z.string()).min(1, "Seleccione al menos una causal"),
     otherCause: z.string().trim().max(500).optional(),
     description: z
@@ -417,6 +422,10 @@ export interface ExpedienteListado {
   /** Puede incluir el valor legacy SOCIAL en datos antiguos. */
   readonly chamber: Chamber | string;
   readonly workflowStatus: WorkflowStatus;
+  /** AUTOPOSTULACION si lo creó el propio postulante, sin la secretaría. */
+  readonly origin?: "SECRETARIA" | "AUTOPOSTULACION";
+  /** Autopostulación: cuándo lo envió el postulante a revisión. */
+  readonly selfSubmittedAt?: string | null;
   readonly publicationStatus: string;
   readonly receivedAt: string;
   readonly submissions: readonly {
@@ -852,3 +861,56 @@ export {
   type BaremoRangoDetalle,
   puntosBaremo,
 } from "./baremo-dinamico";
+
+// ------------------------------------------------------- autopostulación
+
+/**
+ * Teléfono venezolano en formato nacional (11 dígitos): 0 + código + 7.
+ * Móviles 0412/0422 (Digitel), 0414/0424 (Movistar), 0416/0426 (Movilnet);
+ * fijos 02XX. Espejo de civis-api `contracts/postulacion.ts`.
+ */
+export const TELEFONO_VE = /^0(?:2\d{2}|4(?:12|14|16|22|24|26))\d{7}$/;
+
+/** Deja sólo dígitos y pasa +58XXXXXXXXXX a 0XXXXXXXXXX. */
+export function normalizarTelefono(valor: string): string {
+  const digitos = valor.replace(/\D/g, "");
+  if (digitos.length === 12 && digitos.startsWith("58")) return `0${digitos.slice(2)}`;
+  if (digitos.length === 10 && !digitos.startsWith("0")) return `0${digitos}`;
+  return digitos;
+}
+
+export const MENSAJE_TELEFONO =
+  "Teléfono venezolano de 11 dígitos, p. ej. 04141234567 (móvil) o 02121234567 (fijo)";
+
+/** Código de acceso de la autopostulación: CIVIS-XXXX-XXXX-XXXX. */
+export const FORMATO_CODIGO_ACCESO =
+  /^CIVIS-[2-9A-HJKMNP-TV-Z]{4}-[2-9A-HJKMNP-TV-Z]{4}-[2-9A-HJKMNP-TV-Z]{4}$/;
+
+export function normalizarCodigoAcceso(valor: string): string {
+  const limpio = valor.toUpperCase().replace(/[^0-9A-Z]/g, "");
+  const cuerpo = limpio.startsWith("CIVIS") ? limpio.slice(5) : limpio;
+  if (cuerpo.length !== 12) return valor.trim().toUpperCase();
+  return `CIVIS-${cuerpo.slice(0, 4)}-${cuerpo.slice(4, 8)}-${cuerpo.slice(8, 12)}`;
+}
+
+export interface EstadoPostulacion {
+  readonly fileNumber: string | null;
+  readonly submissionId: string | null;
+  readonly fullName: string;
+  readonly nationalId: string;
+  readonly chamber: string;
+  readonly chamberLabel: string;
+  readonly phone: string | null;
+  readonly workflowStatus: WorkflowStatus;
+  /** Etapa sin jerga interna, tal como la ve el postulante. */
+  readonly etapa: string;
+  readonly enviadoEl: string | null;
+  readonly puedeCargar: boolean;
+  readonly documentos: readonly {
+    readonly id: string;
+    readonly category: string;
+    readonly originalName: string;
+    readonly sizeBytes: number;
+    readonly uploadedAt: string;
+  }[];
+}
