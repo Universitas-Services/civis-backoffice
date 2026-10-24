@@ -7,6 +7,7 @@ import { postulanteDesdeExpediente } from "@/lib/adaptar-revision-api";
 import { exigirRol, renovarYVolver } from "@/lib/rutas";
 import { CabeceraPagina, EstadoVacio } from "@/components/cabecera-pagina";
 import { DetalleRevisionPostulante } from "@/components/revision-maqueta/detalle-revision-postulante";
+import { BloqueoRevision } from "@/components/revision-maqueta/bloqueo-revision";
 import { HojaHistorialExpediente, type EventoHistorial } from "@/components/historial-expediente";
 
 export const metadata: Metadata = { title: "Revisión del postulante" };
@@ -43,6 +44,19 @@ export default async function RevisionDocumentalPostulante({
     notFound();
   }
 
+  // Un expediente lo revisa una sola persona a la vez. Si otra lo tiene
+  // abierto, se espera: nadie puede quitárselo.
+  try {
+    await llamarApi(`/internal/candidates/${id}/review-lock`, { method: "POST" });
+  } catch (error) {
+    if (error instanceof NoAutorizado) await renovarYVolver(`/revision-documental/${id}`);
+    if (error instanceof ErrorApi && error.status === 409) {
+      return avisoCarga(error.message, "Este expediente ya está en revisión");
+    }
+    if (error instanceof ErrorApi) return avisoCarga(error.message);
+    return avisoCarga("No se pudo contactar la API. Intente de nuevo en unos momentos.");
+  }
+
   const postulante = postulanteDesdeExpediente(expediente);
 
   return (
@@ -57,13 +71,14 @@ export default async function RevisionDocumentalPostulante({
         acciones={<HojaHistorialExpediente eventos={historial} />}
       />
       <div className="space-y-6 px-5 py-6 sm:px-8">
+        <BloqueoRevision candidateId={id} />
         <DetalleRevisionPostulante postulante={postulante} />
       </div>
     </>
   );
 }
 
-function avisoCarga(detalle: string) {
+function avisoCarga(detalle: string, titulo = "No se pudo cargar este expediente") {
   return (
     <>
       <CabeceraPagina
@@ -76,7 +91,7 @@ function avisoCarga(detalle: string) {
       />
       <div className="px-5 py-6 sm:px-8">
         <EstadoVacio
-          titulo="No se pudo cargar este expediente"
+          titulo={titulo}
           detalle={detalle}
           accion={
             <Link

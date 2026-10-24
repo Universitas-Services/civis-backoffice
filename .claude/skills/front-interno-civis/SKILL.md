@@ -86,6 +86,15 @@ Si una pantalla sugiere lo contrario de esto, la pantalla está mal:
 6. **Nada se borra.** No añadas botones de eliminar expedientes, evaluaciones
    u objeciones.
 
+**Revisión documental: un revisor por expediente.** Al abrir
+`/revision-documental/[id]` la página toma el bloqueo (`POST
+/internal/candidates/:id/review-lock`); si otra persona lo tiene, la API
+responde 409 y se muestra el aviso, nunca el detalle. `<BloqueoRevision>` lo
+renueva con la actividad (máx. una vez por minuto, vía `/api/revision/[id]/bloqueo`)
+y lo suelta al salir (`sendBeacon` a `/api/revision/[id]/liberar`). Vence a
+los 15 min sin actividad y nadie puede forzarlo. La cola muestra las filas
+bloqueadas sin enlace. Las escrituras de la revisión también lo exigen en la API.
+
 ## Diseño — es una herramienta, no una vitrina
 
 Misma paleta y tipografía que la landing (ver la skill `front-publico-civis`

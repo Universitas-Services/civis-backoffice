@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { createPortal } from "react-dom";
-import { FileStack, FileText, Maximize2 } from "lucide-react";
+import { useMemo, useState } from "react";
+import { FileStack, FileText } from "lucide-react";
 import type { DocumentoExpediente } from "@/contracts";
 import { CATEGORIA_ETIQUETA } from "@/contracts";
 import { VisorDocumentoRevision } from "@/components/revision-maqueta/visor-documento-revision";
+import { AmpliarDocumento } from "@/components/revision-maqueta/ampliar-documento";
 import { documentosPorPestana, PESTANAS_VISOR, type PestanaVisorId } from "@/lib/elegibilidad";
 
 type PestanaId = PestanaVisorId | "otros";
@@ -14,8 +14,6 @@ type PestanaId = PestanaVisorId | "otros";
  * Misma visualización que el Paso 1 de elegibilidad:
  * pestañas por bloque, el archivo y el formulario que guardó el revisor.
  */
-const ALTURA_MODAL = "h-[min(80dvh,52rem)]";
-
 export function VistaDocumentosFormulario({
   documentos,
   anclarVisor = true,
@@ -48,7 +46,6 @@ export function VistaDocumentosFormulario({
 
   const [pestanaActiva, setPestanaActiva] = useState<PestanaId | null>(null);
   const [documentoId, setDocumentoId] = useState<string | null>(null);
-  const [ampliado, setAmpliado] = useState(false);
 
   const docsDePestana = useMemo(() => {
     if (!pestanaActiva) return [] as DocumentoExpediente[];
@@ -78,15 +75,6 @@ export function VistaDocumentosFormulario({
       .filter((c) => c.valor.trim() !== "");
   }, [documentoSeleccionado]);
 
-  useEffect(() => {
-    if (!ampliado) return;
-    function cerrarConEscape(evento: KeyboardEvent) {
-      if (evento.key === "Escape") setAmpliado(false);
-    }
-    window.addEventListener("keydown", cerrarConEscape);
-    return () => window.removeEventListener("keydown", cerrarConEscape);
-  }, [ampliado]);
-
   const tituloDocumento = documentoSeleccionado
     ? (CATEGORIA_ETIQUETA[documentoSeleccionado.category] ?? String(documentoSeleccionado.category))
     : "";
@@ -113,7 +101,6 @@ export function VistaDocumentosFormulario({
               onClick={() => {
                 setPestanaActiva(p.id);
                 setDocumentoId(null);
-                setAmpliado(false);
               }}
               className={`whitespace-nowrap border-b-2 px-4 py-2.5 text-sm font-medium transition-colors ${
                 pestanaActiva === p.id
@@ -146,7 +133,6 @@ export function VistaDocumentosFormulario({
                 title={etiqueta}
                 onClick={() => {
                   setDocumentoId(d.id);
-                  setAmpliado(false);
                 }}
                 className={`inline-flex max-w-[16rem] items-center gap-2 rounded-md border px-2.5 py-1.5 text-left text-xs transition-colors ${
                   activo
@@ -178,14 +164,12 @@ export function VistaDocumentosFormulario({
               anclar={anclarVisor}
               accionEncabezado={
                 ampliar ? (
-                  <button
-                    type="button"
-                    onClick={() => setAmpliado(true)}
-                    className="inline-flex shrink-0 items-center gap-1 rounded-md border border-toga-300 bg-white px-2 py-1 text-xs font-medium text-toga-700 hover:bg-toga-50"
-                  >
-                    <Maximize2 className="h-3.5 w-3.5" aria-hidden="true" />
-                    Ampliar
-                  </button>
+                  <AmpliarDocumento
+                    documentId={documentoSeleccionado.id}
+                    nombreArchivo={documentoSeleccionado.originalName}
+                    sizeKb={Math.max(1, Math.round(documentoSeleccionado.sizeBytes / 1024))}
+                    titulo={tituloDocumento}
+                  />
                 ) : undefined
               }
             />
@@ -223,48 +207,6 @@ export function VistaDocumentosFormulario({
           </p>
         </div>
       )}
-      {ampliar &&
-        ampliado &&
-        documentoSeleccionado &&
-        createPortal(
-          <div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-toga-900/40 p-4"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="titulo-documento-ampliado"
-            onClick={() => setAmpliado(false)}
-          >
-            <div
-              className="flex max-h-[92dvh] w-full max-w-5xl flex-col overflow-hidden rounded-lg border border-toga-200 bg-white shadow-lg"
-              onClick={(evento) => evento.stopPropagation()}
-            >
-              <div className="flex items-center justify-between gap-3 border-b border-toga-200 px-4 py-3">
-                <h2 id="titulo-documento-ampliado" className="text-sm font-semibold text-toga-900">
-                  {tituloDocumento}
-                </h2>
-                <button
-                  type="button"
-                  onClick={() => setAmpliado(false)}
-                  className="rounded-md border border-toga-300 px-3 py-1.5 text-sm font-medium text-toga-700 hover:bg-toga-50"
-                >
-                  Cerrar
-                </button>
-              </div>
-              <div className="min-h-0 overflow-auto p-4">
-                <VisorDocumentoRevision
-                  key={`${documentoSeleccionado.id}-ampliado`}
-                  documentId={documentoSeleccionado.id}
-                  nombreArchivo={documentoSeleccionado.originalName}
-                  sizeKb={Math.max(1, Math.round(documentoSeleccionado.sizeBytes / 1024))}
-                  titulo={tituloDocumento}
-                  anclar={false}
-                  altura={ALTURA_MODAL}
-                />
-              </div>
-            </div>
-          </div>,
-          document.body,
-        )}
     </section>
   );
 }

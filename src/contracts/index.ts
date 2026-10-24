@@ -439,6 +439,17 @@ export interface ExpedienteListado {
     readonly ineligible: boolean;
   }[];
   readonly _count: { readonly objections: number };
+  /** Revisión documental en curso. Sólo viene si el bloqueo sigue vigente. */
+  readonly reviewLock?: BloqueoRevision | null;
+}
+
+/** Quién tiene abierto un expediente en revisión. Vence a los 15 min sin actividad. */
+export interface BloqueoRevision {
+  readonly fullName: string;
+  readonly lastActivityAt: string;
+  readonly expiresAt: string;
+  /** El bloqueo es de quien consulta. */
+  readonly mio: boolean;
 }
 
 export interface ExpedienteDetalle extends ExpedienteListado {
@@ -569,6 +580,38 @@ export interface ObjecionBandeja {
   };
   readonly assignedTo: { readonly id: string; readonly fullName: string } | null;
   readonly _count: { readonly attachments: number; readonly adjustments: number };
+}
+
+/** Situación de un postulante objetado frente a la re-evaluación del comité. */
+export type SituacionObjecion = "PENDIENTE" | "ESCALADA" | "EN_RONDA" | "REEVALUADO" | "INELEGIBLE";
+
+/** Una fila de la bandeja de objeciones: un postulante, sin datos de quien objetó. */
+export interface PostulanteObjetado {
+  readonly candidateId: string;
+  readonly fullName: string;
+  readonly chamber: Chamber | string;
+  readonly workflowStatus: WorkflowStatus;
+  readonly total: number;
+  readonly abiertas: number;
+  /** Objeciones llegadas después de cerrarse la última ronda (o todas, si no hubo). */
+  readonly nuevas: number;
+  readonly primeraAt: string;
+  readonly ultimaAt: string;
+  readonly situacion: SituacionObjecion;
+  readonly ronda: {
+    readonly id: string;
+    readonly status: "OPEN" | "CLOSED" | "ESCALATED";
+    readonly openedAt: string;
+    readonly closedAt: string | null;
+    readonly actuaron: number;
+    readonly participantes: number;
+    readonly motivo: string | null;
+  } | null;
+  readonly nota: {
+    readonly anterior: number | null;
+    readonly actual: number | null;
+    readonly inelegible: boolean;
+  };
 }
 
 // ─────────────────────────────────────────── usuarios y bitácora

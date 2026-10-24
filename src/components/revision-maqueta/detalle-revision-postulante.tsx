@@ -22,6 +22,7 @@ import { InsigniaEstado } from "@/components/insignias";
 import { useToast } from "@/components/toast-provider";
 import { SidebarDocsRevision } from "./sidebar-docs-revision";
 import { VisorDocumentoRevision } from "./visor-documento-revision";
+import { AmpliarDocumento } from "./ampliar-documento";
 import { FormularioCedulaIdentidad } from "./formulario-cedula-identidad";
 import { FormularioPartidaNacimiento } from "./formulario-partida-nacimiento";
 import { FormularioDjOtraNacionalidad } from "./formulario-dj-otra-nacionalidad";
@@ -259,7 +260,11 @@ export function DetalleRevisionPostulante({
         } as ValoresFormularioRevision,
       }));
       const rellenos = Object.entries(propuestos).filter(([clave, valor]) => {
-        if (clave === "es_documento" || clave === "calidad_legibilidad" || clave === "advertencias") {
+        if (
+          clave === "es_documento" ||
+          clave === "calidad_legibilidad" ||
+          clave === "advertencias"
+        ) {
           return false;
         }
         return valor !== null && valor !== undefined && String(valor).trim() !== "";
@@ -468,7 +473,8 @@ export function DetalleRevisionPostulante({
               onCampo={(key, value) => actualizarCampo(doc.id, key, value)}
               onVerificar={() => marcarVerificado(doc.id)}
               onRellenarIa={() => void rellenarConIa(doc)}
-            />          ) : (
+            />
+          ) : (
             <div className="flex flex-col items-center justify-center px-4 py-14 text-center">
               <FileStack className="h-10 w-10 text-toga-300" aria-hidden="true" />
               <p className="mt-3 text-sm font-medium text-toga-700">
@@ -594,6 +600,14 @@ function PanelVisualizacionYFormulario({
           nombreArchivo={doc.nombreArchivo}
           sizeKb={doc.sizeKb}
           titulo={doc.titulo}
+          accionEncabezado={
+            <AmpliarDocumento
+              documentId={doc.id}
+              nombreArchivo={doc.nombreArchivo}
+              sizeKb={doc.sizeKb}
+              titulo={doc.titulo}
+            />
+          }
           acciones={
             <ActualizarDocumento
               submissionId={submissionId}
@@ -788,11 +802,7 @@ function PanelVisualizacionYFormulario({
             <FormularioGenericoStub valores={valores} errores={errores} onCampo={actualizarCampo} />
           )}
 
-          <CampoNotaAdvertencias
-            valores={valores}
-            errores={errores}
-            onCampo={actualizarCampo}
-          />
+          <CampoNotaAdvertencias valores={valores} errores={errores} onCampo={actualizarCampo} />
 
           <div className="mt-4 flex flex-wrap gap-2">
             <button
@@ -816,11 +826,7 @@ function PanelVisualizacionYFormulario({
                   }
                   className="inline-flex items-center gap-1.5 rounded-md border border-toga-300 bg-white px-4 py-2 text-sm font-semibold text-toga-700 hover:bg-toga-50 disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  {rellenandoIa ? (
-                    <Spinner />
-                  ) : (
-                    <Sparkles className="h-4 w-4" aria-hidden="true" />
-                  )}
+                  {rellenandoIa ? <Spinner /> : <Sparkles className="h-4 w-4" aria-hidden="true" />}
                   {rellenandoIa
                     ? "Rellenando…"
                     : extractIaUsado
@@ -833,7 +839,8 @@ function PanelVisualizacionYFormulario({
                   </p>
                 )}
               </div>
-            )}          </div>
+            )}{" "}
+          </div>
         </div>
       </div>
     </div>
@@ -903,9 +910,7 @@ function ActualizarDocumento({
         >
           {subiendo ? "Actualizando…" : "Actualizar documento"}
         </button>
-        <p className="text-xs text-toga-500">
-          Sustituye este archivo. La categoría se conserva.
-        </p>
+        <p className="text-xs text-toga-500">Sustituye este archivo. La categoría se conserva.</p>
       </div>
     </div>
   );
