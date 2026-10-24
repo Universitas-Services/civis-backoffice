@@ -189,7 +189,7 @@ export function PasoDatosPostulante({
                     className={`w-24 shrink-0 ${errores.telefono ? "campo-con-error" : ""}`}
                     aria-label="Prefijo del teléfono"
                   >
-                    <SelectValue placeholder="0414" />
+                    <SelectValue placeholder="Prefijo" />
                   </SelectTrigger>
                   <SelectContent>
                     {PREFIJOS_TELEFONO.map((p) => (

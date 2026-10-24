@@ -1,9 +1,36 @@
 "use client";
 
 import Link from "next/link";
+import { Lock } from "lucide-react";
+import type { BloqueoRevision } from "@/contracts";
 import type { PostulanteRevisionLista } from "@/lib/adaptar-revision-api";
 import { InsigniaEstado } from "@/components/insignias";
 import { ConTooltip, TooltipProvider } from "@/components/ui/tooltip";
+
+/** Hora de Caracas fija: el servidor y el navegador pintan lo mismo. */
+function hora(iso: string): string {
+  return new Date(iso).toLocaleTimeString("es-VE", {
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: "America/Caracas",
+  });
+}
+
+/** Un expediente abierto por otro revisor no se puede abrir hasta que lo libere. */
+function bloqueadoPorOtro(b: BloqueoRevision | null): b is BloqueoRevision {
+  return b !== null && !b.mio;
+}
+
+function AvisoBloqueo({ bloqueo }: { readonly bloqueo: BloqueoRevision }) {
+  return bloqueo.mio ? (
+    <p className="mt-1 text-xs font-medium text-balanza-700">Usted lo está revisando</p>
+  ) : (
+    <p className="mt-1 inline-flex items-center gap-1 text-xs font-medium text-toga-600">
+      <Lock className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+      En revisión por {bloqueo.fullName} · última actividad {hora(bloqueo.lastActivityAt)}
+    </p>
+  );
+}
 
 export function ListaPostulantesRevision({
   items,
@@ -57,22 +84,34 @@ export function ListaPostulantesRevision({
           </thead>
           <tbody className="divide-y divide-toga-100">
             {items.map((p) => (
-              <tr key={p.id} className="hover:bg-toga-50">
+              <tr
+                key={p.id}
+                className={
+                  bloqueadoPorOtro(p.bloqueo) ? "bg-toga-50/60 text-toga-500" : "hover:bg-toga-50"
+                }
+              >
                 <th scope="row" className="codigo px-4 py-3 text-xs font-medium text-toga-600">
                   <ConTooltip texto={`Expediente ${p.fileNumber}`}>
                     <span className="cursor-default">{p.fileNumber}</span>
                   </ConTooltip>
                 </th>
                 <td className="px-4 py-3">
-                  <ConTooltip texto={`Revisar documentos de ${p.nombre} ${p.apellido}`}>
-                    <Link
-                      href={`/revision-documental/${p.id}`}
-                      className="font-medium text-toga-900 hover:text-balanza-700 hover:underline"
-                    >
+                  {bloqueadoPorOtro(p.bloqueo) ? (
+                    <span className="font-medium text-toga-700" aria-disabled="true">
                       {p.nombre} {p.apellido}
-                    </Link>
-                  </ConTooltip>
+                    </span>
+                  ) : (
+                    <ConTooltip texto={`Revisar documentos de ${p.nombre} ${p.apellido}`}>
+                      <Link
+                        href={`/revision-documental/${p.id}`}
+                        className="font-medium text-toga-900 hover:text-balanza-700 hover:underline"
+                      >
+                        {p.nombre} {p.apellido}
+                      </Link>
+                    </ConTooltip>
+                  )}
                   <p className="codigo mt-0.5 text-xs text-toga-500">{p.cedula}</p>
+                  {p.bloqueo && <AvisoBloqueo bloqueo={p.bloqueo} />}
                 </td>
                 <td className="px-4 py-3 text-toga-600">
                   <ConTooltip texto={p.salaLabel}>
@@ -99,12 +138,9 @@ export function ListaPostulantesRevision({
 
       {/* Móvil */}
       <ul className="mt-3 space-y-3 lg:hidden">
-        {items.map((p) => (
-          <li key={p.id}>
-            <Link
-              href={`/revision-documental/${p.id}`}
-              className="block rounded-lg border border-toga-200 bg-white p-4 transition-colors hover:bg-toga-50"
-            >
+        {items.map((p) => {
+          const contenido = (
+            <>
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                   <p className="codigo text-xs text-toga-500">{p.fileNumber}</p>
@@ -117,12 +153,31 @@ export function ListaPostulantesRevision({
                 <InsigniaEstado estado="DOCUMENT_REVIEW" />
               </div>
               <p className="mt-3 text-xs text-toga-500">
-                Documentos:{" "}
-                <span className="cifra font-medium text-toga-800">{p.docsTotal}</span>
+                Documentos: <span className="cifra font-medium text-toga-800">{p.docsTotal}</span>
               </p>
-            </Link>
-          </li>
-        ))}
+              {p.bloqueo && <AvisoBloqueo bloqueo={p.bloqueo} />}
+            </>
+          );
+          return (
+            <li key={p.id}>
+              {bloqueadoPorOtro(p.bloqueo) ? (
+                <div
+                  aria-disabled="true"
+                  className="block rounded-lg border border-toga-200 bg-toga-50/60 p-4"
+                >
+                  {contenido}
+                </div>
+              ) : (
+                <Link
+                  href={`/revision-documental/${p.id}`}
+                  className="block rounded-lg border border-toga-200 bg-white p-4 transition-colors hover:bg-toga-50"
+                >
+                  {contenido}
+                </Link>
+              )}
+            </li>
+          );
+        })}
       </ul>
     </TooltipProvider>
   );

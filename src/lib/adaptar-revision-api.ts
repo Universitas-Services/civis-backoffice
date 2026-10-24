@@ -1,4 +1,4 @@
-import type { ExpedienteDetalle, ExpedienteListado } from "@/contracts";
+import type { BloqueoRevision, ExpedienteDetalle, ExpedienteListado } from "@/contracts";
 import {
   CATEGORIA_ETIQUETA,
   SALA_ETIQUETA,
@@ -34,6 +34,8 @@ export interface PostulanteRevisionLista {
   readonly salaLabel: string;
   /** Conteo real de `submissions[0]._count.documents`. */
   readonly docsTotal: number;
+  /** Otro revisor (o uno mismo) lo tiene abierto. */
+  readonly bloqueo: BloqueoRevision | null;
 }
 
 export interface PostulanteRevision {
@@ -110,5 +112,6 @@ export function postulanteDesdeListado(e: ExpedienteListado): PostulanteRevision
     sala: String(e.chamber),
     salaLabel: etiquetaSala(String(e.chamber)),
     docsTotal: submission?._count.documents ?? 0,
+    bloqueo: e.reviewLock ?? null,
   };
 }
