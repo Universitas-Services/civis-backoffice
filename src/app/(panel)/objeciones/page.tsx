@@ -75,14 +75,14 @@ export default async function Objeciones({
     <>
       <CabeceraPagina
         titulo="Gestión de impugnaciones y objeciones"
-        descripcion="Postulantes con objeciones de los visualizadores y si el comité ya los re-evaluó. Primero aparecen los que esperan una ronda de objeción."
+        descripcion="Postulantes con objeciones que el comité envió al Consejo, y si el Consejo ya los re-evaluó. Primero aparecen los que esperan una ronda de objeción."
       />
 
       <div className="px-5 py-6 sm:px-8">
         {datos.resumen.TODAS === 0 ? (
           <EstadoVacio
             titulo="No hay objeciones que mostrar"
-            detalle="Las objeciones las presentan los visualizadores desde el ranking interno y aparecen aquí agrupadas por postulante."
+            detalle="Las objeciones llegan aquí cuando el comité las envía al Consejo, con el descargo del postulante. Aparecen agrupadas por postulante."
           />
         ) : (
           <>

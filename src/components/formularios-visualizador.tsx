@@ -225,7 +225,8 @@ export function FormularioObjecion({
           <p className="text-sm text-toga-800">
             ¿Presentar la objeción contra <span className="font-semibold">{postulante}</span> por:{" "}
             {causas.map((c) => CAUSA_DENUNCIA_ETIQUETA[c] ?? c).join("; ")}? Quedará registrada a su
-            nombre y la revisará el comité. Una objeción no cambia el puntaje por sí sola.
+            nombre; la recibe el comité y, con el descargo del postulante, la envía al Consejo. Una
+            objeción no cambia el puntaje por sí sola.
           </p>
           <div className="flex flex-wrap gap-2">
             <BotonEnvio texto="Confirmar objeción" cargando="Registrando…" />

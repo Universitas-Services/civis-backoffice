@@ -1,6 +1,8 @@
 "use client";
 
+import type { Descargo } from "@/contracts";
 import { CAUSA_DENUNCIA_ETIQUETA } from "@/contracts";
+import { VistaDescargo } from "@/components/vista-descargo";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Sheet,
@@ -19,6 +21,10 @@ export interface ObjecionVista {
   readonly evidenceUrl: string;
   /** Sólo viene si la presentó un visualizador; la ciudadana es reservada. */
   readonly submittedBy?: { readonly fullName: string } | null;
+  /** Respuesta del postulante; null si el comité la envió sin descargo. */
+  readonly descargo?: Descargo | null;
+  /** Motivo del comité para enviarla sin descargo. */
+  readonly forwardReason?: string | null;
 }
 
 /** Botón compacto que abre las denuncias del postulante en un panel lateral. */
@@ -108,6 +114,20 @@ export function ModalObjeciones({
                         </a>
                       </div>
                     ) : null}
+                    {item.descargo !== undefined && (
+                      <div className="border-t border-toga-100 pt-2.5">
+                        <p className="text-[0.65rem] font-medium tracking-wide text-toga-500 uppercase">
+                          Descargo del postulante
+                        </p>
+                        <div className="mt-1.5">
+                          <VistaDescargo
+                            objectionId={item.id}
+                            descargo={item.descargo}
+                            motivoSinDescargo={item.forwardReason}
+                          />
+                        </div>
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               </li>

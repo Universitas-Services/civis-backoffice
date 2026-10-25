@@ -121,11 +121,11 @@ export function PanelRondaComite({
       return (
         <div className="rounded-lg border border-toga-200 bg-toga-50/60 px-4 py-3">
           <p className="text-sm font-semibold text-toga-900">
-            Comité — ronda de {KIND_ETIQUETA[kindEsperado].toLowerCase()} cerrada
+            Consejo — ronda de {KIND_ETIQUETA[kindEsperado].toLowerCase()} cerrada
           </p>
           <p className="mt-1 text-sm leading-relaxed text-toga-700">
-            La nota del comité ya está consolidada. Consulte el Ranking interno; no hace falta abrir
-            otra ronda de baremo.
+            La nota del Consejo ya está consolidada. Consulte el Ranking interno; no hace falta
+            abrir otra ronda de baremo.
           </p>
         </div>
       );
@@ -133,12 +133,12 @@ export function PanelRondaComite({
     return (
       <div className="rounded-lg border border-balanza-600/25 bg-balanza-50/50 px-4 py-3">
         <p className="text-sm font-semibold text-toga-900">
-          Comité — ronda de {KIND_ETIQUETA[kindEsperado].toLowerCase()}
+          Consejo — ronda de {KIND_ETIQUETA[kindEsperado].toLowerCase()}
         </p>
         <p className="mt-1 text-sm leading-relaxed text-toga-700">
           {kindEsperado === "SCORING"
             ? "Todavía no hay ronda de baremo abierta. Al abrir el borrador se intenta abrir sola; si falla, un administrador debe abrirla."
-            : "Tras las objeciones, un administrador debe abrir la ronda para que el comité mantenga o cambie la nota, o vote inelegible."}
+            : "Tras las objeciones, un administrador debe abrir la ronda para que el Consejo mantenga o cambie la nota, o vote inelegible."}
         </p>
         {puedeAbrir && (
           <button
@@ -175,7 +175,7 @@ export function PanelRondaComite({
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div>
           <p className="text-sm font-semibold text-toga-900">
-            Ronda de {KIND_ETIQUETA[rondaUtil.kind]} (comité)
+            Ronda de {KIND_ETIQUETA[rondaUtil.kind]} (Consejo)
           </p>
           <p className="mt-1 text-xs text-toga-500">
             Quorum {rondaUtil.quorumThreshold}
@@ -232,7 +232,7 @@ export function PanelRondaComite({
           ) : (
             <div className="rounded-md border border-toga-200 bg-toga-50/60 p-3">
               <p className="text-sm text-toga-800">
-                ¿Confirma abstenerse? Su nota no entrará en el promedio del comité.
+                ¿Confirma abstenerse? Su nota no entrará en el promedio del Consejo.
               </p>
               <div className="mt-2 flex flex-wrap gap-2">
                 <button

@@ -7,8 +7,10 @@
 import { z } from "zod";
 
 /**
- * Roles del panel — espejo de civis-api `ROLES` (sin PUBLISHER; con ADMIN).
+ * Roles — espejo de civis-api `ROLES` (sin PUBLISHER; con ADMIN).
  * VIEWER: visualizador (diputado). Consulta, opina y objeta; no opera el proceso.
+ * COMMITTEE: comité. Recibe las objeciones y las envía al Consejo con el descargo.
+ * APPLICANT: postulante con cuenta. Usa civis-postulacion, nunca este panel.
  */
 export const ROLES = [
   "SUPER_ADMIN",
@@ -16,12 +18,17 @@ export const ROLES = [
   "SECRETARY",
   "REVIEWER",
   "EVALUATOR",
+  "COMMITTEE",
   "VIEWER",
+  "APPLICANT",
 ] as const;
 export type Role = (typeof ROLES)[number];
 
+/** Roles que se asignan desde el panel. El de postulante nace del registro público. */
+export const ROLES_PANEL = ROLES.filter((rol) => rol !== "APPLICANT");
+
 /** Roles operativos que un ADMIN puede crear/asignar (no ADMIN ni SUPER_ADMIN). */
-export const ROLES_MENORES = ["SECRETARY", "REVIEWER", "EVALUATOR", "VIEWER"] as const;
+export const ROLES_MENORES = ["SECRETARY", "REVIEWER", "EVALUATOR", "COMMITTEE", "VIEWER"] as const;
 export type RoleMenor = (typeof ROLES_MENORES)[number];
 
 export const ROL_ETIQUETA: Record<Role, string> = {
@@ -30,7 +37,9 @@ export const ROL_ETIQUETA: Record<Role, string> = {
   SECRETARY: "Secretaría",
   REVIEWER: "Revisión documental",
   EVALUATOR: "Evaluación",
+  COMMITTEE: "Comité",
   VIEWER: "Visualizador",
+  APPLICANT: "Postulante",
 };
 
 /** Etiqueta segura si llega un rol desconocido (datos legacy). */
@@ -43,7 +52,7 @@ export function etiquetaRol(rol: string): string {
  * SUPER_ADMIN → todos; ADMIN → solo menores; resto → ninguno.
  */
 export function rolesAsignablesPara(rolesActor: readonly Role[]): readonly Role[] {
-  if (rolesActor.includes("SUPER_ADMIN")) return ROLES;
+  if (rolesActor.includes("SUPER_ADMIN")) return ROLES_PANEL;
   if (rolesActor.includes("ADMIN")) return ROLES_MENORES;
   return [];
 }
@@ -55,7 +64,9 @@ const RANGO_ROL: Record<Role, number> = {
   SECRETARY: 2,
   REVIEWER: 3,
   EVALUATOR: 4,
-  VIEWER: 5,
+  COMMITTEE: 5,
+  VIEWER: 6,
+  APPLICANT: 7,
 };
 
 function rangoMasAlto(roles: readonly string[]): number {
@@ -455,6 +466,10 @@ export interface BloqueoRevision {
 export interface ExpedienteDetalle extends ExpedienteListado {
   readonly email: string | null;
   readonly phone: string | null;
+  /** Cuenta del postulante (civis-postulacion). Null si no tiene cuenta. */
+  readonly applicantUserId?: string | null;
+  /** Último motivo de devolución de la revisión; se limpia al reenviar. */
+  readonly returnReason?: string | null;
   readonly internalNotes: string | null;
   readonly publicSummary: string | null;
   readonly version: number;
@@ -631,7 +646,12 @@ export interface UsuarioDirectorio {
 export type EvaluationMode = "INDIVIDUAL" | "COMMITTEE";
 
 export interface AjustesPortal {
+  /** Objeciones públicas desde la landing (solo SUPER_ADMIN lo cambia). */
   readonly objectionsOpen: boolean;
+  /** «Objetar» visible para los visualizadores (SUPER_ADMIN y ADMIN). */
+  readonly viewerObjectionsOpen: boolean;
+  /** «Actualizar en el ranking público» visible para ADMIN y evaluadores (SUPER_ADMIN). */
+  readonly publicRefreshEnabled: boolean;
   readonly evaluationMode: EvaluationMode;
   readonly maxActiveEvaluators: number;
   readonly quorumThreshold: number;
@@ -905,7 +925,7 @@ export {
   puntosBaremo,
 } from "./baremo-dinamico";
 
-// ------------------------------------------------------- autopostulación
+// ------------------------------------------------------- teléfono del postulante
 
 /**
  * Teléfono venezolano en formato nacional (11 dígitos): 0 + código + 7.
@@ -925,35 +945,99 @@ export function normalizarTelefono(valor: string): string {
 export const MENSAJE_TELEFONO =
   "Teléfono venezolano de 11 dígitos, p. ej. 04141234567 (móvil) o 02121234567 (fijo)";
 
-/** Código de acceso de la autopostulación: CIVIS-XXXX-XXXX-XXXX. */
-export const FORMATO_CODIGO_ACCESO =
-  /^CIVIS-[2-9A-HJKMNP-TV-Z]{4}-[2-9A-HJKMNP-TV-Z]{4}-[2-9A-HJKMNP-TV-Z]{4}$/;
+// ------------------------------------------------------- comité y descargos
 
-export function normalizarCodigoAcceso(valor: string): string {
-  const limpio = valor.toUpperCase().replace(/[^0-9A-Z]/g, "");
-  const cuerpo = limpio.startsWith("CIVIS") ? limpio.slice(5) : limpio;
-  if (cuerpo.length !== 12) return valor.trim().toUpperCase();
-  return `CIVIS-${cuerpo.slice(0, 4)}-${cuerpo.slice(4, 8)}-${cuerpo.slice(8, 12)}`;
+/** Respuesta del postulante a una objeción. El adjunto es opcional. */
+export interface Descargo {
+  readonly id: string;
+  readonly title: string;
+  readonly description: string;
+  readonly originalName: string | null;
+  readonly detectedMime: string | null;
+  readonly sizeBytes: number | null;
+  readonly submittedVia: "POSTULANTE" | "SECRETARIA";
+  readonly createdAt: string;
 }
 
-export interface EstadoPostulacion {
-  readonly fileNumber: string | null;
-  readonly submissionId: string | null;
-  readonly fullName: string;
-  readonly nationalId: string;
-  readonly chamber: string;
-  readonly chamberLabel: string;
-  readonly phone: string | null;
-  readonly workflowStatus: WorkflowStatus;
-  /** Etapa sin jerga interna, tal como la ve el postulante. */
-  readonly etapa: string;
-  readonly enviadoEl: string | null;
-  readonly puedeCargar: boolean;
-  readonly documentos: readonly {
+export const ETAPAS_COMITE = ["ESPERANDO_DESCARGO", "CON_DESCARGO", "ENVIADAS"] as const;
+export type EtapaComite = (typeof ETAPAS_COMITE)[number];
+
+/** Fila de la bandeja del comité: una objeción, sin identidad del objetante. */
+export interface ObjecionComite {
+  readonly id: string;
+  readonly trackingCode: string;
+  readonly causes: readonly string[];
+  /** Categoría de las objeciones antiguas, que no traen causales. */
+  readonly category: string;
+  readonly receivedAt: string;
+  readonly forwardedAt: string | null;
+  readonly forwardReason: string | null;
+  readonly etapa: EtapaComite;
+  readonly descargo: { readonly createdAt: string; readonly submittedVia: string } | null;
+  readonly candidate: {
     readonly id: string;
-    readonly category: string;
-    readonly originalName: string;
-    readonly sizeBytes: number;
-    readonly uploadedAt: string;
-  }[];
+    readonly fullName: string;
+    readonly chamber: string;
+    readonly origin: "SECRETARIA" | "AUTOPOSTULACION";
+    /** true: responde el postulante desde su cuenta; false: la secretaría. */
+    readonly conCuenta: boolean;
+  };
 }
+
+export interface BandejaComite {
+  readonly items: readonly ObjecionComite[];
+  readonly total: number;
+  readonly page: number;
+  readonly pageSize: number;
+  readonly resumen: Record<EtapaComite, number>;
+}
+
+/** Objeción abierta por el comité: con identidad del objetante (se audita). */
+export interface ObjecionComiteDetalle {
+  readonly id: string;
+  readonly trackingCode: string;
+  readonly objectorFullName: string;
+  readonly objectorNationalId: string | null;
+  readonly objectorEmail: string;
+  readonly objectorPhone: string | null;
+  readonly causes: readonly string[];
+  readonly category: string;
+  readonly otherCause: string | null;
+  readonly description: string;
+  readonly evidenceUrl: string;
+  readonly receivedAt: string;
+  readonly forwardedAt: string | null;
+  readonly forwardReason: string | null;
+  readonly forwardedBy: { readonly fullName: string } | null;
+  readonly submittedBy: { readonly fullName: string } | null;
+  readonly descargo: Descargo | null;
+  readonly etapa: EtapaComite;
+  readonly candidate: {
+    readonly id: string;
+    readonly fullName: string;
+    readonly chamber: string;
+    readonly origin: "SECRETARIA" | "AUTOPOSTULACION";
+    readonly conCuenta: boolean;
+    readonly workflowStatus: WorkflowStatus;
+    readonly fileNumber: string | null;
+  };
+}
+
+/** Objeción tal como la ven el postulante y la secretaría: sin quién la presentó. */
+export interface ObjecionParaDescargo {
+  readonly id: string;
+  readonly trackingCode: string;
+  readonly causes: readonly string[];
+  readonly otherCause: string | null;
+  readonly description: string;
+  readonly evidenceUrl: string;
+  readonly receivedAt: string;
+  readonly forwardedAt: string | null;
+  readonly descargo: Descargo | null;
+}
+
+/** Espejo de civis-api `descargoSchema` (campos de texto; el adjunto va aparte). */
+export const descargoSchema = z.object({
+  title: z.string().trim().min(3, "Título demasiado corto").max(200),
+  description: z.string().trim().min(10, "Describa el descargo (mínimo 10 caracteres)").max(5000),
+});

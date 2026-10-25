@@ -145,7 +145,7 @@ export async function cambiarActivoComite(
   } catch (error) {
     return {
       ok: false,
-      error: error instanceof ErrorApi ? error.message : "No se pudo cambiar el comité",
+      error: error instanceof ErrorApi ? error.message : "No se pudo cambiar el Consejo",
     };
   }
 }
@@ -206,7 +206,7 @@ export async function guardarAjustesComite(formData: FormData): Promise<EstadoUs
       },
     });
     revalidatePath("/usuarios");
-    return { exito: "Ajustes de comité guardados." };
+    return { exito: "Ajustes del Consejo guardados." };
   } catch (error) {
     return {
       error: error instanceof ErrorApi ? error.message : "No se pudieron guardar los ajustes",

@@ -28,17 +28,18 @@ administración. No es un sitio de consulta: es donde se opera el proceso.
 - **La autorización real la hace la API**, en cada llamada. Ocultar un enlace
   del menú es comodidad, no seguridad.
 
-## Autopostulación (páginas públicas)
+## Autopostulación (fuera de este panel)
 
-`/postulacion/*` es la única parte del panel sin sesión: el postulante crea su
-expediente, carga documentos y lo envía con un código de acceso
-(`CIVIS-XXXX-XXXX-XXXX`). Reglas:
+La autopostulación vive en el proyecto `civis-postulacion`, con **cuenta propia
+del postulante** (rol `APPLICANT`, registro con correo verificado). Este panel
+ya no tiene páginas públicas: no hay `/postulacion/*`, ni cookie
+`cp_postulacion`, ni cabecera `X-Codigo-Postulacion`. No las reintroduzcas.
 
-- El código **nunca** va en la URL. Vive cifrado en la cookie HttpOnly
-  `cp_postulacion` (`src/lib/postulacion.ts`) y viaja a la API en la cabecera
-  `X-Codigo-Postulacion`, siempre desde el servidor.
-- Tras el primer envío el acceso es de solo lectura; si la revisión devuelve
-  el expediente, lo corrige la secretaría (ve el aviso de contacto).
+- El login del panel **rechaza** las cuentas cuyo único rol es `APPLICANT` (y
+  revoca la sesión que la API acababa de abrir).
+- `APPLICANT` no se asigna desde Usuarios (`ROLES_PANEL` lo excluye; la API también).
+- Si la revisión devuelve una autopostulación, el postulante corrige desde su
+  cuenta y la secretaría también puede hacerlo; el motivo llega en `returnReason`.
 - Contrato: `docs/AUTOPOSTULACION.md`.
 
 ## Navegación y roles
@@ -49,7 +50,10 @@ de que el endpoint correspondiente tenga su `@Roles()` en la API. Si sólo lo
 haces en un sitio, lo has hecho mal.
 
 Roles (espejo de civis-api): `SUPER_ADMIN`, `ADMIN`, `SECRETARY`, `REVIEWER`,
-`EVALUATOR`, `VIEWER` (visualizador: en lo legal, diputados registrados).
+`EVALUATOR`, `COMMITTEE` (comité de objeciones), `VIEWER` (visualizador: en lo
+legal, diputados registrados) y `APPLICANT` (postulante; nunca entra al panel).
+Los evaluadores activos (`committeeActive`) se llaman **«Consejo»** en pantalla;
+«comité» es solo el rol `COMMITTEE`.
 `SUPER_ADMIN` es un rol reservado: ningún texto de pantalla ni mensaje de
 error debe nombrarlo ante otros roles. Una persona puede tener varios; la bitácora registra cuál se usó
 en cada acción.
@@ -59,9 +63,13 @@ Matriz UX del panel (más estricta que algunos `@Roles` de la API):
 - Crear expediente: `SUPER_ADMIN` + `SECRETARY`
 - Revisión documental: `SUPER_ADMIN` + `REVIEWER`
 - Evaluación: `SUPER_ADMIN` + `ADMIN` + `EVALUATOR` (solo evaluadores `committeeActive` votan/puntúan; ADMIN reabre escaladas por empate o plazo; SUPER_ADMIN ve conteos y puede forzar cierre sin quorum)
-- Objeciones (bandeja y ajuste): `SUPER_ADMIN` + `ADMIN` + `EVALUATOR` (abrir ronda de objeción en comité, `SUPER_ADMIN` + `ADMIN`; puntuar/votar inelegible, evaluadores activos). No hay lapso: las objeciones las presenta el `VIEWER` desde el ranking interno, autenticado, sin código por correo
+- Comité (`/comite-objeciones`): `SUPER_ADMIN` + `COMMITTEE`. Toda objeción llega primero aquí; espera el descargo del postulante (él desde su cuenta, o la secretaría en el expediente si no tiene cuenta) y la envía al Consejo. Sin descargo también puede enviarla, con **motivo obligatorio** que el Consejo ve
+- Objeciones del Consejo (bandeja y ajuste): `SUPER_ADMIN` + `ADMIN` + `EVALUATOR` (abrir ronda de objeción, `SUPER_ADMIN` + `ADMIN`; puntuar/votar inelegible, evaluadores activos). Solo ven las objeciones que el comité envió, con su descargo
+- Descargo: el postulante y la secretaría **nunca** ven quién presentó la objeción
 - Baremo: `SUPER_ADMIN` + `ADMIN` + `EVALUATOR` (crear baremo, solo `SUPER_ADMIN`; ADMIN consulta el activo, ve postulados y aplica)
-- Ranking interno: `SUPER_ADMIN` + `ADMIN` + `EVALUATOR` + `VIEWER`. La landing está fuera de uso: el panel no publica en ella (sus endpoints de la API se conservan). En `/ranking/[candidateId]` todos leen las opiniones; el `VIEWER` opina (comentario, no se borra) y objeta
+- Ranking interno: `SUPER_ADMIN` + `ADMIN` + `EVALUATOR` + `VIEWER`. En `/ranking/[candidateId]` todos leen las opiniones; el `VIEWER` opina (comentario, no se borra) y objeta **solo si** el interruptor «Objeciones de los visualizadores» está activo
+- Interruptores del portal (en `/ranking`): objeciones de visualizadores, `SUPER_ADMIN` + `ADMIN`; objeciones públicas en la landing y «Actualizar en el ranking público» para admin/evaluadores, solo `SUPER_ADMIN`
+- Publicación: enviar al ranking público, solo `SUPER_ADMIN`. «Actualizar en el ranking público» (llevar la nota re-evaluada a la landing): `SUPER_ADMIN` siempre; `ADMIN` y `EVALUATOR` cuando el interruptor lo habilita. La API vuelve a comprobarlo
 - `VIEWER` ve todo el expediente (datos, documentos, historial, notas) y el Ranking interno, pero sus únicas acciones son opinar y objetar; no entra a la bandeja de Objeciones. Entra directo a `/ranking`
 - Informes: solo `SUPER_ADMIN`
 - `ADMIN` ve Panel, Expedientes, Evaluación (escaladas), Baremo, Objeciones, Ranking interno y Usuarios

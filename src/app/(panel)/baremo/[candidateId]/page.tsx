@@ -1,6 +1,11 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import type { AjustesPortal, BaremoDetalle, ExpedienteDetalle, RondaComiteAbierta } from "@/contracts";
+import type {
+  AjustesPortal,
+  BaremoDetalle,
+  ExpedienteDetalle,
+  RondaComiteAbierta,
+} from "@/contracts";
 import {
   PantallaAplicarBaremo,
   type EvaluacionBaremoVista,
@@ -31,6 +36,8 @@ export default async function BaremoDetalle({
   let expediente: ExpedienteDetalle;
   let portal: AjustesPortal = {
     objectionsOpen: false,
+    viewerObjectionsOpen: false,
+    publicRefreshEnabled: false,
     evaluationMode: "INDIVIDUAL",
     maxActiveEvaluators: 7,
     quorumThreshold: 5,
@@ -39,7 +46,7 @@ export default async function BaremoDetalle({
   try {
     [expediente, portal] = await Promise.all([
       llamarApi<ExpedienteDetalle>(`/internal/candidates/${candidateId}`),
-      llamarApi<AjustesPortal>("/public/portal").catch(() => portal),
+      llamarApi<AjustesPortal>("/internal/portal").catch(() => portal),
     ]);
   } catch (error) {
     if (error instanceof NoAutorizado) await renovarYVolver(`/baremo/${candidateId}`);

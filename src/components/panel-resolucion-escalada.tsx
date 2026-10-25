@@ -27,7 +27,7 @@ function motivoEscalada(result: unknown): { reason: ReopenCommitteeReason | null
   if (r.reason === "TIE") {
     return {
       reason: "TIE",
-      texto: `Empate en votos decisivos (${String(r.elegibles ?? "?")} elegible / ${String(r.inelegibles ?? "?")} inelegible). Reabra la ronda para que el comité vote de nuevo.`,
+      texto: `Empate en votos decisivos (${String(r.elegibles ?? "?")} elegible / ${String(r.inelegibles ?? "?")} inelegible). Reabra la ronda para que el Consejo vote de nuevo.`,
     };
   }
   if (r.reason === "DEADLINE") {

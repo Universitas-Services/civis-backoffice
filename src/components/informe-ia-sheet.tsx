@@ -141,7 +141,7 @@ export function InformeIaSheet({
               <p className="mt-1.5 text-sm leading-relaxed text-toga-500">
                 {textoVacio ??
                   (soloLectura
-                    ? "Si el informe no se generó al enviar a evaluación, puede pedirlo una sola vez. Quedará guardado para todo el comité."
+                    ? "Si el informe no se generó al enviar a evaluación, puede pedirlo una sola vez. Quedará guardado para todo el Consejo."
                     : "La IA revisa los datos y documentos que el revisor ya guardó y redacta un resumen que podrá leer y editar aquí.")}
               </p>
               <button

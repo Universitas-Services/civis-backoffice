@@ -417,14 +417,14 @@ export function DetalleRevisionPostulante({
                   htmlFor="motivo-devolucion"
                   className="block text-sm font-semibold text-toga-900"
                 >
-                  Motivo de la devolución a secretaría
+                  Motivo de la devolución
                 </label>
                 <textarea
                   id="motivo-devolucion"
                   rows={3}
                   value={motivoDevolucion}
                   onChange={(e) => setMotivoDevolucion(e.target.value)}
-                  placeholder="Explique qué debe corregir secretaría (mínimo 10 caracteres)"
+                  placeholder="Explique qué debe corregirse (mínimo 10 caracteres). Lo ven la secretaría y, si tiene cuenta, el postulante."
                   className="w-full rounded-md border border-toga-300 bg-white px-3 py-2 text-sm text-toga-900 placeholder:text-toga-400"
                 />
                 <div className="flex flex-wrap gap-2">
@@ -452,7 +452,7 @@ export function DetalleRevisionPostulante({
                 onClick={() => setConfirmandoDevolucion(true)}
                 className="rounded-md border border-balanza-600 px-4 py-2 text-sm font-semibold text-balanza-700 hover:bg-balanza-50"
               >
-                Devolver a secretaría
+                Devolver para corrección
               </button>
             )}
           </div>

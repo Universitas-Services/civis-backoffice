@@ -1,25 +1,24 @@
-# CIVIS — Autopostulación y PDF de objeciones del visualizador
+# CIVIS — Autopostulación, comité de objeciones y PDF del visualizador
 
-Contrato entre el backoffice y `civis-api`. Implementado en `civis-api/src/postulaciones/` (migración `20261023120000_autopostulacion`) y en las páginas públicas `/postulacion/*` del panel. Prefijo `/api/v1`.
+Contrato entre el backoffice y `civis-api`. Prefijo `/api/v1`. Migración `20261025120000_cuentas_comite`.
 
-## 1. Autopostulación
+## 1. Autopostulación (fuera del panel)
 
-El postulante se registra sin pasar por la secretaría, desde la pantalla de ingreso («Postularme»).
+Desde octubre de 2026 la autopostulación **no vive en este panel**: la atiende el proyecto
+`civis-postulacion`, con cuenta propia del postulante. El panel ya no tiene `/postulacion/*`,
+ni la cookie `cp_postulacion`, ni la cabecera `X-Codigo-Postulacion`.
 
-### Flujo
-
-1. **Datos:** nombre, apellido, cédula (V/E), sala y **teléfono venezolano**.
-2. **Comprobante:** el número de expediente (`EXP-0010`, de referencia) y el **código de acceso** secreto `CIVIS-XXXX-XXXX-XXXX`.
-   - El código se muestra **una sola vez**: hay que copiarlo o descargar el comprobante (.txt).
-   - «Continuar» se habilita tras marcar «Ya guardé mi código».
-3. **Carga de documentos:** el mismo listado que usa la secretaría.
-   - «Salir» cierra la postulación en ese navegador.
-   - «Reanudar mi postulación» vuelve a entrar con el código.
-4. **Envío a revisión:**
-   - El postulante escribe un correo y recibe un código de 6 dígitos, válido 10 minutos. A los 5 intentos fallidos deja de valer.
-   - Al confirmarlo, el expediente pasa a revisión documental y le llega un correo de confirmación con el número de expediente y el código de consulta.
-5. **Después del envío:** con el código solo se **consulta** la etapa y los documentos enviados. Aunque la revisión lo devuelva, el postulante ya no puede cargar documentos.
-   - **Si la revisora lo devuelve:** vuelve a borrador como siempre. La secretaría ve el aviso «Autopostulación devuelta: contacte al postulante», con su teléfono y su correo, y hace las correcciones.
+- **Cuenta:** el postulante se registra con nombre, apellido, correo y clave, y confirma el
+  correo con un código de 6 dígitos (`POST /public/cuentas/registro`, `/verificar`, `/reenviar`).
+  Ingresa con el login común (`/auth/login`); una cuenta sin verificar recibe `403` con
+  `codigo: CORREO_SIN_VERIFICAR`. El rol `APPLICANT` no se asigna desde el panel, y el login del
+  panel rechaza las cuentas que solo tienen ese rol.
+- **Postulación:** rutas `/applicant/postulacion` (solo `APPLICANT`, siempre sobre su propio
+  expediente). Crear, corregir datos y cargar documentos mientras está en `DRAFT`; enviar a
+  revisión sin código por correo.
+- **Devolución:** si la revisión lo devuelve a borrador, el motivo se guarda en
+  `Candidate.returnReason` (además de la bitácora) y el postulante recibe un correo. **Corrige él
+  desde su cuenta, y la secretaría también puede hacerlo** desde el expediente.
 
 ### Teléfono
 
@@ -30,39 +29,42 @@ Formato nacional de 11 dígitos: `0` + código + 7 dígitos.
 | Móviles | 0412 y 0422 (Digitel), 0414 y 0424 (Movistar), 0416 y 0426 (Movilnet) |
 | Fijos | 02XX |
 
-- El campo solo admite números.
-- Si se pega `+58 414…`, se convierte a `0414…`.
-- Se guarda como `04141234567`.
+## 2. Comité y descargos
 
-### Seguridad
-- **Código de acceso:**
-  - Unos 59 bits de azar, en Crockford base32 (sin 0/O/1/I/L/U).
-  - En la base solo queda su **SHA-256**, que además se omite de todas las respuestas de la API.
-- **El código nunca va en la URL:**
-  - El panel lo guarda cifrado en la cookie HttpOnly `cp_postulacion`, que dura 7 días.
-  - Desde el servidor de Next se envía en la cabecera `X-Codigo-Postulacion`.
-- **Código del correo:**
-  - Va ligado a la postulación (`purpose: POSTULACION`, `candidateId`); un código de denuncia no sirve aquí.
-- **Límites por IP:** `RATE_LIMIT_POSTULACION_PER_HOUR` (5 por defecto) para las altas y los códigos por correo.
-- **Campo trampa:** honeypot `website`.
-- **Subidas:** mismas validaciones que la secretaría (tipo real, antivirus, tamaño y número de archivos). Solo se aceptan en un expediente de origen `AUTOPOSTULACION`, en borrador y nunca enviado.
+Toda objeción llega primero al **comité** (rol `COMMITTEE`), no al Consejo (los evaluadores activos).
 
-### API (`@Public`)
+1. **Recibida:** el postulante con cuenta recibe un correo y la ve en «Objeciones». Si el
+   expediente lo creó la secretaría, ella lo ve en el expediente y contacta al postulante.
+2. **Descargo:** título, descripción y un documento opcional (PDF, JPEG o PNG). Uno por objeción;
+   no se edita. Lo presenta el postulante con cuenta, o la secretaría si no tiene cuenta.
+   Ni el postulante ni la secretaría ven quién presentó la objeción.
+3. **Envío al Consejo:** el comité la envía cuando hay descargo. **Sin descargo también puede
+   enviarla, pero con un motivo obligatorio** (≥10 caracteres) que el Consejo ve junto a la objeción.
+4. **Consejo:** su bandeja, el resumen, las rondas de objeción y la inelegibilidad solo consideran
+   objeciones enviadas (`forwardedAt`). Desde ahí, el flujo es el mismo de siempre.
 
-| Ruta | Cuerpo / cabecera | Respuesta |
+| Ruta | Roles |
+|---|---|
+| `GET /internal/comite/objeciones?etapa=&page=` | SA, COMMITTEE |
+| `GET /internal/comite/objeciones/:id` (identidad del objetante; se audita) | SA, COMMITTEE |
+| `POST /internal/comite/objeciones/:id/enviar-consejo` `{ motivo? }` | SA, COMMITTEE |
+| `GET /internal/candidates/:id/objeciones-descargo` | SA, SECRETARY |
+| `POST /internal/objections/:id/descargo` (multipart `title`, `description`, `file?`) | SA, SECRETARY |
+| `GET /internal/objections/:id/descargo/archivo` | SA, ADMIN, EVALUATOR, COMMITTEE, SECRETARY |
+| `GET /applicant/objeciones`, `POST /applicant/objeciones/:id/descargo` | APPLICANT |
+
+## 3. Interruptores del portal (`PATCH /internal/portal`, `GET /internal/portal`)
+
+| Ajuste | Quién lo cambia | Efecto |
 |---|---|---|
-| `POST /public/postulaciones` | `{ firstName, lastName, nationalId, chamber, phone, website? }` | `{ fileNumber, accessCode, fullName }` · `409` si la cédula ya tiene expediente |
-| `GET /public/postulaciones/actual` | cabecera con el código | etapa, sala, documentos vigentes, `puedeCargar` |
-| `POST /public/postulaciones/documentos` | multipart `category`, `replaces?`, `file` + cabecera | documento creado |
-| `POST /public/postulaciones/codigo-correo` | `{ email }` + cabecera | `{ enviado: true }` · exige al menos un documento |
-| `POST /public/postulaciones/enviar` | `{ email, codigoCorreo }` + cabecera | estado actualizado |
+| `viewerObjectionsOpen` | SA, ADMIN | Los visualizadores ven «Objetar» en el ranking interno |
+| `objectionsOpen` | SA | Objeciones públicas desde la landing |
+| `publicRefreshEnabled` | SA | ADMIN y evaluadores ven «Actualizar en el ranking público» |
 
-### Modelo
-- **`Candidate`:** se añaden `origin` (`SECRETARIA` | `AUTOPOSTULACION`), `accessCodeHash` y `selfSubmittedAt`.
-- **`Submission.uploadedById` y `Document.uploadedById`** pasan a ser opcionales: el postulante no es un usuario del sistema.
-- **`EmailVerification`:** se añaden `purpose`, `candidateId` y `attempts`.
+Enviar postulantes del ranking interno al público (`POST /internal/publications/ranking/enviar`):
+solo SA.
 
-## 2. Objeciones del visualizador
+## 4. Objeciones del visualizador
 
 - **«Mis objeciones»** (ficha del postulante en el ranking):
   - Cada objeción tiene «Descargar PDF».

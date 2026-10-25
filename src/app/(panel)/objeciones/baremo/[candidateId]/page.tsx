@@ -32,6 +32,8 @@ export default async function AjustarBaremo({
   let historial: EvaluacionBaremoVista[];
   let portal: AjustesPortal = {
     objectionsOpen: false,
+    viewerObjectionsOpen: false,
+    publicRefreshEnabled: false,
     evaluationMode: "INDIVIDUAL",
     maxActiveEvaluators: 7,
     quorumThreshold: 5,
@@ -44,7 +46,7 @@ export default async function AjustarBaremo({
         `/internal/objections/candidate/${candidateId}/resumen`,
       ),
       llamarApi<EvaluacionBaremoVista[]>(`/internal/evaluations/history/${candidateId}`),
-      llamarApi<AjustesPortal>("/public/portal").catch(() => portal),
+      llamarApi<AjustesPortal>("/internal/portal").catch(() => portal),
     ]);
   } catch (error) {
     if (error instanceof NoAutorizado) await renovarYVolver(`/objeciones/baremo/${candidateId}`);
@@ -111,11 +113,14 @@ export default async function AjustarBaremo({
   }
 
   if (!evaluacion?.baremoCongelado) {
+    // Aun sin baremo que corregir, el Consejo debe poder leer las objeciones
+    // que le envió el comité y el descargo del postulante.
     return aviso(
       "No se puede ajustar el baremo",
       modoComite
         ? "Abra la ronda de objeción (ADMIN) o espere a que exista un baremo consolidado."
         : "Este postulante no tiene un baremo guardado para corregir.",
+      <ModalObjeciones nombre={resumen.fullName} items={resumen.items} />,
     );
   }
 
@@ -168,12 +173,13 @@ export default async function AjustarBaremo({
   );
 }
 
-function aviso(titulo: string, detalle: string) {
+function aviso(titulo: string, detalle: string, extra?: React.ReactNode) {
   return (
     <div className="px-5 py-10 sm:px-8">
       <div className="mx-auto max-w-xl rounded-lg border border-balanza-600/25 bg-balanza-50 p-6">
         <h1 className="text-base font-semibold text-toga-900">{titulo}</h1>
         <p className="mt-2 text-sm leading-relaxed text-toga-700">{detalle}</p>
+        {extra && <div className="mt-4">{extra}</div>}
       </div>
     </div>
   );

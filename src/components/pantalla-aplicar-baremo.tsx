@@ -1,13 +1,6 @@
 "use client";
 
-import {
-  Fragment,
-  useMemo,
-  useState,
-  useTransition,
-  useEffect,
-  type ReactNode,
-} from "react";
+import { Fragment, useMemo, useState, useTransition, useEffect, type ReactNode } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
@@ -258,7 +251,7 @@ function FormularioBaremo({
       setFirmaGuardada(firma(lineas));
       toast.exito(
         modoComite
-          ? "Nota enviada al comité. El promedio se consolida cuando todos actúen."
+          ? "Nota enviada al Consejo. El promedio se consolida cuando todos actúen."
           : "Puntuado correctamente.",
       );
       if (modoComite) {
@@ -439,17 +432,13 @@ function FormularioBaremo({
           disabled={hayError || lineas.length === 0 || pendiente || !hayCambios}
           className="rounded-md bg-balanza-600 px-4 py-2 text-sm font-semibold text-white hover:bg-balanza-700 disabled:opacity-60"
         >
-          {pendiente
-            ? "Guardando…"
-            : modoComite
-              ? "Enviar nota al comité"
-              : "Guardar"}
+          {pendiente ? "Guardando…" : modoComite ? "Enviar nota al Consejo" : "Guardar"}
         </button>
       )}
 
       {modoComite && estado === "SUBMITTED" && !hayCambios && (
         <p className="rounded-lg border border-toga-200 bg-toga-50 px-4 py-3 text-sm text-toga-700">
-          Su nota quedó registrada para el promedio del comité. No publica sola al ranking: al
+          Su nota quedó registrada para el promedio del Consejo. No publica sola al ranking: al
           cerrar la ronda se consolida una sola nota oficial.
         </p>
       )}
@@ -460,7 +449,6 @@ function FormularioBaremo({
           solo al ranking interno.
         </p>
       )}
-
     </div>
   );
 }

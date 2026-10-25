@@ -205,7 +205,9 @@ export function PantallaElegibilidad({
         return;
       }
       if (r.votoComite) {
-        toast.exito("Voto de elegibilidad registrado. El veredicto se cierra al alcanzar el quorum.");
+        toast.exito(
+          "Voto de elegibilidad registrado. El veredicto se cierra al alcanzar el quorum.",
+        );
         router.push("/evaluacion");
       } else {
         toast.exito("Postulante declarado elegible. Continúe en Baremo.");
@@ -248,9 +250,7 @@ export function PantallaElegibilidad({
         toast.error(r.error ?? "No se pudo registrar la recusación.");
         return;
       }
-      toast.exito(
-        "Recusación registrada. No cuenta como voto en contra del postulante.",
-      );
+      toast.exito("Recusación registrada. No cuenta como voto en contra del postulante.");
       router.push("/evaluacion");
       router.refresh();
     });
@@ -310,9 +310,9 @@ export function PantallaElegibilidad({
           </div>
           <span className="inline-flex rounded-full bg-toga-100 px-2.5 py-1 text-xs font-medium text-toga-700">
             {enEscalada
-              ? "Comité — ronda escalada"
+              ? "Consejo — ronda escalada"
               : modoComite
-                ? "Comité — voto de elegibilidad (voto oculto)"
+                ? "Consejo — voto de elegibilidad (voto oculto)"
                 : "En revisión de elegibilidad — Paso 1"}
           </span>
         </div>
@@ -343,8 +343,8 @@ export function PantallaElegibilidad({
                   : "Ronda reabierta por plazo vencido"}
               </p>
               <p className="mt-1">
-                Debe volver a emitir su voto o recusación en esta nueva ronda. Los votos
-                anteriores quedaron en historial.
+                Debe volver a emitir su voto o recusación en esta nueva ronda. Los votos anteriores
+                quedaron en historial.
               </p>
             </div>
           ) : null}
@@ -367,8 +367,8 @@ export function PantallaElegibilidad({
             >
               <p className="font-semibold text-toga-900">Consulta administrativa</p>
               <p className="mt-1">
-                Puede revisar el expediente. El voto de elegibilidad corresponde a los
-                evaluadores; las rondas escaladas se resuelven desde la pestaña Escaladas.
+                Puede revisar el expediente. El voto de elegibilidad corresponde a los evaluadores;
+                las rondas escaladas se resuelven desde la pestaña Escaladas.
               </p>
             </div>
           ) : null}
@@ -385,217 +385,216 @@ export function PantallaElegibilidad({
               </p>
             </div>
           ) : null}
-          {enEscalada && puedeResolverEscalada ? null : !puedeVotarElegibilidad && !enEscalada ? null : (
-          <div className="rounded-lg border border-toga-200 bg-white p-4">
-            <h2 className="text-sm font-semibold text-toga-900">Lista de verificación</h2>
-            <p className="mt-1 text-xs text-toga-500">
-              Marque cada requisito tras constatar el soporte.
-            </p>
-            <ul className="mt-3 space-y-2">
-              {BLOQUES_ELEGIBILIDAD.map((b) => (
-                <li key={b.id}>
-                  <label className="flex cursor-pointer gap-2.5 rounded-md border border-toga-200 bg-toga-50/50 px-2.5 py-2.5 hover:bg-toga-50">
-                    <input
-                      type="checkbox"
-                      checked={checklist[b.id]}
-                      disabled={bloqueoVotoComite}
-                      onChange={() => toggleBloque(b.id)}
-                      className="mt-0.5 h-4 w-4 shrink-0 rounded border-toga-300 text-balanza-600 focus:ring-balanza-600/30 disabled:cursor-not-allowed disabled:opacity-60"
-                    />
-                    <span className="min-w-0">
-                      <span className="flex flex-wrap items-center gap-1.5">
-                        <span className="text-sm font-medium text-toga-900">
-                          {b.orden}. {b.tituloCorto}
-                        </span>
-                        <span
-                          className={`rounded-full px-1.5 py-0.5 text-[0.6rem] font-medium ${
-                            b.estatus === "EXCLUYENTE"
-                              ? "bg-balanza-50 text-balanza-700 ring-1 ring-inset ring-balanza-600/20"
-                              : "bg-toga-100 text-toga-600"
-                          }`}
-                        >
-                          {b.estatus === "EXCLUYENTE" ? "Excluyente" : "Obligatorio"}
-                        </span>
-                      </span>
-                      <span className="mt-1 block text-[0.7rem] leading-relaxed text-toga-600">
-                        {b.criterio}
-                      </span>
-                    </span>
-                  </label>
-                </li>
-              ))}
-            </ul>
-
-            <div className="mt-4">
-              <label
-                htmlFor="motivo-elegibilidad"
-                className="block text-sm font-semibold text-toga-900"
-              >
-                Fundamentación
-              </label>
+          {enEscalada && puedeResolverEscalada ? null : !puedeVotarElegibilidad &&
+            !enEscalada ? null : (
+            <div className="rounded-lg border border-toga-200 bg-white p-4">
+              <h2 className="text-sm font-semibold text-toga-900">Lista de verificación</h2>
               <p className="mt-1 text-xs text-toga-500">
-                Obligatoria en ambos dictámenes (entre 20 y 3000 caracteres).
+                Marque cada requisito tras constatar el soporte.
               </p>
-              <textarea
-                id="motivo-elegibilidad"
-                rows={4}
-                value={motivo}
-                disabled={bloqueoVotoComite}
-                onChange={(e) => setMotivo(e.target.value)}
-                placeholder="Fundamentación jurídica del dictamen…"
-                className="mt-2 w-full rounded-md border border-toga-300 bg-white px-3 py-2 text-sm text-toga-900 placeholder:text-toga-400 focus:border-balanza-600 focus:outline-none focus:ring-2 focus:ring-balanza-600/20 disabled:cursor-not-allowed disabled:bg-toga-50 disabled:opacity-70"
-              />
-            </div>
-
-            <div className="mt-4">
-              {bloqueoVotoComite ? null : panelInelegible ? (
-                <div className="space-y-3 rounded-lg border border-balanza-600/30 bg-balanza-50/40 p-3">
-                  <h3 className="text-sm font-semibold text-toga-900">
-                    Causales de inelegibilidad
-                  </h3>
-                  <ul className="space-y-2">
-                    {CAUSALES_INELEGIBILIDAD.map((c) => (
-                      <li key={c.id}>
-                        <label className="flex cursor-pointer gap-2 text-xs text-toga-800">
-                          <input
-                            type="checkbox"
-                            checked={causales.has(c.id)}
-                            onChange={() => toggleCausal(c.id)}
-                            className="mt-0.5 h-3.5 w-3.5 shrink-0 rounded border-toga-300 text-balanza-600"
-                          />
-                          <span>
-                            <span className="font-medium">Causal {c.orden}.</span> {c.texto}
+              <ul className="mt-3 space-y-2">
+                {BLOQUES_ELEGIBILIDAD.map((b) => (
+                  <li key={b.id}>
+                    <label className="flex cursor-pointer gap-2.5 rounded-md border border-toga-200 bg-toga-50/50 px-2.5 py-2.5 hover:bg-toga-50">
+                      <input
+                        type="checkbox"
+                        checked={checklist[b.id]}
+                        disabled={bloqueoVotoComite}
+                        onChange={() => toggleBloque(b.id)}
+                        className="mt-0.5 h-4 w-4 shrink-0 rounded border-toga-300 text-balanza-600 focus:ring-balanza-600/30 disabled:cursor-not-allowed disabled:opacity-60"
+                      />
+                      <span className="min-w-0">
+                        <span className="flex flex-wrap items-center gap-1.5">
+                          <span className="text-sm font-medium text-toga-900">
+                            {b.orden}. {b.tituloCorto}
                           </span>
-                        </label>
-                      </li>
-                    ))}
-                  </ul>
-                  <div className="flex flex-wrap gap-2 pt-1">
-                    <button
-                      type="button"
-                      disabled={pendiente || completo}
-                      onClick={confirmarInelegible}
-                      className="rounded-md bg-balanza-700 px-3 py-2 text-sm font-semibold text-white hover:bg-balanza-800 disabled:opacity-60"
-                    >
-                      {pendiente ? "Registrando…" : "Confirmar inelegibilidad"}
-                    </button>
-                    <button
-                      type="button"
-                      disabled={pendiente}
-                      onClick={() => setPanelInelegible(false)}
-                      className="rounded-md border border-toga-300 bg-white px-3 py-2 text-sm font-medium text-toga-700 hover:bg-toga-50"
-                    >
-                      Cancelar
-                    </button>
+                          <span
+                            className={`rounded-full px-1.5 py-0.5 text-[0.6rem] font-medium ${
+                              b.estatus === "EXCLUYENTE"
+                                ? "bg-balanza-50 text-balanza-700 ring-1 ring-inset ring-balanza-600/20"
+                                : "bg-toga-100 text-toga-600"
+                            }`}
+                          >
+                            {b.estatus === "EXCLUYENTE" ? "Excluyente" : "Obligatorio"}
+                          </span>
+                        </span>
+                        <span className="mt-1 block text-[0.7rem] leading-relaxed text-toga-600">
+                          {b.criterio}
+                        </span>
+                      </span>
+                    </label>
+                  </li>
+                ))}
+              </ul>
+
+              <div className="mt-4">
+                <label
+                  htmlFor="motivo-elegibilidad"
+                  className="block text-sm font-semibold text-toga-900"
+                >
+                  Fundamentación
+                </label>
+                <p className="mt-1 text-xs text-toga-500">
+                  Obligatoria en ambos dictámenes (entre 20 y 3000 caracteres).
+                </p>
+                <textarea
+                  id="motivo-elegibilidad"
+                  rows={4}
+                  value={motivo}
+                  disabled={bloqueoVotoComite}
+                  onChange={(e) => setMotivo(e.target.value)}
+                  placeholder="Fundamentación jurídica del dictamen…"
+                  className="mt-2 w-full rounded-md border border-toga-300 bg-white px-3 py-2 text-sm text-toga-900 placeholder:text-toga-400 focus:border-balanza-600 focus:outline-none focus:ring-2 focus:ring-balanza-600/20 disabled:cursor-not-allowed disabled:bg-toga-50 disabled:opacity-70"
+                />
+              </div>
+
+              <div className="mt-4">
+                {bloqueoVotoComite ? null : panelInelegible ? (
+                  <div className="space-y-3 rounded-lg border border-balanza-600/30 bg-balanza-50/40 p-3">
+                    <h3 className="text-sm font-semibold text-toga-900">
+                      Causales de inelegibilidad
+                    </h3>
+                    <ul className="space-y-2">
+                      {CAUSALES_INELEGIBILIDAD.map((c) => (
+                        <li key={c.id}>
+                          <label className="flex cursor-pointer gap-2 text-xs text-toga-800">
+                            <input
+                              type="checkbox"
+                              checked={causales.has(c.id)}
+                              onChange={() => toggleCausal(c.id)}
+                              className="mt-0.5 h-3.5 w-3.5 shrink-0 rounded border-toga-300 text-balanza-600"
+                            />
+                            <span>
+                              <span className="font-medium">Causal {c.orden}.</span> {c.texto}
+                            </span>
+                          </label>
+                        </li>
+                      ))}
+                    </ul>
+                    <div className="flex flex-wrap gap-2 pt-1">
+                      <button
+                        type="button"
+                        disabled={pendiente || completo}
+                        onClick={confirmarInelegible}
+                        className="rounded-md bg-balanza-700 px-3 py-2 text-sm font-semibold text-white hover:bg-balanza-800 disabled:opacity-60"
+                      >
+                        {pendiente ? "Registrando…" : "Confirmar inelegibilidad"}
+                      </button>
+                      <button
+                        type="button"
+                        disabled={pendiente}
+                        onClick={() => setPanelInelegible(false)}
+                        className="rounded-md border border-toga-300 bg-white px-3 py-2 text-sm font-medium text-toga-700 hover:bg-toga-50"
+                      >
+                        Cancelar
+                      </button>
+                    </div>
                   </div>
-                </div>
-              ) : confirmandoElegible ? (
-                <div className="space-y-3 rounded-lg border border-balanza-600/25 bg-balanza-50/40 p-3">
-                  <p className="text-sm text-toga-800">
-                    ¿Confirma {modoComite ? "votar elegible a" : "declarar elegible a"}{" "}
-                    <span className="font-semibold">
-                      {expediente.firstName} {expediente.lastName}
-                    </span>
-                    ?
-                  </p>
-                  <div className="flex flex-wrap gap-2">
-                    <button
-                      type="button"
-                      disabled={pendiente}
-                      onClick={confirmarElegible}
-                      className="rounded-md bg-balanza-600 px-3 py-2 text-sm font-semibold text-white hover:bg-balanza-700 disabled:opacity-60"
-                    >
-                      {pendiente
-                        ? "Registrando…"
-                        : modoComite
-                          ? "Confirmar voto elegible"
-                          : "Confirmar y pasar al baremo"}
-                    </button>
-                    <button
-                      type="button"
-                      disabled={pendiente}
-                      onClick={() => setConfirmandoElegible(false)}
-                      className="rounded-md border border-toga-300 bg-white px-3 py-2 text-sm font-medium text-toga-700 hover:bg-toga-50"
-                    >
-                      Cancelar
-                    </button>
+                ) : confirmandoElegible ? (
+                  <div className="space-y-3 rounded-lg border border-balanza-600/25 bg-balanza-50/40 p-3">
+                    <p className="text-sm text-toga-800">
+                      ¿Confirma {modoComite ? "votar elegible a" : "declarar elegible a"}{" "}
+                      <span className="font-semibold">
+                        {expediente.firstName} {expediente.lastName}
+                      </span>
+                      ?
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        disabled={pendiente}
+                        onClick={confirmarElegible}
+                        className="rounded-md bg-balanza-600 px-3 py-2 text-sm font-semibold text-white hover:bg-balanza-700 disabled:opacity-60"
+                      >
+                        {pendiente
+                          ? "Registrando…"
+                          : modoComite
+                            ? "Confirmar voto elegible"
+                            : "Confirmar y pasar al baremo"}
+                      </button>
+                      <button
+                        type="button"
+                        disabled={pendiente}
+                        onClick={() => setConfirmandoElegible(false)}
+                        className="rounded-md border border-toga-300 bg-white px-3 py-2 text-sm font-medium text-toga-700 hover:bg-toga-50"
+                      >
+                        Cancelar
+                      </button>
+                    </div>
                   </div>
-                </div>
-              ) : panelRecusacion ? (
-                <div className="space-y-3 rounded-lg border border-toga-300 bg-toga-50/50 p-3">
-                  <h3 className="text-sm font-semibold text-toga-900">Recusación</h3>
-                  <p className="text-xs text-toga-600">
-                    Indique el motivo (conflicto de interés u otra causa). No cuenta como
-                    voto en contra del postulante. Mínimo 10 caracteres.
-                  </p>
-                  <label htmlFor="motivo-recusacion" className="block text-sm">
-                    <span className="font-medium text-toga-800">Motivo de la recusación</span>
-                    <textarea
-                      id="motivo-recusacion"
-                      rows={3}
-                      value={motivoRecusacion}
-                      disabled={pendiente}
-                      onChange={(e) => setMotivoRecusacion(e.target.value)}
-                      placeholder="Describa el motivo de apartarse de este expediente…"
-                      className="mt-1 w-full rounded-md border border-toga-300 bg-white px-3 py-2 text-sm text-toga-900 placeholder:text-toga-400 focus:border-balanza-600 focus:outline-none focus:ring-2 focus:ring-balanza-600/20 disabled:opacity-60"
-                    />
-                  </label>
-                  <div className="flex flex-wrap gap-2 pt-1">
-                    <button
-                      type="button"
-                      disabled={pendiente || motivoRecusacion.trim().length < 10}
-                      onClick={confirmarRecusacion}
-                      className="rounded-md bg-balanza-700 px-3 py-2 text-sm font-semibold text-white hover:bg-balanza-800 disabled:opacity-60"
-                    >
-                      {pendiente ? "Registrando…" : "Confirmar recusación"}
-                    </button>
-                    <button
-                      type="button"
-                      disabled={pendiente}
-                      onClick={() => {
-                        setPanelRecusacion(false);
-                        setMotivoRecusacion("");
-                      }}
-                      className="rounded-md border border-toga-300 bg-white px-3 py-2 text-sm font-medium text-toga-700 hover:bg-toga-50"
-                    >
-                      Cancelar
-                    </button>
+                ) : panelRecusacion ? (
+                  <div className="space-y-3 rounded-lg border border-toga-300 bg-toga-50/50 p-3">
+                    <h3 className="text-sm font-semibold text-toga-900">Recusación</h3>
+                    <p className="text-xs text-toga-600">
+                      Indique el motivo (conflicto de interés u otra causa). No cuenta como voto en
+                      contra del postulante. Mínimo 10 caracteres.
+                    </p>
+                    <label htmlFor="motivo-recusacion" className="block text-sm">
+                      <span className="font-medium text-toga-800">Motivo de la recusación</span>
+                      <textarea
+                        id="motivo-recusacion"
+                        rows={3}
+                        value={motivoRecusacion}
+                        disabled={pendiente}
+                        onChange={(e) => setMotivoRecusacion(e.target.value)}
+                        placeholder="Describa el motivo de apartarse de este expediente…"
+                        className="mt-1 w-full rounded-md border border-toga-300 bg-white px-3 py-2 text-sm text-toga-900 placeholder:text-toga-400 focus:border-balanza-600 focus:outline-none focus:ring-2 focus:ring-balanza-600/20 disabled:opacity-60"
+                      />
+                    </label>
+                    <div className="flex flex-wrap gap-2 pt-1">
+                      <button
+                        type="button"
+                        disabled={pendiente || motivoRecusacion.trim().length < 10}
+                        onClick={confirmarRecusacion}
+                        className="rounded-md bg-balanza-700 px-3 py-2 text-sm font-semibold text-white hover:bg-balanza-800 disabled:opacity-60"
+                      >
+                        {pendiente ? "Registrando…" : "Confirmar recusación"}
+                      </button>
+                      <button
+                        type="button"
+                        disabled={pendiente}
+                        onClick={() => {
+                          setPanelRecusacion(false);
+                          setMotivoRecusacion("");
+                        }}
+                        className="rounded-md border border-toga-300 bg-white px-3 py-2 text-sm font-medium text-toga-700 hover:bg-toga-50"
+                      >
+                        Cancelar
+                      </button>
+                    </div>
                   </div>
-                </div>
-              ) : (
-                <div className="flex flex-col gap-2">
-                  <button
-                    type="button"
-                    disabled={pendiente || completo || bloqueoVotoComite}
-                    onClick={onAbrirInelegible}
-                    className="w-full rounded-md border border-balanza-600 bg-white px-3 py-2.5 text-sm font-semibold text-balanza-700 hover:bg-balanza-50 disabled:opacity-60"
-                  >
-                    {modoComite ? "Votar inelegible" : "Declarar inelegible"}
-                  </button>
-                  <button
-                    type="button"
-                    disabled={pendiente || !completo || bloqueoVotoComite}
-                    onClick={onDeclararElegible}
-                    className="w-full rounded-md bg-balanza-600 px-3 py-2.5 text-sm font-semibold text-white hover:bg-balanza-700 disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    {modoComite
-                      ? "Votar elegible"
-                      : "Declarar elegible y pasar al baremo"}
-                  </button>
-                  {modoComite && puedeEmitirVotoComite && (
+                ) : (
+                  <div className="flex flex-col gap-2">
                     <button
                       type="button"
-                      disabled={pendiente}
-                      onClick={onAbrirRecusacion}
-                      className="w-full rounded-md border border-toga-300 bg-white px-3 py-2.5 text-sm font-medium text-toga-700 hover:bg-toga-50 disabled:opacity-60"
+                      disabled={pendiente || completo || bloqueoVotoComite}
+                      onClick={onAbrirInelegible}
+                      className="w-full rounded-md border border-balanza-600 bg-white px-3 py-2.5 text-sm font-semibold text-balanza-700 hover:bg-balanza-50 disabled:opacity-60"
                     >
-                      Apartarme de este expediente (recusación)
+                      {modoComite ? "Votar inelegible" : "Declarar inelegible"}
                     </button>
-                  )}
-                </div>
-              )}
+                    <button
+                      type="button"
+                      disabled={pendiente || !completo || bloqueoVotoComite}
+                      onClick={onDeclararElegible}
+                      className="w-full rounded-md bg-balanza-600 px-3 py-2.5 text-sm font-semibold text-white hover:bg-balanza-700 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      {modoComite ? "Votar elegible" : "Declarar elegible y pasar al baremo"}
+                    </button>
+                    {modoComite && puedeEmitirVotoComite && (
+                      <button
+                        type="button"
+                        disabled={pendiente}
+                        onClick={onAbrirRecusacion}
+                        className="w-full rounded-md border border-toga-300 bg-white px-3 py-2.5 text-sm font-medium text-toga-700 hover:bg-toga-50 disabled:opacity-60"
+                      >
+                        Apartarme de este expediente (recusación)
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
           )}
         </aside>
       </div>
@@ -607,7 +606,7 @@ export function PantallaElegibilidad({
           generando={preparandoIa}
           disponible={informeGuardado.trim().length > 0 || informeVisible.trim().length > 0}
           soloLectura
-          descripcion={`Resumen del expediente de ${expediente.firstName} ${expediente.lastName}. Es un apoyo: el dictamen lo decide usted. El texto es el mismo para todo el comité y no se puede editar.`}
+          descripcion={`Resumen del expediente de ${expediente.firstName} ${expediente.lastName}. Es un apoyo: el dictamen lo decide usted. El texto es el mismo para todo el Consejo y no se puede editar.`}
           onAbrir={cargarOGenerarInformeIa}
           onGenerar={cargarOGenerarInformeIa}
           onCambiar={() => undefined}
