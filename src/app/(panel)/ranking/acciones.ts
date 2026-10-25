@@ -86,3 +86,83 @@ export async function objetar(
     return { error: mensajeDe(error, "No se pudo registrar la objeción") };
   }
 }
+
+/**
+ * Publica las fichas indicadas y refresca el ranking público en un solo paso.
+ * Solo SUPER_ADMIN (la API lo exige). El motivo de la bitácora lo escribe el servidor.
+ */
+export async function enviarAlRankingPublico(candidateIds: string[]): Promise<EstadoRanking> {
+  if (candidateIds.length === 0) {
+    return { error: "Seleccione al menos un postulante." };
+  }
+  try {
+    const r = await llamarApiAccion<{ publicados: number; omitidos: number }>(
+      "/internal/publications/ranking/enviar",
+      { method: "POST", body: { candidateIds }, timeoutMs: 60_000 },
+    );
+    revalidatePath("/ranking");
+    const yaEstaban = r.omitidos > 0 ? ` ${r.omitidos} ya estaban publicados.` : "";
+    return { exito: `Enviados al ranking público: ${r.publicados}.${yaEstaban}` };
+  } catch (error) {
+    return { error: mensajeDe(error, "No se pudo enviar al ranking público") };
+  }
+}
+
+/**
+ * Vuelve a publicar la ficha y el ranking de alguien que ya está en el sitio
+ * público, con su nota vigente. Para cuando una re-evaluación cambió la nota
+ * interna y la landing quedó con la anterior.
+ */
+export async function actualizarEnRankingPublico(candidateId: string): Promise<EstadoRanking> {
+  try {
+    const r = await llamarApiAccion<{ refrescado: boolean; rankingVersion?: number }>(
+      `/internal/publications/candidate/${candidateId}/refrescar`,
+      { method: "POST", body: {}, timeoutMs: 60_000 },
+    );
+    revalidatePath("/ranking");
+    if (!r.refrescado) {
+      return { error: "Ese postulante ya no está en el ranking público." };
+    }
+    return { exito: `Ficha y ranking público actualizados (ranking v${r.rankingVersion}).` };
+  } catch (error) {
+    return { error: mensajeDe(error, "No se pudo actualizar el ranking público") };
+  }
+}
+
+export type AjusteInterruptor = "viewerObjectionsOpen" | "objectionsOpen" | "publicRefreshEnabled";
+
+const AJUSTES_INTERRUPTOR: readonly AjusteInterruptor[] = [
+  "viewerObjectionsOpen",
+  "objectionsOpen",
+  "publicRefreshEnabled",
+];
+
+const EXITO_AJUSTE: Record<AjusteInterruptor, [string, string]> = {
+  viewerObjectionsOpen: [
+    "Los visualizadores ya pueden objetar.",
+    "Los visualizadores ya no ven «Objetar».",
+  ],
+  objectionsOpen: [
+    "Objeciones públicas abiertas en la landing.",
+    "Objeciones públicas cerradas en la landing.",
+  ],
+  publicRefreshEnabled: [
+    "Admin y evaluadores ya ven «Actualizar en el ranking público».",
+    "Solo usted ve «Actualizar en el ranking público».",
+  ],
+};
+
+/** Cambia un interruptor del portal. Quién puede cambiar cada uno lo decide la API. */
+export async function cambiarInterruptor(
+  ajuste: AjusteInterruptor,
+  valor: boolean,
+): Promise<EstadoRanking> {
+  if (!AJUSTES_INTERRUPTOR.includes(ajuste)) return { error: "Ajuste desconocido" };
+  try {
+    await llamarApiAccion("/internal/portal", { method: "PATCH", body: { [ajuste]: valor } });
+    revalidatePath("/ranking");
+    return { exito: EXITO_AJUSTE[ajuste][valor ? 0 : 1] };
+  } catch (error) {
+    return { error: mensajeDe(error, "No se pudo cambiar el ajuste") };
+  }
+}

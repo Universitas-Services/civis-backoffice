@@ -35,9 +35,9 @@ export function ConfiguracionEvaluacion({
         Modalidad de evaluación
       </h2>
       <p className="mt-1 text-sm leading-relaxed text-toga-600">
-        Solo los evaluadores activos en comité (tope máximo 7) pueden evaluar, en individual o en
-        comité. En comité, el quorum es el mínimo de actuaciones (voto o recusación) para decidir
-        por mayoría. Cambiar de modalidad exige que no haya rondas abiertas.
+        Solo los evaluadores activos en el Consejo (tope máximo 7) pueden evaluar, en individual o
+        en Consejo. En Consejo, el quorum es el mínimo de actuaciones (voto o recusación) para
+        decidir por mayoría. Cambiar de modalidad exige que no haya rondas abiertas.
       </p>
 
       <form action={accion} className="mt-4 grid gap-4 sm:grid-cols-2">
@@ -51,7 +51,7 @@ export function ConfiguracionEvaluacion({
             className="mt-1 w-full rounded-md border border-toga-300 px-3 py-2 text-sm disabled:bg-toga-50"
           >
             <option value="INDIVIDUAL">Individual</option>
-            <option value="COMMITTEE">Comité</option>
+            <option value="COMMITTEE">Consejo</option>
           </select>
           {!esSuperAdmin && (
             <span className="mt-1 block text-xs text-toga-500">
@@ -71,7 +71,7 @@ export function ConfiguracionEvaluacion({
             className="mt-1 w-full rounded-md border border-toga-300 px-3 py-2 text-sm"
           />
           <span className="mt-1 block text-xs text-toga-500">
-            Máximo 7. Solo esos evaluadores pueden evaluar (individual o comité).
+            Máximo 7. Solo esos evaluadores pueden evaluar (individual o Consejo).
           </span>
         </label>
 
@@ -155,7 +155,7 @@ export function InterruptorComite({
             : "bg-toga-100 text-toga-500 ring-toga-300"
         }`}
       >
-        {enComite ? "En comité" : "Fuera del comité"}
+        {enComite ? "En el Consejo" : "Fuera del Consejo"}
       </button>
     );
   }
@@ -163,7 +163,7 @@ export function InterruptorComite({
   return (
     <div className="mx-auto min-w-[16rem] rounded-md border border-toga-300 bg-white p-3 text-left">
       <p className="text-xs font-medium text-toga-900">
-        {enComite ? `Sacar a ${nombre} del comité` : `Incluir a ${nombre} en el comité`}
+        {enComite ? `Sacar a ${nombre} del Consejo` : `Incluir a ${nombre} en el Consejo`}
       </p>
       <textarea
         rows={2}
@@ -181,7 +181,7 @@ export function InterruptorComite({
               const r = await cambiarActivoComite(id, !enComite, motivo);
               if (r.ok) {
                 setConfirmando(false);
-                toast.exito(enComite ? "Fuera del comité." : "Incluido en el comité.");
+                toast.exito(enComite ? "Fuera del Consejo." : "Incluido en el Consejo.");
               } else {
                 toast.error(r.error ?? "No se pudo cambiar");
               }

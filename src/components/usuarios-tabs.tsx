@@ -3,10 +3,7 @@
 import type { AjustesPortal, Role, UsuarioDirectorio } from "@/contracts";
 import { etiquetaRol } from "@/contracts";
 import { CrearUsuario, EditorRoles, InterruptorUsuario } from "@/components/gestion-usuarios";
-import {
-  ConfiguracionEvaluacion,
-  InterruptorComite,
-} from "@/components/configuracion-evaluacion";
+import { ConfiguracionEvaluacion, InterruptorComite } from "@/components/configuracion-evaluacion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 /**
@@ -47,7 +44,7 @@ export function UsuariosTabs({
             Directorio
           </h2>
           <p className="mt-1 text-sm text-toga-600">
-            Solo los evaluadores activos en comité pueden evaluar (individual o comité). Tope{" "}
+            Solo los evaluadores activos en el Consejo pueden evaluar (individual o Consejo). Tope{" "}
             <span className="cifra font-medium text-toga-800">{ajustes.maxActiveEvaluators}</span>
             {modoComite ? (
               <>
@@ -116,7 +113,7 @@ export function UsuariosTabs({
                     Acceso
                   </th>
                   <th scope="col" className="px-4 py-3 font-semibold text-toga-700">
-                    Comité
+                    Consejo
                   </th>
                 </tr>
               </thead>

@@ -88,9 +88,9 @@ export default async function BandejaEvaluacion() {
       <div className="space-y-6 px-5 py-6 sm:px-8">
         {bandeja.bloqueadoSinComite ? (
           <div className="rounded-lg border border-balanza-600/25 bg-balanza-50 p-5 text-sm text-toga-800">
-            <p className="font-semibold text-toga-900">No está activo en el comité</p>
+            <p className="font-semibold text-toga-900">No está activo en el Consejo</p>
             <p className="mt-1 leading-relaxed">
-              Solo los evaluadores marcados como activos en comité pueden evaluar. Pida a un
+              Solo los evaluadores marcados como activos en el Consejo pueden evaluar. Pida a un
               administrador que lo incluya en Usuarios.
             </p>
           </div>

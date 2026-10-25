@@ -14,6 +14,8 @@ export default async function Usuarios() {
   let usuarios: readonly UsuarioDirectorio[];
   let ajustes: AjustesPortal = {
     objectionsOpen: false,
+    viewerObjectionsOpen: false,
+    publicRefreshEnabled: false,
     evaluationMode: "INDIVIDUAL",
     maxActiveEvaluators: 7,
     quorumThreshold: 5,
@@ -21,7 +23,7 @@ export default async function Usuarios() {
   };
   try {
     usuarios = await llamarApi<UsuarioDirectorio[]>("/internal/users");
-    ajustes = await llamarApi<AjustesPortal>("/public/portal");
+    ajustes = await llamarApi<AjustesPortal>("/internal/portal");
   } catch (error) {
     if (error instanceof NoAutorizado) await renovarYVolver("/usuarios");
     throw error;

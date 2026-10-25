@@ -15,9 +15,7 @@ export default async function EvaluarElegibilidad({
 }) {
   const usuario = await exigirRol("SUPER_ADMIN", "ADMIN", "EVALUATOR");
   const { candidateId } = await params;
-  const puedeResolverEscalada = usuario.roles.some(
-    (r) => r === "SUPER_ADMIN" || r === "ADMIN",
-  );
+  const puedeResolverEscalada = usuario.roles.some((r) => r === "SUPER_ADMIN" || r === "ADMIN");
   const puedeVotarElegibilidad = usuario.roles.some(
     (r) => r === "SUPER_ADMIN" || r === "EVALUATOR",
   );
@@ -30,7 +28,7 @@ export default async function EvaluarElegibilidad({
   let rondaAbierta: RondaComiteAbierta | null = null;
   try {
     expediente = await llamarApi<ExpedienteDetalle>(`/internal/candidates/${candidateId}`);
-    const portal = await llamarApi<AjustesPortal>("/public/portal");
+    const portal = await llamarApi<AjustesPortal>("/internal/portal");
     modoComite = portal.evaluationMode === "COMMITTEE";
     if (modoComite) {
       rondaAbierta = await leerRondaAbierta(candidateId);

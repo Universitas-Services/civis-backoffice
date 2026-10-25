@@ -10,12 +10,16 @@ import type { Role, Sesion } from "@/contracts";
  * - Crear expediente: SUPER_ADMIN + SECRETARY
  * - Revisión documental: SUPER_ADMIN + REVIEWER
  * - Evaluación: SUPER_ADMIN + ADMIN + EVALUATOR (ADMIN resuelve escaladas de comité; el voto es del evaluador)
- * - Objeciones (bandeja y ajuste): SUPER_ADMIN + ADMIN + EVALUATOR. Ya no hay lapso:
- *   las objeciones las presentan los visualizadores desde el ranking interno.
+ * - Comité: SUPER_ADMIN + COMMITTEE. Toda objeción llega primero aquí; el comité
+ *   espera el descargo del postulante y la envía al Consejo (con motivo si no hay descargo).
+ * - Objeciones (bandeja y ajuste del Consejo): SUPER_ADMIN + ADMIN + EVALUATOR. Sólo ven
+ *   lo que el comité envió. Los visualizadores objetan desde el ranking interno cuando
+ *   el interruptor de SUPER_ADMIN/ADMIN lo habilita.
  * - Baremo (lista, activo y aplicar): SUPER_ADMIN + ADMIN + EVALUATOR
  * - Configurar baremo: solo SUPER_ADMIN (la API también lo permite al ADMIN)
- * - Ranking interno: SUPER_ADMIN + ADMIN + EVALUATOR + VIEWER. No se publica en la
- *   landing (fuera de uso). El VIEWER opina y objeta desde la ficha del ranking.
+ * - Ranking interno: SUPER_ADMIN + ADMIN + EVALUATOR + VIEWER. Enviar al ranking público
+ *   y los interruptores de landing y de refresco: solo SUPER_ADMIN. «Actualizar en el
+ *   ranking público»: SUPER_ADMIN siempre; ADMIN y EVALUATOR si SUPER_ADMIN lo habilita.
  * - Informes: solo SUPER_ADMIN
  * - ADMIN ve Panel, Expedientes, Evaluación (escaladas), Baremo, Objeciones, Ranking interno y Usuarios
  * - VIEWER (visualizador, diputado) ve Expedientes en solo lectura y Ranking interno
@@ -64,6 +68,7 @@ export const SECCIONES: readonly SeccionNav[] = [
       },
     ],
   },
+  { href: "/comite-objeciones", texto: "Comité", roles: ["SUPER_ADMIN", "COMMITTEE"] },
   { href: "/objeciones", texto: "Objeciones", roles: ["SUPER_ADMIN", "ADMIN", "EVALUATOR"] },
   {
     href: "/ranking",
@@ -106,6 +111,7 @@ export function rutaInicio(roles: readonly string[]): string {
   );
   if (vePanel) return "/dashboard";
   if (roles.includes("REVIEWER")) return "/revision-documental";
+  if (roles.includes("COMMITTEE")) return "/comite-objeciones";
   if (roles.includes("VIEWER")) return "/ranking";
   return "/expedientes";
 }

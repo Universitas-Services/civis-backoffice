@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { objecionVisualizadorSchema, opinionSchema } from "./index";
+import { objecionVisualizadorSchema, opinionSchema, rolesAsignablesPara } from "./index";
 
 const objecionValida = {
   objectorNationalId: "V-12345678",
@@ -45,5 +45,16 @@ describe("objecionVisualizadorSchema", () => {
     expect(
       objecionVisualizadorSchema.safeParse({ ...objecionValida, evidenceUrl: "no-es-url" }).success,
     ).toBe(false);
+  });
+});
+
+describe("roles asignables desde el panel", () => {
+  it("el de postulante nunca se asigna desde el panel", () => {
+    expect(rolesAsignablesPara(["SUPER_ADMIN"])).not.toContain("APPLICANT");
+    expect(rolesAsignablesPara(["ADMIN"])).not.toContain("APPLICANT");
+  });
+
+  it("el administrador puede asignar el rol de comité", () => {
+    expect(rolesAsignablesPara(["ADMIN"])).toContain("COMMITTEE");
   });
 });

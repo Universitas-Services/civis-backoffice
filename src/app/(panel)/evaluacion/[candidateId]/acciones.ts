@@ -135,7 +135,7 @@ export type ResultadoElegibilidadAccion = {
 
 async function esModoComite(): Promise<boolean> {
   try {
-    const portal = await llamarApi<AjustesPortal>("/public/portal");
+    const portal = await llamarApi<AjustesPortal>("/internal/portal");
     return portal.evaluationMode === "COMMITTEE";
   } catch {
     return false;

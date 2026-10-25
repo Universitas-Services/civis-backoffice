@@ -2,7 +2,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { Lock, Scale } from "lucide-react";
-import type { ExpedienteDetalle } from "@/contracts";
+import type { ExpedienteDetalle, ObjecionParaDescargo } from "@/contracts";
 import { SALA_ETIQUETA } from "@/contracts";
 import { ErrorApi, llamarApi, NoAutorizado } from "@/lib/api";
 import { renovarYVolver } from "@/lib/rutas";
@@ -15,6 +15,7 @@ import {
   Puntaje,
 } from "@/components/insignias";
 import { SeccionDocumentosExpediente } from "@/components/seccion-documentos-expediente";
+import { SeccionDescargosSecretaria } from "@/components/seccion-descargos-secretaria";
 import { HojaHistorialExpediente, type EventoHistorial } from "@/components/historial-expediente";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -53,6 +54,38 @@ export default async function DetalleExpediente({
   const expediente = e.submissions[0];
   const devueltoAutopostulado =
     e.origin === "AUTOPOSTULACION" && e.workflowStatus === "DRAFT" && Boolean(e.selfSubmittedAt);
+  const conCuenta = Boolean(e.applicantUserId);
+
+  // El postulante con cuenta responde sus objeciones él mismo; si no tiene
+  // cuenta, la secretaría lo contacta y carga el descargo aquí.
+  let objecionesDescargo: ObjecionParaDescargo[] = [];
+  if (!conCuenta && tieneRol(usuario, "SUPER_ADMIN", "SECRETARY") && e._count.objections > 0) {
+    try {
+      objecionesDescargo = await llamarApi<ObjecionParaDescargo[]>(
+        `/internal/candidates/${id}/objeciones-descargo`,
+      );
+    } catch (error) {
+      if (error instanceof NoAutorizado) await renovarYVolver(`/expedientes/${id}`);
+    }
+  }
+  const contacto = (
+    <>
+      {e.phone && (
+        <>
+          Teléfono: <span className="codigo font-semibold">{telefonoLegible(e.phone)}</span>
+        </>
+      )}
+      {e.phone && e.email && " · "}
+      {e.email && (
+        <>
+          Correo:{" "}
+          <a href={`mailto:${e.email}`} className="font-semibold text-balanza-700 underline">
+            {e.email}
+          </a>
+        </>
+      )}
+    </>
+  );
   const evaluacion = e.evaluations[0];
   const puedeEvaluar =
     tieneRol(usuario, "SUPER_ADMIN", "EVALUATOR") &&
@@ -163,34 +196,25 @@ export default async function DetalleExpediente({
             className="rounded-lg border border-balanza-600/30 bg-balanza-50 px-5 py-4 text-sm leading-relaxed text-toga-800"
           >
             <p className="font-semibold text-toga-900">
-              Autopostulación devuelta: contacte al postulante
+              {conCuenta
+                ? "Autopostulación devuelta para corrección"
+                : "Autopostulación devuelta: contacte al postulante"}
             </p>
             <p className="mt-1">
-              Este expediente lo cargó y envió el propio postulante, y la revisión lo devolvió. Él
-              ya no puede modificarlo: acuerde las correcciones por teléfono o correo y cárguelas
-              aquí.
+              {conCuenta
+                ? "La revisión devolvió este expediente. El postulante ya vio el motivo y puede corregirlo desde su cuenta; usted también puede hacerlo aquí."
+                : "Este expediente lo cargó y envió el propio postulante, y la revisión lo devolvió. No tiene cuenta para corregirlo: acuerde las correcciones por teléfono o correo y cárguelas aquí."}
             </p>
-            <p className="mt-2">
-              {e.phone && (
-                <>
-                  Teléfono: <span className="codigo font-semibold">{telefonoLegible(e.phone)}</span>
-                </>
-              )}
-              {e.phone && e.email && " · "}
-              {e.email && (
-                <>
-                  Correo:{" "}
-                  <a
-                    href={`mailto:${e.email}`}
-                    className="font-semibold text-balanza-700 underline"
-                  >
-                    {e.email}
-                  </a>
-                </>
-              )}
-            </p>
+            {e.returnReason && (
+              <p className="mt-2">
+                <span className="font-semibold text-toga-900">Motivo:</span> {e.returnReason}
+              </p>
+            )}
+            <p className="mt-2">{contacto}</p>
           </div>
         )}
+        <SeccionDescargosSecretaria objeciones={objecionesDescargo} contacto={contacto} />
+
         <SeccionDocumentosExpediente
           candidateId={e.id}
           submissionId={expediente?.id ?? null}

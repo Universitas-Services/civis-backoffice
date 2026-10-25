@@ -1,10 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  FORMATO_CODIGO_ACCESO,
-  normalizarCodigoAcceso,
-  normalizarTelefono,
-  TELEFONO_VE,
-} from "./index";
+import { normalizarTelefono, TELEFONO_VE } from "./index";
 
 const valido = (v: string) => TELEFONO_VE.test(normalizarTelefono(v));
 
@@ -29,16 +24,4 @@ describe("teléfono venezolano", () => {
     "rechaza %s",
     (v) => expect(valido(v)).toBe(false),
   );
-});
-
-describe("código de acceso", () => {
-  it("se normaliza aunque se escriba en minúsculas, sin guiones o con espacios", () => {
-    expect(normalizarCodigoAcceso(" civis 7k3m-q9xa 2f8p ")).toBe("CIVIS-7K3M-Q9XA-2F8P");
-    expect(FORMATO_CODIGO_ACCESO.test(normalizarCodigoAcceso("7k3mq9xa2f8p"))).toBe(true);
-  });
-
-  it("rechaza códigos con caracteres ambiguos o de largo incorrecto", () => {
-    expect(FORMATO_CODIGO_ACCESO.test(normalizarCodigoAcceso("CIVIS-0O1I-Q9XA-2F8P"))).toBe(false);
-    expect(FORMATO_CODIGO_ACCESO.test(normalizarCodigoAcceso("CIVIS-7K3M-Q9XA"))).toBe(false);
-  });
 });

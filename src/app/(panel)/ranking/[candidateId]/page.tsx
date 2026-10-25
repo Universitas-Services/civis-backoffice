@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import type { MiObjecion, OpinionPostulante, ResultadoRanking } from "@/contracts";
+import type { AjustesPortal, MiObjecion, OpinionPostulante, ResultadoRanking } from "@/contracts";
 import { ESTADO_PUBLICO_OBJECION } from "@/contracts";
 import { ErrorApi, llamarApi, NoAutorizado } from "@/lib/api";
 import { exigirRol, renovarYVolver } from "@/lib/rutas";
@@ -51,7 +51,7 @@ export default async function FichaRanking({
   const fila = ranking.entries.find((e) => e.candidateId === candidateId && !e.ineligible);
   if (!fila) notFound();
 
-  const [opiniones, misObjeciones] = await Promise.all([
+  const [opiniones, misObjeciones, portal] = await Promise.all([
     leerLista<OpinionPostulante>(`/internal/candidates/${candidateId}/opinions`, volver),
     esVisualizador
       ? leerLista<MiObjecion>(
@@ -59,7 +59,9 @@ export default async function FichaRanking({
           volver,
         )
       : Promise.resolve(null),
+    llamarApi<AjustesPortal>("/internal/portal").catch(() => null),
   ]);
+  const objecionesAbiertas = portal?.viewerObjectionsOpen ?? false;
 
   return (
     <>
@@ -149,12 +151,19 @@ export default async function FichaRanking({
               Objetar
             </h2>
             <p className="mt-1 text-sm text-toga-500">
-              Una objeción formal queda registrada a su nombre y la revisa el comité. Por sí sola no
-              cambia el puntaje.
+              Una objeción formal queda registrada a su nombre. La recibe el comité, que pide el
+              descargo del postulante y la envía al Consejo. Por sí sola no cambia el puntaje.
             </p>
-            <div className="mt-4">
-              <FormularioObjecion candidateId={candidateId} postulante={fila.fullName} />
-            </div>
+            {objecionesAbiertas ? (
+              <div className="mt-4">
+                <FormularioObjecion candidateId={candidateId} postulante={fila.fullName} />
+              </div>
+            ) : (
+              <p className="mt-4 rounded-lg border border-toga-200 bg-toga-50 px-4 py-3 text-sm text-toga-600">
+                La presentación de objeciones no está habilitada en este momento. Puede seguir
+                consultando las que ya presentó.
+              </p>
+            )}
 
             <h3 className="mt-8 text-sm font-semibold text-toga-900">
               Mis objeciones a este postulante

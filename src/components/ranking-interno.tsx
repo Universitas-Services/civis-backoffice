@@ -41,9 +41,11 @@ function Opiniones({ n }: { readonly n: number | undefined }) {
 function AccionesFila({
   e,
   esVisualizador,
+  puedeObjetar,
 }: {
   readonly e: EntradaRanking;
   readonly esVisualizador: boolean;
+  readonly puedeObjetar: boolean;
 }) {
   if (!e.candidateId) return null;
   const base = `/ranking/${e.candidateId}`;
@@ -60,23 +62,31 @@ function AccionesFila({
       <Link href={`${base}#opinar`} className={enlace}>
         Opinar
       </Link>
-      <Link
-        href={`${base}#objetar`}
-        className="rounded-md border border-balanza-600 bg-white px-3 py-1.5 text-sm font-semibold text-balanza-700 hover:bg-balanza-50"
-      >
-        Objetar
-      </Link>
+      {puedeObjetar && (
+        <Link
+          href={`${base}#objetar`}
+          className="rounded-md border border-balanza-600 bg-white px-3 py-1.5 text-sm font-semibold text-balanza-700 hover:bg-balanza-50"
+        >
+          Objetar
+        </Link>
+      )}
     </span>
   );
 }
 
-/** Ranking interno: una sola lista, sin controles de publicación. */
+/**
+ * Ranking interno: una sola lista. La publicación va aparte
+ * (`PublicacionRanking`). «Objetar» solo aparece si el interruptor de
+ * objeciones de visualizadores está activo.
+ */
 export function RankingInterno({
   entries,
   esVisualizador,
+  puedeObjetar,
 }: {
   readonly entries: readonly EntradaRanking[];
   readonly esVisualizador: boolean;
+  readonly puedeObjetar: boolean;
 }) {
   return (
     <>
@@ -97,7 +107,7 @@ export function RankingInterno({
               <Opiniones n={e.opinionCount} />
             </div>
             <div className="mt-3">
-              <AccionesFila e={e} esVisualizador={esVisualizador} />
+              <AccionesFila e={e} esVisualizador={esVisualizador} puedeObjetar={puedeObjetar} />
             </div>
           </li>
         ))}
@@ -152,7 +162,7 @@ export function RankingInterno({
                   <Opiniones n={e.opinionCount} />
                 </td>
                 <td className="px-4 py-3 text-right">
-                  <AccionesFila e={e} esVisualizador={esVisualizador} />
+                  <AccionesFila e={e} esVisualizador={esVisualizador} puedeObjetar={puedeObjetar} />
                 </td>
               </tr>
             ))}

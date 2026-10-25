@@ -3,10 +3,7 @@
 import { redirect } from "next/navigation";
 import { cambiarContrasenaSchema, loginSchema } from "@/contracts";
 import { API_INTERNA } from "@/lib/config";
-import {
-  cabecerasAuthCookie,
-  extraerRefreshCookie,
-} from "@/lib/auth-refresh";
+import { cabecerasAuthCookie, extraerRefreshCookie } from "@/lib/auth-refresh";
 import { rutaInicio } from "@/lib/secciones-nav";
 import { cerrarSesion, guardarSesion, leerSesion } from "@/lib/sesion";
 import { accessExpiresAtDesde } from "@/lib/ttl-access";
@@ -93,6 +90,20 @@ export async function iniciarSesion(
     return {
       error:
         "El servidor no entregó la cookie de sesión (refresh). Revise que la API setee cp_refresh en el login.",
+    };
+  }
+
+  // Las cuentas de postulante usan su propio portal, nunca este panel. La
+  // sesión que la API acaba de abrir se revoca en el acto.
+  if (!datos.user.roles.some((rol) => rol !== "APPLICANT")) {
+    await fetch(`${API_INTERNA}/auth/logout`, {
+      method: "POST",
+      headers: { Accept: "application/json", ...cabecerasAuthCookie(refreshCookie) },
+      cache: "no-store",
+    }).catch(() => null);
+    return {
+      error:
+        "Esta cuenta es de postulante: ingrese desde el portal de postulación, no desde el panel.",
     };
   }
 

@@ -36,7 +36,7 @@ export function PanelTallyComite({
 
   return (
     <div className="rounded-lg border border-toga-200 bg-white p-4 text-sm">
-      <p className="font-semibold text-toga-900">Progreso del comité</p>
+      <p className="font-semibold text-toga-900">Progreso del Consejo</p>
       <ul className="mt-2 space-y-1 text-toga-700">
         <li>
           Actuaciones:{" "}
