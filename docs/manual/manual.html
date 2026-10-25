@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="es-VE">
+<head>
+<meta charset="utf-8" />
+<title>Manual de usuario — CIVIS</title>
+<style>
+  @page { size: A4; margin: 18mm 16mm 20mm; }
+  :root { --vino:#7a1e2d; --azul:#0f2a44; --gris:#64748b; --claro:#cbd5e1; --fondo:#f8fafc; --texto:#1f2937; }
+  * { box-sizing: border-box; }
+  body { font-family: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif; color: var(--texto); font-size: 10.5pt; line-height: 1.55; margin: 0; }
+  h1, h2, h3 { font-family: Merriweather, Georgia, "Times New Roman", serif; color: var(--azul); font-weight: 700; line-height: 1.25; }
+  h1 { font-size: 24pt; margin: 0 0 6pt; }
+  h2 { font-size: 16pt; margin: 0 0 4pt; padding-bottom: 6pt; border-bottom: 2px solid var(--vino); }
+  h3 { font-size: 12pt; margin: 16pt 0 4pt; }
+  p { margin: 0 0 7pt; }
+  ol, ul { margin: 0 0 8pt; padding-left: 18pt; }
+  li { margin-bottom: 3pt; }
+  code, .codigo { font-family: "IBM Plex Mono", Consolas, monospace; font-size: 9.5pt; background: #eef2f6; padding: 0 3pt; border-radius: 3px; }
+  .portada { height: 255mm; display: flex; flex-direction: column; justify-content: space-between; background: var(--azul); color: #fff; padding: 22mm 18mm; margin: -18mm -16mm 0; page-break-after: always; position: relative; overflow: hidden; }
+  .portada img { height: 22mm; align-self: flex-start; }
+  .portada h1 { color: #fff; font-size: 30pt; margin-top: 12mm; }
+  .portada .lema { font-family: Merriweather, Georgia, serif; font-size: 15pt; color: #e2e8f0; }
+  .portada .raya { width: 18mm; height: 2px; background: #c2414f; margin: 8mm 0; }
+  .portada small { color: #cbd5e1; font-size: 9pt; }
+  .seccion { page-break-before: always; }
+  .figura { margin: 8pt 0 12pt; page-break-inside: avoid; }
+  .figura img { width: 100%; border: 1px solid var(--claro); border-radius: 6px; display: block; }
+  .figura.media img { width: 70%; margin: 0 auto; }
+  .figura.movil img { width: 38%; margin: 0 auto; }
+  .figura figcaption { font-size: 8.5pt; color: var(--gris); margin-top: 4pt; text-align: center; }
+  .nota { border: 1px solid #e8b4bc; background: #fdf2f4; border-radius: 6px; padding: 7pt 10pt; margin: 8pt 0 10pt; page-break-inside: avoid; }
+  .nota strong { color: var(--vino); }
+  .ok { border: 1px solid #a7f3d0; background: #ecfdf5; border-radius: 6px; padding: 7pt 10pt; margin: 8pt 0 10pt; }
+  table { width: 100%; border-collapse: collapse; margin: 6pt 0 10pt; font-size: 9.5pt; page-break-inside: avoid; }
+  th, td { border: 1px solid var(--claro); padding: 4pt 6pt; text-align: left; vertical-align: top; }
+  th { background: var(--fondo); color: var(--azul); }
+  .indice li { margin-bottom: 2pt; }
+  .rol { display: inline-block; background: var(--azul); color: #fff; font-size: 8pt; font-weight: 600; padding: 1pt 6pt; border-radius: 10pt; margin-right: 4pt; }
+</style>
+</head>
+<body>
+
+<section class="portada">
+  <img src="../../../civis-postulacion/public/brand/civis-horiz-blanco-slogan.png" alt="CIVIS" />
+  <div>
+    <h1>Manual de usuario</h1>
+    <p class="lema">Cuentas de postulante, comité de objeciones, descargos y recuperación de contraseña</p>
+    <div class="raya"></div>
+    <p>Portal del postulante · Panel interno (secretaría, revisión, comité, Consejo, visualizadores y administración)</p>
+  </div>
+  <small>Versión 2 · Octubre de 2026 · Capturas tomadas en un entorno de prueba con datos ficticios.</small>
+</section>
+
+<section>
+  <h2>Contenido</h2>
+  <ol class="indice">
+    <li>Cómo funciona el proceso</li>
+    <li>Postulante: crear la cuenta y postularse</li>
+    <li>Postulante: corregir un expediente devuelto</li>
+    <li>Postulante: responder una objeción (descargo)</li>
+    <li>Revisión documental: devolver para corrección</li>
+    <li>Visualizador: presentar una objeción</li>
+    <li>Secretaría: cargar el descargo de un postulante sin cuenta</li>
+    <li>Comité: recibir objeciones y enviarlas al Consejo</li>
+    <li>Consejo (evaluadores): objeciones con descargo</li>
+    <li>Administración: interruptores y ranking público</li>
+    <li>Recuperar la contraseña (todos los usuarios)</li>
+    <li>Quién puede hacer qué</li>
+  </ol>
+
+  <h3>1. Cómo funciona el proceso</h3>
+  <p>Hay dos puertas de entrada:</p>
+  <ul>
+    <li><strong>Portal del postulante</strong>: el aspirante crea su cuenta, registra su postulación, carga los documentos, sigue su etapa, corrige lo que le pidan y responde objeciones.</li>
+    <li><strong>Panel interno</strong>: lo usa el personal del Consejo Independiente según su rol.</li>
+  </ul>
+  <p>Recorrido de un expediente:</p>
+  <ol>
+    <li><strong>Carga de documentos</strong> (borrador). El postulante, o la secretaría si lo dio de alta ella, carga los recaudos.</li>
+    <li><strong>Revisión documental.</strong> El revisor lo aprueba o lo <em>devuelve para corrección</em> con un motivo. Mientras está en borrador, el postulante y la secretaría pueden corregirlo.</li>
+    <li><strong>Evaluación</strong> por el Consejo (los evaluadores activos) y <strong>ranking interno</strong>.</li>
+    <li><strong>Objeciones.</strong> Si están habilitadas, los visualizadores objetan desde el ranking interno. La objeción llega primero al <strong>comité</strong>, que espera el <strong>descargo</strong> del postulante y la envía al <strong>Consejo</strong>. El Consejo la evalúa con el flujo de siempre (rondas, puntaje o inelegibilidad).</li>
+  </ol>
+  <div class="nota"><strong>Confidencialidad.</strong> El postulante y la secretaría nunca ven quién presentó una objeción. Solo el comité y el Consejo ven esa identidad, y cada consulta queda registrada en la bitácora.</div>
+</section>
+
+<section class="seccion">
+  <h2>2. Postulante: crear la cuenta y postularse</h2>
+  <p><span class="rol">Postulante</span> Entre al portal de postulación y pulse <strong>«Créela aquí»</strong>.</p>
+  <ol>
+    <li>Escriba su nombre, apellido y correo, y una contraseña de al menos 12 caracteres con mayúscula, minúscula y un número. Pulse <strong>«Crear cuenta»</strong>.</li>
+    <li>Le llega al correo un código de 6 dígitos que vence en 10 minutos. Escríbalo y pulse <strong>«Confirmar correo»</strong>. Si no le llegó, use <strong>«Enviar otro código»</strong>.</li>
+    <li>Ingrese con su correo y contraseña.</li>
+  </ol>
+  <figure class="figura"><img src="capturas/01-registro.png" /><figcaption>Crear la cuenta</figcaption></figure>
+  <figure class="figura media"><img src="capturas/02-verificar.png" /><figcaption>Confirmar el correo con el código</figcaption></figure>
+
+  <h3>Registrar la postulación</h3>
+  <ol>
+    <li>La primera vez verá <strong>«Registrar mi postulación»</strong>. Complete la cédula, la sala a la que aspira y un teléfono venezolano. Su nombre ya viene de la cuenta.</li>
+    <li>Pulse <strong>«Registrar postulación»</strong>. Se crea su expediente (por ejemplo, <span class="codigo">EXP-0009</span>).</li>
+  </ol>
+  <figure class="figura"><img src="capturas/05-datos-postulacion.png" /><figcaption>Datos de la postulación</figcaption></figure>
+
+  <h3>Cargar los documentos y enviar a revisión</h3>
+  <ol>
+    <li>En el listado de la derecha, elija un documento, adjunte el PDF o la imagen y pulse <strong>«Guardar documento»</strong>. Puede hacerlo en varias sesiones.</li>
+    <li>Cuando termine, pulse <strong>«Enviar a revisión»</strong> y confirme. No hace falta ningún código por correo: su sesión basta.</li>
+    <li>Arriba verá siempre la <strong>etapa actual</strong>. Mientras esté en revisión o evaluación no podrá cambiar datos ni documentos.</li>
+  </ol>
+  <figure class="figura"><img src="capturas/07-documento-guardado.png" /><figcaption>Documento guardado: queda marcado en el listado</figcaption></figure>
+  <figure class="figura"><img src="capturas/09-en-revision.png" /><figcaption>Expediente enviado: etapa «En revisión documental»</figcaption></figure>
+</section>
+
+<section class="seccion">
+  <h2>3. Postulante: corregir un expediente devuelto</h2>
+  <p>Si la revisión documental encuentra algo que corregir, le devuelve el expediente con un motivo. Le llega un correo y, al ingresar, verá el aviso <strong>«La revisión le pide corregir su expediente»</strong> con el motivo exacto.</p>
+  <ol>
+    <li>Use <strong>«Corregir mis datos»</strong> si hay que cambiar nombre, sala o teléfono. La cédula no se puede cambiar.</li>
+    <li>Cargue o sustituya los documentos señalados.</li>
+    <li>Pulse <strong>«Reenviar a revisión»</strong> y confirme.</li>
+  </ol>
+  <p>La secretaría también puede hacer estas correcciones desde el panel si usted se lo pide.</p>
+  <figure class="figura"><img src="capturas/10-devuelto.png" /><figcaption>Expediente devuelto con el motivo de la revisión</figcaption></figure>
+  <figure class="figura movil"><img src="capturas/17-movil-postulacion.png" /><figcaption>El portal también se usa desde el teléfono</figcaption></figure>
+</section>
+
+<section class="seccion">
+  <h2>4. Postulante: responder una objeción (descargo)</h2>
+  <p>Si alguien objeta su postulación, le llega un correo y, en <strong>«Mi postulación»</strong>, un aviso con el botón <strong>«Ver objeciones»</strong>.</p>
+  <figure class="figura"><img src="capturas/11-aviso-objecion.png" /><figcaption>Aviso de objeciones recibidas</figcaption></figure>
+  <ol>
+    <li>Abra la objeción. Verá las causales, la descripción de los hechos y la evidencia. <strong>No verá quién la presentó.</strong></li>
+    <li>En <strong>«Presentar mi descargo»</strong>, escriba un título y una descripción y, si quiere, adjunte un PDF o una imagen de respaldo.</li>
+    <li>Pulse <strong>«Revisar y presentar»</strong> y luego <strong>«Confirmar y presentar»</strong>. <strong>El descargo no se puede modificar después.</strong></li>
+  </ol>
+  <figure class="figura"><img src="capturas/13-detalle-objecion.png" /><figcaption>Objeción y formulario de descargo</figcaption></figure>
+  <figure class="figura"><img src="capturas/15-descargo-presentado.png" /><figcaption>Descargo presentado</figcaption></figure>
+  <div class="nota"><strong>Plazo.</strong> Puede presentar el descargo mientras el comité no haya enviado la objeción al Consejo. Si el comité la envía sin descargo, la objeción mostrará «Ya no admite descargo».</div>
+</section>
+
+<section class="seccion">
+  <h2>5. Revisión documental: devolver para corrección</h2>
+  <p><span class="rol">Revisor</span> En <strong>«Revisión documental»</strong> abra el expediente. Si falta algo o algo está mal:</p>
+  <ol>
+    <li>Pulse <strong>«Devolver para corrección»</strong>.</li>
+    <li>Escriba el motivo (mínimo 10 caracteres). Lo verá la secretaría y, si tiene cuenta, el postulante, que además lo recibe por correo.</li>
+    <li>Pulse <strong>«Confirmar devolución»</strong>.</li>
+  </ol>
+  <figure class="figura"><img src="capturas/21-cola-revision.png" /><figcaption>Cola de revisión documental</figcaption></figure>
+  <figure class="figura"><img src="capturas/23-devolver.png" /><figcaption>Motivo de la devolución</figcaption></figure>
+</section>
+
+<section class="seccion">
+  <h2>6. Visualizador: presentar una objeción</h2>
+  <p><span class="rol">Visualizador</span> Solo puede objetar cuando la administración activa <strong>«Objeciones de los visualizadores»</strong>. Si está apagado, el botón <strong>«Objetar»</strong> no aparece.</p>
+  <ol>
+    <li>En <strong>«Ranking interno»</strong>, pulse <strong>«Objetar»</strong> en la fila del postulante.</li>
+    <li>Escriba su cédula, marque las causales, describa los hechos (mínimo 50 caracteres) y pegue el enlace a las pruebas.</li>
+    <li>Pulse <strong>«Presentar objeción»</strong> y confirme. Recibirá el acuse con el PDF de la denuncia.</li>
+  </ol>
+  <figure class="figura"><img src="capturas/43-formulario-objecion.png" /><figcaption>Formulario de objeción del visualizador</figcaption></figure>
+  <p>La objeción llega al comité. Por sí sola no cambia el puntaje.</p>
+</section>
+
+<section class="seccion">
+  <h2>7. Secretaría: cargar el descargo de un postulante sin cuenta</h2>
+  <p><span class="rol">Secretaría</span> Si el expediente lo dio de alta la secretaría y el postulante no tiene cuenta, en su ficha aparece <strong>«Objeciones y descargos»</strong> con el teléfono y el correo del postulante.</p>
+  <ol>
+    <li>Contacte al postulante y léale la objeción. Tampoco aquí se ve quién la presentó.</li>
+    <li>Escriba el título y la descripción con lo que responde el postulante y, si hay, adjunte el documento.</li>
+    <li>Pulse <strong>«Cargar descargo»</strong> y confirme.</li>
+  </ol>
+  <figure class="figura"><img src="capturas/30-secretaria-descargo.png" /><figcaption>Objeción pendiente de descargo en el expediente</figcaption></figure>
+  <figure class="figura"><img src="capturas/31-secretaria-descargo-cargado.png" /><figcaption>Descargo cargado por la secretaría</figcaption></figure>
+</section>
+
+<section class="seccion">
+  <h2>8. Comité: recibir objeciones y enviarlas al Consejo</h2>
+  <p><span class="rol">Comité</span> Toda objeción llega primero a <strong>«Comité»</strong>, organizada en tres pestañas:</p>
+  <ul>
+    <li><strong>Esperando descargo</strong>: indica si lo presenta el postulante o lo carga la secretaría, y cuántos días lleva.</li>
+    <li><strong>Con descargo</strong>: listas para enviar al Consejo.</li>
+    <li><strong>Enviadas al Consejo</strong>.</li>
+  </ul>
+  <figure class="figura"><img src="capturas/50-comite-bandeja.png" /><figcaption>Bandeja del comité</figcaption></figure>
+  <ol>
+    <li>Pulse <strong>«Abrir»</strong>. Verá la objeción, el descargo con su adjunto y, aparte, quién objeta.</li>
+    <li>Pulse <strong>«Enviar al Consejo»</strong> y confirme.</li>
+    <li><strong>Sin descargo</strong>: puede esperar o enviarla igual. En ese caso <strong>el motivo es obligatorio</strong> y el Consejo lo verá junto a la objeción.</li>
+  </ol>
+  <figure class="figura"><img src="capturas/51-comite-detalle.png" /><figcaption>Objeción con descargo del postulante</figcaption></figure>
+  <figure class="figura"><img src="capturas/53-comite-sin-descargo-error.png" /><figcaption>Sin descargo, el motivo es obligatorio</figcaption></figure>
+</section>
+
+<section class="seccion">
+  <h2>9. Consejo (evaluadores): objeciones con descargo</h2>
+  <p><span class="rol">Evaluador</span> <span class="rol">Administrador</span> En <strong>«Objeciones»</strong> solo aparecen las objeciones que el comité ya envió. Las que siguen en el comité no se muestran.</p>
+  <ul>
+    <li>En <strong>«Ajustar baremo» → «Ver objeciones»</strong> se lee cada objeción con su <strong>descargo</strong> y el documento adjunto, o el aviso <strong>«Sin descargo»</strong> con el motivo del comité.</li>
+    <li>La ronda de objeción, el puntaje y la inelegibilidad siguen igual que antes.</li>
+  </ul>
+  <p>Los siete evaluadores activos ahora se llaman <strong>«Consejo»</strong> en todo el panel.</p>
+  <figure class="figura"><img src="capturas/60-consejo-bandeja.png" /><figcaption>Bandeja del Consejo: solo lo enviado por el comité</figcaption></figure>
+  <figure class="figura"><img src="capturas/61-consejo-ve-descargo.png" /><figcaption>El Consejo ve la objeción y el descargo</figcaption></figure>
+</section>
+
+<section class="seccion">
+  <h2>10. Administración: interruptores y ranking público</h2>
+  <p>En <strong>«Ranking interno»</strong>, la sección <strong>«Ajustes de objeciones y publicación»</strong> reúne tres interruptores:</p>
+  <table>
+    <tr><th>Interruptor</th><th>Quién lo cambia</th><th>Qué hace</th></tr>
+    <tr><td>Objeciones de los visualizadores</td><td>Superadministrador y administrador</td><td>Muestra «Objetar» a los visualizadores en el ranking interno.</td></tr>
+    <tr><td>Objeciones públicas en la landing</td><td>Superadministrador</td><td>Abre las objeciones a la ciudadanía desde el sitio público. Por ahora las objeciones son cerradas.</td></tr>
+    <tr><td>«Actualizar en el ranking público» para admin y evaluadores</td><td>Superadministrador</td><td>Permite a administradores y evaluadores llevar al sitio público la nota re-evaluada de un postulante ya publicado.</td></tr>
+  </table>
+  <figure class="figura"><img src="capturas/40-ranking-interruptores.png" /><figcaption>Interruptores y ranking público (vista del superadministrador)</figcaption></figure>
+  <h3>Ranking público</h3>
+  <ul>
+    <li><strong>Enviar al ranking público</strong> (sección «Sin publicar»): solo el superadministrador.</li>
+    <li><strong>Actualizar</strong> (sección «Ya publicados»): el superadministrador siempre; el administrador y los evaluadores solo si el interruptor está activo. Una re-evaluación cambia la nota interna, no la pública: este botón la lleva al sitio.</li>
+  </ul>
+  <figure class="figura"><img src="capturas/71-admin-actualizado.png" /><figcaption>Administrador actualizando una ficha publicada</figcaption></figure>
+</section>
+
+<section class="seccion">
+  <h2>11. Recuperar la contraseña (todos los usuarios)</h2>
+  <p>Funciona igual en el portal del postulante y en el panel interno.</p>
+  <ol>
+    <li>En la pantalla de ingreso, pulse <strong>«¿Olvidó su contraseña?»</strong>.</li>
+    <li>Escriba el correo de su cuenta y pulse <strong>«Enviarme un código»</strong>.</li>
+    <li>Escriba el código de 6 dígitos que le llegó, que vence en 10 minutos, y su contraseña nueva dos veces.</li>
+    <li>Pulse <strong>«Restablecer contraseña»</strong> e ingrese con la nueva.</li>
+  </ol>
+  <div class="ok">Al restablecerla se cierran todas sus sesiones abiertas, se quita el bloqueo por intentos fallidos y le llega un correo de aviso. Si usted no lo pidió, restablézcala de nuevo y avise al equipo.</div>
+  <figure class="figura media"><img src="capturas/80-recuperar-panel.png" /><figcaption>Panel: pedir el código</figcaption></figure>
+  <figure class="figura media"><img src="capturas/81-nueva-clave-panel.png" /><figcaption>Panel: código y contraseña nueva</figcaption></figure>
+  <figure class="figura"><img src="capturas/16-recuperar-portal.png" /><figcaption>Portal del postulante: recuperar contraseña</figcaption></figure>
+</section>
+
+<section class="seccion">
+  <h2>12. Quién puede hacer qué</h2>
+  <table>
+    <tr><th>Rol</th><th>Dónde entra</th><th>Qué hace</th></tr>
+    <tr><td>Postulante</td><td>Portal del postulante</td><td>Crear cuenta, postularse, cargar y corregir documentos, seguir su etapa y presentar descargos.</td></tr>
+    <tr><td>Secretaría</td><td>Panel</td><td>Crear expedientes, corregirlos en borrador y cargar descargos de postulantes sin cuenta.</td></tr>
+    <tr><td>Revisor</td><td>Panel</td><td>Revisión documental: enviar a evaluación o devolver para corrección.</td></tr>
+    <tr><td>Comité</td><td>Panel</td><td>Recibir objeciones y enviarlas al Consejo, con descargo o con motivo.</td></tr>
+    <tr><td>Evaluador (Consejo)</td><td>Panel</td><td>Evaluar, re-evaluar por objeción y, si está habilitado, actualizar el ranking público.</td></tr>
+    <tr><td>Visualizador</td><td>Panel</td><td>Consultar, opinar y, si está habilitado, objetar.</td></tr>
+    <tr><td>Administrador</td><td>Panel</td><td>Usuarios, interruptor de objeciones de visualizadores y escaladas; actualizar el ranking público si está habilitado.</td></tr>
+  </table>
+  <p>Una cuenta de postulante no puede entrar al panel interno, y el personal no entra por el portal del postulante.</p>
+</section>
+
+</body>
+</html>
