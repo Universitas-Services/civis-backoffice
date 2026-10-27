@@ -23,6 +23,8 @@ export class ErrorApi extends Error {
     message: string,
     readonly status: number,
     readonly detalles?: readonly { field: string; message: string }[],
+    /** Cuerpo de la respuesta de error, para los campos extra (`codigo`, ids). */
+    readonly datos?: Record<string, unknown>,
   ) {
     super(message);
     this.name = "ErrorApi";
@@ -138,6 +140,7 @@ async function ejecutarLlamada<T>(
       datos?.message ?? "No se pudo completar la operación",
       respuesta.status,
       datos?.errors,
+      (datos as Record<string, unknown> | null) ?? undefined,
     );
   }
   return datos as T;
