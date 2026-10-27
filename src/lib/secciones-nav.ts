@@ -87,6 +87,7 @@ export const SECCIONES: readonly SeccionNav[] = [
     roles: ["SUPER_ADMIN", "ADMIN"],
   },
   { href: "/configuracion", texto: "Configuración del proceso", roles: ["SUPER_ADMIN"] },
+  { href: "/documentos-legales", texto: "Documentos legales", roles: ["SUPER_ADMIN"] },
   { href: "/auditoria", texto: "Bitácora", roles: ["SUPER_ADMIN"] },
 ];
 

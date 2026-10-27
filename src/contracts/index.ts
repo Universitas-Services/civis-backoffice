@@ -1254,3 +1254,55 @@ export const descargoSchema = z.object({
   title: z.string().trim().min(3, "Título demasiado corto").max(200),
   description: z.string().trim().min(10, "Describa el descargo (mínimo 10 caracteres)").max(5000),
 });
+
+// ─────────────────────────────────────────── documentos legales
+
+export type TipoDocumentoLegal = "TERMINOS" | "PRIVACIDAD";
+export type EstadoDocumentoLegal = "BORRADOR" | "VIGENTE" | "REEMPLAZADO";
+
+export const TITULO_DOCUMENTO_LEGAL: Record<TipoDocumentoLegal, string> = {
+  TERMINOS: "Términos y Condiciones",
+  PRIVACIDAD: "Política de Privacidad",
+};
+
+/** Una versión en el listado de la superadministración. */
+export interface VersionLegal {
+  readonly id: string;
+  readonly kind: TipoDocumentoLegal;
+  readonly version: number;
+  readonly title: string;
+  readonly status: EstadoDocumentoLegal;
+  readonly changeSummary: string | null;
+  readonly sha256: string | null;
+  readonly publishedAt: string | null;
+  readonly createdAt: string;
+  readonly updatedAt: string;
+  readonly publishedBy: { readonly fullName: string } | null;
+  readonly _count: { readonly acceptances: number };
+}
+
+/** `GET /internal/legal`: por tipo, vigente, borrador e historial. */
+export interface PanelLegal {
+  readonly kind: TipoDocumentoLegal;
+  readonly titulo: string;
+  readonly vigente: VersionLegal | null;
+  readonly borrador: VersionLegal | null;
+  readonly historial: readonly VersionLegal[];
+}
+
+/** `GET /internal/legal/:id`: una versión con su texto. */
+export interface DocumentoLegal extends VersionLegal {
+  readonly content: string;
+  readonly createdBy: { readonly fullName: string } | null;
+}
+
+/** Espejo de civis-api `borradorLegalSchema`. */
+export const borradorLegalSchema = z.object({
+  title: z.string().trim().min(3, "Indique un título").max(200),
+  content: z
+    .string()
+    .trim()
+    .min(200, "El texto es demasiado corto para un documento legal")
+    .max(200_000),
+  changeSummary: z.string().trim().max(2000).optional().or(z.literal("")),
+});
