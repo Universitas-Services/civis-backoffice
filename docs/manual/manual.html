@@ -26,6 +26,7 @@
   .figura { margin: 8pt 0 12pt; page-break-inside: avoid; }
   .figura img { width: 100%; border: 1px solid var(--claro); border-radius: 6px; display: block; }
   .figura.media img { width: 70%; margin: 0 auto; }
+  .figura.angosta img { width: 55%; margin: 0 auto; }
   .figura.movil img { width: 38%; margin: 0 auto; }
   .figura figcaption { font-size: 8.5pt; color: var(--gris); margin-top: 4pt; text-align: center; }
   .nota { border: 1px solid #e8b4bc; background: #fdf2f4; border-radius: 6px; padding: 7pt 10pt; margin: 8pt 0 10pt; page-break-inside: avoid; }
@@ -36,6 +37,9 @@
   th { background: var(--fondo); color: var(--azul); }
   .indice li { margin-bottom: 2pt; }
   .rol { display: inline-block; background: var(--azul); color: #fff; font-size: 8pt; font-weight: 600; padding: 1pt 6pt; border-radius: 10pt; margin-right: 4pt; }
+  .etapas { display: flex; flex-wrap: wrap; gap: 4pt; margin: 6pt 0 10pt; }
+  .etapas span { border: 1px solid var(--claro); border-radius: 4px; padding: 3pt 7pt; font-size: 9pt; background: #fff; }
+  .etapas b { color: var(--vino); }
 </style>
 </head>
 <body>
@@ -44,11 +48,11 @@
   <img src="../../../civis-postulacion/public/brand/civis-horiz-blanco-slogan.png" alt="CIVIS" />
   <div>
     <h1>Manual de usuario</h1>
-    <p class="lema">Cuentas de postulante, comité de objeciones, descargos y recuperación de contraseña</p>
+    <p class="lema">Postulación, procedimiento de objeciones con plazos legales, autos del comité y configuración del proceso</p>
     <div class="raya"></div>
     <p>Portal del postulante · Panel interno (secretaría, revisión, comité, Consejo, visualizadores y administración)</p>
   </div>
-  <small>Versión 2 · Octubre de 2026 · Capturas tomadas en un entorno de prueba con datos ficticios.</small>
+  <small>Versión 3 · Octubre de 2026 · Capturas tomadas en un entorno de prueba con datos ficticios.</small>
 </section>
 
 <section>
@@ -57,13 +61,14 @@
     <li>Cómo funciona el proceso</li>
     <li>Postulante: crear la cuenta y postularse</li>
     <li>Postulante: corregir un expediente devuelto</li>
-    <li>Postulante: responder una objeción (descargo)</li>
+    <li>Postulante: responder una objeción admitida (descargo)</li>
     <li>Revisión documental: devolver para corrección</li>
     <li>Visualizador: presentar una objeción</li>
-    <li>Secretaría: cargar el descargo de un postulante sin cuenta</li>
-    <li>Comité: recibir objeciones y enviarlas al Consejo</li>
-    <li>Consejo (evaluadores): objeciones con descargo</li>
-    <li>Administración: interruptores y ranking público</li>
+    <li>Comité: admisión, descargo, comprobación y decisión</li>
+    <li>Secretaría: descargos de postulantes sin cuenta</li>
+    <li>Consejo (evaluadores): objeciones declaradas con lugar</li>
+    <li>Superadministración: configuración del proceso y calendario</li>
+    <li>Administración: usuarios, Consejo y cuentas de postulantes</li>
     <li>Recuperar la contraseña (todos los usuarios)</li>
     <li>Quién puede hacer qué</li>
   </ol>
@@ -71,72 +76,82 @@
   <h3>1. Cómo funciona el proceso</h3>
   <p>Hay dos puertas de entrada:</p>
   <ul>
-    <li><strong>Portal del postulante</strong>: el aspirante crea su cuenta, registra su postulación, carga los documentos, sigue su etapa, corrige lo que le pidan y responde objeciones.</li>
-    <li><strong>Panel interno</strong>: lo usa el personal del Consejo Independiente según su rol.</li>
+    <li><strong>Portal del postulante</strong>: el aspirante crea su cuenta, registra su postulación, carga los documentos, sigue su etapa, corrige lo que le pidan y responde las objeciones admitidas.</li>
+    <li><strong>Panel interno</strong>: lo usa el personal según su rol.</li>
   </ul>
   <p>Recorrido de un expediente:</p>
   <ol>
-    <li><strong>Carga de documentos</strong> (borrador). El postulante, o la secretaría si lo dio de alta ella, carga los recaudos.</li>
-    <li><strong>Revisión documental.</strong> El revisor lo aprueba o lo <em>devuelve para corrección</em> con un motivo. Mientras está en borrador, el postulante y la secretaría pueden corregirlo.</li>
+    <li><strong>Postulaciones.</strong> El postulante (o la secretaría) registra el expediente y lo envía a revisión. Al <strong>cerrar las postulaciones</strong> ya no se registran ni se envían expedientes nuevos.</li>
+    <li><strong>Revisión documental</strong>: aprueba o <em>devuelve para corrección</em>.</li>
     <li><strong>Evaluación</strong> por el Consejo (los evaluadores activos) y <strong>ranking interno</strong>.</li>
-    <li><strong>Objeciones.</strong> Si están habilitadas, los visualizadores objetan desde el ranking interno. La objeción llega primero al <strong>comité</strong>, que espera el <strong>descargo</strong> del postulante y la envía al <strong>Consejo</strong>. El Consejo la evalúa con el flujo de siempre (rondas, puntaje o inelegibilidad).</li>
+    <li><strong>Objeciones</strong>, según los artículos 71 y 72 de la Ley Orgánica del Tribunal Supremo de Justicia:</li>
   </ol>
-  <div class="nota"><strong>Confidencialidad.</strong> El postulante y la secretaría nunca ven quién presentó una objeción. Solo el comité y el Consejo ven esa identidad, y cada consulta queda registrada en la bitácora.</div>
+  <div class="etapas">
+    <span><b>1</b> Lapso de objeciones (15 días)</span>
+    <span><b>2</b> Admisión por el comité (8 días)</span>
+    <span><b>3</b> Descargo del postulado (3 días)</span>
+    <span><b>4</b> Comprobación (hasta 5 días)</span>
+    <span><b>5</b> Decisión: con lugar o sin lugar</span>
+  </div>
+  <p>Durante el lapso y la admisión, <strong>sólo el comité ve las objeciones</strong>. Si el comité la admite, el postulado es notificado y responde. Si la declara <strong>con lugar</strong>, pasa al Consejo, que declara la inelegibilidad (lo excluye del ranking interno) o baja su puntaje. Si la declara <strong>sin lugar</strong>, se ratifica su elegibilidad.</p>
+  <p>Cada pronunciamiento del comité queda en un <strong>auto</strong> en PDF, numerado (por ejemplo <span class="codigo">CIVIS-AUTO-2026-0008</span>), que se notifica por correo y no se puede modificar.</p>
+  <div class="nota"><strong>Confidencialidad.</strong> El postulante y la secretaría nunca ven quién presentó una objeción, ni siquiera en los autos y la copia de la denuncia que reciben. Sólo el comité y el Consejo ven esa identidad, y cada consulta queda registrada en la bitácora.</div>
 </section>
 
 <section class="seccion">
   <h2>2. Postulante: crear la cuenta y postularse</h2>
   <p><span class="rol">Postulante</span> Entre al portal de postulación y pulse <strong>«Créela aquí»</strong>.</p>
   <ol>
-    <li>Escriba su nombre, apellido y correo, y una contraseña de al menos 12 caracteres con mayúscula, minúscula y un número. Pulse <strong>«Crear cuenta»</strong>.</li>
+    <li>Escriba sus <strong>nombres</strong>, <strong>apellidos</strong> y correo, y una contraseña de al menos 12 caracteres con mayúscula, minúscula y un número. Pulse <strong>«Crear cuenta»</strong>.</li>
     <li>Le llega al correo un código de 6 dígitos que vence en 10 minutos. Escríbalo y pulse <strong>«Confirmar correo»</strong>. Si no le llegó, use <strong>«Enviar otro código»</strong>.</li>
     <li>Ingrese con su correo y contraseña.</li>
   </ol>
-  <figure class="figura"><img src="capturas/01-registro.png" /><figcaption>Crear la cuenta</figcaption></figure>
-  <figure class="figura media"><img src="capturas/02-verificar.png" /><figcaption>Confirmar el correo con el código</figcaption></figure>
+  <figure class="figura"><img src="capturas/01-registro.png" /><figcaption>Crear la cuenta: nombres y apellidos completos</figcaption></figure>
 
   <h3>Registrar la postulación</h3>
   <ol>
-    <li>La primera vez verá <strong>«Registrar mi postulación»</strong>. Complete la cédula, la sala a la que aspira y un teléfono venezolano. Su nombre ya viene de la cuenta.</li>
+    <li>La primera vez verá <strong>«Registrar mi postulación»</strong>. Complete la cédula, la sala a la que aspira y un teléfono venezolano.</li>
     <li>Pulse <strong>«Registrar postulación»</strong>. Se crea su expediente (por ejemplo, <span class="codigo">EXP-0009</span>).</li>
   </ol>
   <figure class="figura"><img src="capturas/05-datos-postulacion.png" /><figcaption>Datos de la postulación</figcaption></figure>
 
   <h3>Cargar los documentos y enviar a revisión</h3>
   <ol>
-    <li>En el listado de la derecha, elija un documento, adjunte el PDF o la imagen y pulse <strong>«Guardar documento»</strong>. Puede hacerlo en varias sesiones.</li>
-    <li>Cuando termine, pulse <strong>«Enviar a revisión»</strong> y confirme. No hace falta ningún código por correo: su sesión basta.</li>
+    <li>Elija un documento, adjunte el PDF o la imagen y pulse <strong>«Guardar documento»</strong>. Puede hacerlo en varias sesiones.</li>
+    <li>Cuando termine, pulse <strong>«Enviar a revisión»</strong> y confirme.</li>
     <li>Arriba verá siempre la <strong>etapa actual</strong>. Mientras esté en revisión o evaluación no podrá cambiar datos ni documentos.</li>
   </ol>
-  <figure class="figura"><img src="capturas/07-documento-guardado.png" /><figcaption>Documento guardado: queda marcado en el listado</figcaption></figure>
   <figure class="figura"><img src="capturas/09-en-revision.png" /><figcaption>Expediente enviado: etapa «En revisión documental»</figcaption></figure>
+  <div class="nota"><strong>Cierre de postulaciones.</strong> Cuando el periodo se cierra, el portal ya no permite registrar una postulación ni enviarla por primera vez. Si su expediente fue devuelto por la revisión, sí puede corregirlo y reenviarlo.</div>
 </section>
 
 <section class="seccion">
   <h2>3. Postulante: corregir un expediente devuelto</h2>
   <p>Si la revisión documental encuentra algo que corregir, le devuelve el expediente con un motivo. Le llega un correo y, al ingresar, verá el aviso <strong>«La revisión le pide corregir su expediente»</strong> con el motivo exacto.</p>
   <ol>
-    <li>Use <strong>«Corregir mis datos»</strong> si hay que cambiar nombre, sala o teléfono. La cédula no se puede cambiar.</li>
+    <li>Use <strong>«Corregir mis datos»</strong> si hay que cambiar nombres, apellidos, sala o teléfono. La cédula no se puede cambiar.</li>
     <li>Cargue o sustituya los documentos señalados.</li>
     <li>Pulse <strong>«Reenviar a revisión»</strong> y confirme.</li>
   </ol>
-  <p>La secretaría también puede hacer estas correcciones desde el panel si usted se lo pide.</p>
+  <p>La secretaría también puede hacer estas correcciones desde el panel.</p>
   <figure class="figura"><img src="capturas/10-devuelto.png" /><figcaption>Expediente devuelto con el motivo de la revisión</figcaption></figure>
   <figure class="figura movil"><img src="capturas/17-movil-postulacion.png" /><figcaption>El portal también se usa desde el teléfono</figcaption></figure>
 </section>
 
 <section class="seccion">
-  <h2>4. Postulante: responder una objeción (descargo)</h2>
-  <p>Si alguien objeta su postulación, le llega un correo y, en <strong>«Mi postulación»</strong>, un aviso con el botón <strong>«Ver objeciones»</strong>.</p>
-  <figure class="figura"><img src="capturas/11-aviso-objecion.png" /><figcaption>Aviso de objeciones recibidas</figcaption></figure>
+  <h2>4. Postulante: responder una objeción admitida (descargo)</h2>
+  <p>Usted sólo se entera de una objeción cuando el comité la <strong>admite</strong>. En ese momento le llega un correo de <strong>notificación</strong> con dos PDF adjuntos: el <strong>auto de admisión</strong> y la <strong>denuncia</strong> (sin la identidad de quien objetó), y el enlace para responder.</p>
+  <figure class="figura"><img src="capturas/11-aviso-objecion.png" /><figcaption>Aviso en «Mi postulación»: objeción admitida</figcaption></figure>
   <ol>
-    <li>Abra la objeción. Verá las causales, la descripción de los hechos y la evidencia. <strong>No verá quién la presentó.</strong></li>
-    <li>En <strong>«Presentar mi descargo»</strong>, escriba un título y una descripción y, si quiere, adjunte un PDF o una imagen de respaldo.</li>
-    <li>Pulse <strong>«Revisar y presentar»</strong> y luego <strong>«Confirmar y presentar»</strong>. <strong>El descargo no se puede modificar después.</strong></li>
+    <li>Abra <strong>«Objeciones»</strong> y la objeción. Verá las causales, los hechos, la evidencia, el auto de admisión y el <strong>plazo</strong> con la fecha y hora en que vence.</li>
+    <li>En <strong>«Presentar mi descargo»</strong>, escriba un título y una descripción y, si quiere, adjunte un PDF o una imagen de prueba.</li>
+    <li>Pulse <strong>«Revisar y presentar»</strong> y luego <strong>«Confirmar y presentar»</strong>. El descargo no se puede modificar después.</li>
   </ol>
-  <figure class="figura"><img src="capturas/13-detalle-objecion.png" /><figcaption>Objeción y formulario de descargo</figcaption></figure>
-  <figure class="figura"><img src="capturas/15-descargo-presentado.png" /><figcaption>Descargo presentado</figcaption></figure>
-  <div class="nota"><strong>Plazo.</strong> Puede presentar el descargo mientras el comité no haya enviado la objeción al Consejo. Si el comité la envía sin descargo, la objeción mostrará «Ya no admite descargo».</div>
+  <figure class="figura media"><img src="capturas/13-detalle-objecion.png" /><figcaption>Objeción admitida: auto, plazo y formulario de descargo</figcaption></figure>
+  <div class="nota"><strong>Plazo de 3 días continuos.</strong> Corre desde la notificación y vence a las 11:59 p. m. (hora de Caracas) del tercer día. Si vence sin descargo, el formulario se cierra, le llega un aviso «sin descargos» y el comité decide con lo que conste en el expediente.</div>
+  <h3>La decisión</h3>
+  <p>Cuando el comité decide, le llega otro correo con el <strong>auto de decisión</strong>. En la objeción verá si fue <strong>con lugar</strong> (pasa al Consejo de evaluadores) o <strong>sin lugar</strong> (se ratifica su elegibilidad), con todos los autos para descargar.</p>
+  <figure class="figura media"><img src="capturas/15-objecion-decidida.png" /><figcaption>Objeción decidida: decisión, autos y su descargo</figcaption></figure>
 </section>
 
 <section class="seccion">
@@ -153,102 +168,148 @@
 
 <section class="seccion">
   <h2>6. Visualizador: presentar una objeción</h2>
-  <p><span class="rol">Visualizador</span> Solo puede objetar cuando la administración activa <strong>«Objeciones de los visualizadores»</strong>. Si está apagado, el botón <strong>«Objetar»</strong> no aparece.</p>
+  <p><span class="rol">Visualizador</span> Sólo puede objetar mientras está abierto el lapso de objeciones (interruptor <strong>«Objeciones de los visualizadores»</strong>). Si está cerrado, el botón <strong>«Objetar»</strong> no aparece.</p>
   <ol>
     <li>En <strong>«Ranking interno»</strong>, pulse <strong>«Objetar»</strong> en la fila del postulante.</li>
     <li>Escriba su cédula, marque las causales, describa los hechos (mínimo 50 caracteres) y pegue el enlace a las pruebas.</li>
     <li>Pulse <strong>«Presentar objeción»</strong> y confirme. Recibirá el acuse con el PDF de la denuncia.</li>
   </ol>
-  <figure class="figura"><img src="capturas/43-formulario-objecion.png" /><figcaption>Formulario de objeción del visualizador</figcaption></figure>
-  <p>La objeción llega al comité. Por sí sola no cambia el puntaje.</p>
+  <figure class="figura angosta"><img src="capturas/43-formulario-objecion.png" /><figcaption>Formulario de objeción del visualizador</figcaption></figure>
+  <p>La objeción llega sólo al comité. Usted recibirá por correo el auto de inadmisión, o el auto de decisión final (con lugar o sin lugar).</p>
 </section>
 
 <section class="seccion">
-  <h2>7. Secretaría: cargar el descargo de un postulante sin cuenta</h2>
-  <p><span class="rol">Secretaría</span> Si el expediente lo dio de alta la secretaría y el postulante no tiene cuenta, en su ficha aparece <strong>«Objeciones y descargos»</strong> con el teléfono y el correo del postulante.</p>
-  <ol>
-    <li>Contacte al postulante y léale la objeción. Tampoco aquí se ve quién la presentó.</li>
-    <li>Escriba el título y la descripción con lo que responde el postulante y, si hay, adjunte el documento.</li>
-    <li>Pulse <strong>«Cargar descargo»</strong> y confirme.</li>
-  </ol>
-  <figure class="figura"><img src="capturas/30-secretaria-descargo.png" /><figcaption>Objeción pendiente de descargo en el expediente</figcaption></figure>
-  <figure class="figura"><img src="capturas/31-secretaria-descargo-cargado.png" /><figcaption>Descargo cargado por la secretaría</figcaption></figure>
-</section>
-
-<section class="seccion">
-  <h2>8. Comité: recibir objeciones y enviarlas al Consejo</h2>
-  <p><span class="rol">Comité</span> Toda objeción llega primero a <strong>«Comité»</strong>, organizada en tres pestañas:</p>
-  <ul>
-    <li><strong>Esperando descargo</strong>: indica si lo presenta el postulante o lo carga la secretaría, y cuántos días lleva.</li>
-    <li><strong>Con descargo</strong>: listas para enviar al Consejo.</li>
-    <li><strong>Enviadas al Consejo</strong>.</li>
-  </ul>
-  <figure class="figura"><img src="capturas/50-comite-bandeja.png" /><figcaption>Bandeja del comité</figcaption></figure>
-  <ol>
-    <li>Pulse <strong>«Abrir»</strong>. Verá la objeción, el descargo con su adjunto y, aparte, quién objeta.</li>
-    <li>Pulse <strong>«Enviar al Consejo»</strong> y confirme.</li>
-    <li><strong>Sin descargo</strong>: puede esperar o enviarla igual. En ese caso <strong>el motivo es obligatorio</strong> y el Consejo lo verá junto a la objeción.</li>
-  </ol>
-  <figure class="figura"><img src="capturas/51-comite-detalle.png" /><figcaption>Objeción con descargo del postulante</figcaption></figure>
-  <figure class="figura"><img src="capturas/53-comite-sin-descargo-error.png" /><figcaption>Sin descargo, el motivo es obligatorio</figcaption></figure>
-</section>
-
-<section class="seccion">
-  <h2>9. Consejo (evaluadores): objeciones con descargo</h2>
-  <p><span class="rol">Evaluador</span> <span class="rol">Administrador</span> En <strong>«Objeciones»</strong> solo aparecen las objeciones que el comité ya envió. Las que siguen en el comité no se muestran.</p>
-  <ul>
-    <li>En <strong>«Ajustar baremo» → «Ver objeciones»</strong> se lee cada objeción con su <strong>descargo</strong> y el documento adjunto, o el aviso <strong>«Sin descargo»</strong> con el motivo del comité.</li>
-    <li>La ronda de objeción, el puntaje y la inelegibilidad siguen igual que antes.</li>
-  </ul>
-  <p>Los siete evaluadores activos ahora se llaman <strong>«Consejo»</strong> en todo el panel.</p>
-  <figure class="figura"><img src="capturas/60-consejo-bandeja.png" /><figcaption>Bandeja del Consejo: solo lo enviado por el comité</figcaption></figure>
-  <figure class="figura"><img src="capturas/61-consejo-ve-descargo.png" /><figcaption>El Consejo ve la objeción y el descargo</figcaption></figure>
-</section>
-
-<section class="seccion">
-  <h2>10. Administración: interruptores y ranking público</h2>
-  <p>En <strong>«Ranking interno»</strong>, la sección <strong>«Ajustes de objeciones y publicación»</strong> reúne tres interruptores:</p>
+  <h2>7. Comité: admisión, descargo, comprobación y decisión</h2>
+  <p><span class="rol">Comité</span> Toda objeción llega a <strong>«Comité»</strong>, organizada en cuatro pestañas. Arriba se recuerda el plazo de admisión según el calendario del proceso.</p>
   <table>
-    <tr><th>Interruptor</th><th>Quién lo cambia</th><th>Qué hace</th></tr>
-    <tr><td>Objeciones de los visualizadores</td><td>Superadministrador y administrador</td><td>Muestra «Objetar» a los visualizadores en el ranking interno.</td></tr>
-    <tr><td>Objeciones públicas en la landing</td><td>Superadministrador</td><td>Abre las objeciones a la ciudadanía desde el sitio público. Por ahora las objeciones son cerradas.</td></tr>
-    <tr><td>«Actualizar en el ranking público» para admin y evaluadores</td><td>Superadministrador</td><td>Permite a administradores y evaluadores llevar al sitio público la nota re-evaluada de un postulante ya publicado.</td></tr>
+    <tr><th>Pestaña</th><th>Qué contiene</th></tr>
+    <tr><td>Por admitir</td><td>Objeciones recibidas en el lapso. Sólo el comité las ve.</td></tr>
+    <tr><td>En descargo</td><td>Admitidas y notificadas; muestra cuánto le queda al postulado para responder.</td></tr>
+    <tr><td>Por decidir</td><td>Con descargo, o «sin descargos» si venció el plazo. Corre la comprobación.</td></tr>
+    <tr><td>Decididas</td><td>Inadmitidas, con lugar (en el Consejo) y sin lugar.</td></tr>
   </table>
-  <figure class="figura"><img src="capturas/40-ranking-interruptores.png" /><figcaption>Interruptores y ranking público (vista del superadministrador)</figcaption></figure>
+  <figure class="figura"><img src="capturas/50-comite-bandeja.png" /><figcaption>Bandeja del comité</figcaption></figure>
+
+  <h3>Admitir o inadmitir</h3>
+  <ol>
+    <li>Pulse <strong>«Abrir»</strong>. Verá la objeción y, aparte, quién objeta (dato reservado).</li>
+    <li>Pulse <strong>«Admitir»</strong> si trae prueba y se refiere a requisitos de elegibilidad; si no, <strong>«Inadmitir»</strong>.</li>
+    <li>Si quiere, escriba <strong>consideraciones adicionales</strong>: el auto ya trae su fundamentación completa y lo que escriba se añade.</li>
+    <li>Confirme. El sistema dicta el auto en PDF y lo notifica:
+      <ul>
+        <li><strong>Admitida</strong>: al postulado (o a la secretaría si no tiene cuenta), con el auto y la denuncia. Empieza su plazo de descargo.</li>
+        <li><strong>Inadmitida</strong>: sólo a quien objetó. El postulado nunca la verá.</li>
+      </ul>
+    </li>
+  </ol>
+  <figure class="figura"><img src="capturas/51-comite-admision.png" /><figcaption>Admisión con confirmación</figcaption></figure>
+  <figure class="figura"><img src="capturas/52-comite-en-descargo.png" /><figcaption>Admitida: el comité espera el descargo y ve el plazo y la línea de tiempo</figcaption></figure>
+
+  <h3>Comprobación y decisión final</h3>
+  <p>Con el descargo, o vencido el plazo sin él, la objeción pasa a <strong>«Por decidir»</strong>. Si el plazo vence sin respuesta, el sistema la marca <strong>«Sin descargos»</strong> y avisa al postulado y al comité. Use el periodo de comprobación (hasta 5 días) para pedir informes o verificar datos ante órganos públicos o privados.</p>
+  <figure class="figura"><img src="capturas/53-comite-por-decidir.png" /><figcaption>Objeciones por decidir: con descargo o sin descargos</figcaption></figure>
+  <ol>
+    <li>Abra la objeción y pulse <strong>«Con lugar»</strong> o <strong>«Sin lugar»</strong>.</li>
+    <li>Agregue, si quiere, sus consideraciones y confirme.</li>
+    <li><strong>Con lugar</strong>: se dicta el auto y la objeción pasa al Consejo. <strong>Sin lugar</strong>: se dicta el auto que ratifica la elegibilidad. En ambos casos se notifica al postulado y a quien objetó.</li>
+  </ol>
+  <figure class="figura"><img src="capturas/54-comite-decision.png" /><figcaption>Decisión final de una objeción sin descargos</figcaption></figure>
+  <figure class="figura media"><img src="capturas/55-comite-decidida.png" /><figcaption>Objeción declarada con lugar, con sus autos</figcaption></figure>
+  <div class="nota"><strong>Los autos no se modifican.</strong> Se generan una sola vez, se guardan con su huella digital y quedan disponibles para descargar en el comité, la secretaría, el Consejo y el portal del postulante (el de inadmisión, sólo en el comité).</div>
+</section>
+
+<section class="seccion">
+  <h2>8. Secretaría: descargos de postulantes sin cuenta</h2>
+  <p><span class="rol">Secretaría</span> Si el expediente lo dio de alta la secretaría y el postulante no tiene cuenta, la notificación de admisión llega al correo de la secretaría con el auto y la denuncia. En la ficha del expediente aparece <strong>«Objeciones y descargos»</strong>, sólo con las objeciones ya admitidas.</p>
+  <ol>
+    <li>Contacte al postulante, entréguele el auto y la denuncia. Tampoco aquí se ve quién objetó.</li>
+    <li>Antes de que venza el plazo, escriba el título y la descripción con lo que responde el postulante y, si hay, adjunte el documento.</li>
+    <li>Pulse <strong>«Cargar descargo»</strong> y confirme. Vencido el plazo, el formulario se cierra.</li>
+  </ol>
+  <figure class="figura"><img src="capturas/30-secretaria-descargo.png" /><figcaption>Objeción admitida con su plazo y su auto, lista para cargar el descargo</figcaption></figure>
+  <div class="nota"><strong>Postulaciones cerradas.</strong> Con el periodo cerrado, «Registrar postulante» muestra un aviso y no permite crear expedientes. Los expedientes devueltos sí se corrigen y reenvían.</div>
+  <figure class="figura media"><img src="capturas/95-postulaciones-cerradas.png" /><figcaption>Registro de postulantes con el periodo cerrado</figcaption></figure>
+</section>
+
+<section class="seccion">
+  <h2>9. Consejo (evaluadores): objeciones declaradas con lugar</h2>
+  <p><span class="rol">Evaluador</span> <span class="rol">Administrador</span> En <strong>«Objeciones»</strong> sólo aparecen las objeciones que el comité declaró <strong>con lugar</strong>. Las demás no se muestran.</p>
+  <ul>
+    <li>En <strong>«Ver objeciones»</strong> se lee cada objeción con el <strong>descargo</strong> del postulado (o el aviso de que venció sin él), las consideraciones del comité y el <strong>auto con lugar</strong> en PDF.</li>
+    <li>Con eso, el Consejo <strong>declara la inelegibilidad</strong> (el postulado sale del ranking interno de inmediato) o <strong>ajusta el puntaje</strong>, con la ronda de objeción como siempre.</li>
+  </ul>
+  <figure class="figura"><img src="capturas/60-consejo-bandeja.png" /><figcaption>Bandeja del Consejo</figcaption></figure>
+  <figure class="figura"><img src="capturas/61-consejo-ve-descargo.png" /><figcaption>El Consejo ve la objeción, el descargo y el auto con lugar</figcaption></figure>
+</section>
+
+<section class="seccion">
+  <h2>10. Superadministración: configuración del proceso y calendario</h2>
+  <p><span class="rol">Superadministrador</span> Todos los interruptores del proceso están en <strong>«Configuración del proceso»</strong>:</p>
+  <table>
+    <tr><th>Interruptor</th><th>Qué hace</th></tr>
+    <tr><td>Postulaciones cerradas</td><td>Ni la secretaría ni el portal registran expedientes ni hacen un primer envío. Pide confirmación y calcula el calendario.</td></tr>
+    <tr><td>Objeciones de los visualizadores</td><td>Abre o cierra el lapso de objeciones desde el ranking interno (el administrador también lo maneja desde «Ranking interno»).</td></tr>
+    <tr><td>Objeciones públicas en la landing</td><td>Abre las objeciones a la ciudadanía desde el sitio público.</td></tr>
+    <tr><td>«Actualizar en el ranking público» para admin y evaluadores</td><td>Les permite llevar al sitio público la nota re-evaluada de un postulante ya publicado.</td></tr>
+  </table>
+  <figure class="figura"><img src="capturas/90-configuracion.png" /><figcaption>Configuración del proceso</figcaption></figure>
+  <figure class="figura media"><img src="capturas/91-cerrar-postulaciones.png" /><figcaption>Cerrar las postulaciones pide confirmación</figcaption></figure>
+
+  <h3>Calendario y plazos</h3>
+  <p>Al cerrar las postulaciones, el sistema calcula el calendario desde el día hábil siguiente (publicación de la nómina): lapso de objeciones, admisión, descargos y comprobación, cada uno con su color. Los feriados se marcan con un punto.</p>
+  <ul>
+    <li>Puede fijar a mano el <strong>inicio del lapso</strong>.</li>
+    <li>Si un periodo debe <strong>alargarse</strong> por un inconveniente, cambie sus días: la vista previa se recalcula al momento. Luego pulse <strong>«Guardar configuración»</strong>.</li>
+    <li>El lapso de objeciones se cuenta en días hábiles por defecto. Si se desmarca la casilla, cuenta días continuos, como dice el art. 71.</li>
+    <li>Los plazos de descargo y comprobación de las objeciones ya notificadas no cambian.</li>
+  </ul>
+  <figure class="figura"><img src="capturas/92-calendario.png" /><figcaption>Calendario del proceso y duraciones editables</figcaption></figure>
+  <div class="nota"><strong>Cierre del lapso.</strong> El lapso de objeciones se cierra apagando los interruptores de objeciones. Si el calendario indica que ya venció y siguen abiertas, la página muestra un aviso.</div>
+</section>
+
+<section class="seccion">
+  <h2>11. Administración: usuarios, Consejo y cuentas de postulantes</h2>
+  <p><span class="rol">Superadministrador</span> <span class="rol">Administrador</span></p>
+  <h3>El Consejo</h3>
+  <p>En <strong>«Usuarios y roles» → «Consejo»</strong> se ve cuántos puestos del Consejo están ocupados y quiénes lo integran. Use <strong>«Agregar al Consejo»</strong> para elegir un evaluador activo, o <strong>«Sacar del Consejo»</strong>, indicando el motivo.</p>
+  <figure class="figura"><img src="capturas/94-usuarios-consejo.png" /><figcaption>Pestaña «Consejo»</figcaption></figure>
+  <h3>Cuentas de postulantes</h3>
+  <p>Las cuentas creadas en el portal del postulante ya no aparecen en «Usuarios y roles» y <strong>nunca cambian de rol</strong>. Se consultan en <strong>«Cuentas de postulantes»</strong>: búsqueda por nombre, correo o cédula, estado de la cuenta y enlace al expediente. Desde ahí se pueden suspender o reactivar.</p>
+  <figure class="figura"><img src="capturas/93-cuentas-postulantes.png" /><figcaption>Cuentas de postulantes</figcaption></figure>
   <h3>Ranking público</h3>
   <ul>
-    <li><strong>Enviar al ranking público</strong> (sección «Sin publicar»): solo el superadministrador.</li>
-    <li><strong>Actualizar</strong> (sección «Ya publicados»): el superadministrador siempre; el administrador y los evaluadores solo si el interruptor está activo. Una re-evaluación cambia la nota interna, no la pública: este botón la lleva al sitio.</li>
+    <li><strong>Enviar al ranking público</strong>: sólo el superadministrador.</li>
+    <li><strong>Actualizar</strong> una ficha publicada: el superadministrador siempre; el administrador y los evaluadores sólo si el interruptor está activo.</li>
   </ul>
   <figure class="figura"><img src="capturas/71-admin-actualizado.png" /><figcaption>Administrador actualizando una ficha publicada</figcaption></figure>
 </section>
 
 <section class="seccion">
-  <h2>11. Recuperar la contraseña (todos los usuarios)</h2>
+  <h2>12. Recuperar la contraseña (todos los usuarios)</h2>
   <p>Funciona igual en el portal del postulante y en el panel interno.</p>
   <ol>
     <li>En la pantalla de ingreso, pulse <strong>«¿Olvidó su contraseña?»</strong>.</li>
     <li>Escriba el correo de su cuenta y pulse <strong>«Enviarme un código»</strong>.</li>
-    <li>Escriba el código de 6 dígitos que le llegó, que vence en 10 minutos, y su contraseña nueva dos veces.</li>
+    <li>Escriba el código de 6 dígitos (vence en 10 minutos) y su contraseña nueva dos veces.</li>
     <li>Pulse <strong>«Restablecer contraseña»</strong> e ingrese con la nueva.</li>
   </ol>
-  <div class="ok">Al restablecerla se cierran todas sus sesiones abiertas, se quita el bloqueo por intentos fallidos y le llega un correo de aviso. Si usted no lo pidió, restablézcala de nuevo y avise al equipo.</div>
+  <div class="ok">Al restablecerla se cierran todas sus sesiones abiertas, se quita el bloqueo por intentos fallidos y le llega un correo de aviso.</div>
   <figure class="figura media"><img src="capturas/80-recuperar-panel.png" /><figcaption>Panel: pedir el código</figcaption></figure>
   <figure class="figura media"><img src="capturas/81-nueva-clave-panel.png" /><figcaption>Panel: código y contraseña nueva</figcaption></figure>
-  <figure class="figura"><img src="capturas/16-recuperar-portal.png" /><figcaption>Portal del postulante: recuperar contraseña</figcaption></figure>
 </section>
 
 <section class="seccion">
-  <h2>12. Quién puede hacer qué</h2>
+  <h2>13. Quién puede hacer qué</h2>
   <table>
     <tr><th>Rol</th><th>Dónde entra</th><th>Qué hace</th></tr>
-    <tr><td>Postulante</td><td>Portal del postulante</td><td>Crear cuenta, postularse, cargar y corregir documentos, seguir su etapa y presentar descargos.</td></tr>
-    <tr><td>Secretaría</td><td>Panel</td><td>Crear expedientes, corregirlos en borrador y cargar descargos de postulantes sin cuenta.</td></tr>
+    <tr><td>Postulante</td><td>Portal del postulante</td><td>Crear cuenta, postularse, cargar y corregir documentos, seguir su etapa, responder objeciones admitidas dentro del plazo y descargar sus autos.</td></tr>
+    <tr><td>Secretaría</td><td>Panel</td><td>Crear expedientes (con postulaciones abiertas), corregirlos en borrador y cargar descargos de postulantes sin cuenta.</td></tr>
     <tr><td>Revisor</td><td>Panel</td><td>Revisión documental: enviar a evaluación o devolver para corrección.</td></tr>
-    <tr><td>Comité</td><td>Panel</td><td>Recibir objeciones y enviarlas al Consejo, con descargo o con motivo.</td></tr>
-    <tr><td>Evaluador (Consejo)</td><td>Panel</td><td>Evaluar, re-evaluar por objeción y, si está habilitado, actualizar el ranking público.</td></tr>
-    <tr><td>Visualizador</td><td>Panel</td><td>Consultar, opinar y, si está habilitado, objetar.</td></tr>
-    <tr><td>Administrador</td><td>Panel</td><td>Usuarios, interruptor de objeciones de visualizadores y escaladas; actualizar el ranking público si está habilitado.</td></tr>
+    <tr><td>Comité</td><td>Panel</td><td>Admitir o inadmitir objeciones, esperar el descargo, comprobar y decidir con lugar o sin lugar. Cada acto dicta un auto.</td></tr>
+    <tr><td>Evaluador (Consejo)</td><td>Panel</td><td>Evaluar y, ante una objeción con lugar, declarar la inelegibilidad o ajustar el puntaje.</td></tr>
+    <tr><td>Visualizador</td><td>Panel</td><td>Consultar, opinar y, con el lapso abierto, objetar.</td></tr>
+    <tr><td>Administrador</td><td>Panel</td><td>Usuarios, Consejo, cuentas de postulantes, interruptor de objeciones de visualizadores; actualizar el ranking público si está habilitado.</td></tr>
+    <tr><td>Superadministrador</td><td>Panel</td><td>Todo lo anterior más la configuración del proceso: cierre de postulaciones, interruptores, calendario y plazos.</td></tr>
   </table>
   <p>Una cuenta de postulante no puede entrar al panel interno, y el personal no entra por el portal del postulante.</p>
 </section>
