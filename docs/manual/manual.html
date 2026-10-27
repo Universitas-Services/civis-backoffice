@@ -48,11 +48,11 @@
   <img src="../../../civis-postulacion/public/brand/civis-horiz-blanco-slogan.png" alt="CIVIS" />
   <div>
     <h1>Manual de usuario</h1>
-    <p class="lema">Postulación, procedimiento de objeciones con plazos legales, autos del comité y configuración del proceso</p>
+    <p class="lema">Postulación, aceptación de los documentos legales, procedimiento de objeciones con plazos legales y configuración del proceso</p>
     <div class="raya"></div>
     <p>Portal del postulante · Panel interno (secretaría, revisión, comité, Consejo, visualizadores y administración)</p>
   </div>
-  <small>Versión 3 · Octubre de 2026 · Capturas tomadas en un entorno de prueba con datos ficticios.</small>
+  <small>Versión 4 · Octubre de 2026 · Capturas tomadas en un entorno de prueba con datos ficticios.</small>
 </section>
 
 <section>
@@ -60,6 +60,7 @@
   <ol class="indice">
     <li>Cómo funciona el proceso</li>
     <li>Postulante: crear la cuenta y postularse</li>
+    <li>Postulante: aceptar una versión nueva de los documentos</li>
     <li>Postulante: corregir un expediente devuelto</li>
     <li>Postulante: responder una objeción admitida (descargo)</li>
     <li>Revisión documental: devolver para corrección</li>
@@ -68,10 +69,21 @@
     <li>Secretaría: descargos de postulantes sin cuenta</li>
     <li>Consejo (evaluadores): objeciones declaradas con lugar</li>
     <li>Superadministración: configuración del proceso y calendario</li>
+    <li>Superadministración: Términos y Condiciones y Política de Privacidad</li>
     <li>Administración: usuarios, Consejo y cuentas de postulantes</li>
     <li>Recuperar la contraseña (todos los usuarios)</li>
     <li>Quién puede hacer qué</li>
   </ol>
+
+  <div class="ok"><strong>Novedades de la versión 4.</strong>
+    <ul style="margin:4pt 0 0">
+      <li>Al crear la cuenta, el postulante acepta por separado los <strong>Términos y Condiciones</strong> y la <strong>Política de Privacidad</strong>, que puede leer en una ventana sin salir del registro.</li>
+      <li>El registro y cada inicio de sesión del portal incluyen una <strong>verificación de seguridad</strong> (captcha).</li>
+      <li>Cuando se publica una versión nueva de esos documentos, el postulante la acepta al volver a ingresar (sección 3).</li>
+      <li>El superadministrador publica y consulta las versiones desde <strong>«Documentos legales»</strong> (sección 12).</li>
+      <li>El <strong>calendario del proceso</strong> se configura en tres pasos, con calendarios propios para la fecha de inicio y los feriados (sección 11).</li>
+    </ul>
+  </div>
 
   <h3>1. Cómo funciona el proceso</h3>
   <p>Hay dos puertas de entrada:</p>
@@ -102,11 +114,16 @@
   <h2>2. Postulante: crear la cuenta y postularse</h2>
   <p><span class="rol">Postulante</span> Entre al portal de postulación y pulse <strong>«Créela aquí»</strong>.</p>
   <ol>
-    <li>Escriba sus <strong>nombres</strong>, <strong>apellidos</strong> y correo, y una contraseña de al menos 12 caracteres con mayúscula, minúscula y un número. Pulse <strong>«Crear cuenta»</strong>.</li>
+    <li>Escriba sus <strong>nombres</strong>, <strong>apellidos</strong> y correo, y una contraseña de al menos 12 caracteres con mayúscula, minúscula y un número.</li>
+    <li>Marque las dos casillas: <strong>«He leído y acepto los Términos y Condiciones»</strong> y <strong>«He leído y acepto la Política de Privacidad»</strong>. Son obligatorias y se guardan por separado. Pulse el nombre de cada documento para leerlo en una ventana; ciérrela con <strong>«Cerrar»</strong>.</li>
+    <li>Espere a que la verificación de seguridad muestre la marca verde y pulse <strong>«Crear cuenta»</strong>.</li>
     <li>Le llega al correo un código de 6 dígitos que vence en 10 minutos. Escríbalo y pulse <strong>«Confirmar correo»</strong>. Si no le llegó, use <strong>«Enviar otro código»</strong>.</li>
-    <li>Ingrese con su correo y contraseña.</li>
+    <li>Ingrese con su correo y contraseña. La verificación de seguridad también aparece en cada ingreso.</li>
   </ol>
-  <figure class="figura"><img src="capturas/01-registro.png" /><figcaption>Crear la cuenta: nombres y apellidos completos</figcaption></figure>
+  <figure class="figura"><img src="capturas/01-registro.png" /><figcaption>Crear la cuenta: datos, aceptación de los dos documentos y verificación de seguridad</figcaption></figure>
+  <figure class="figura"><img src="capturas/01b-modal-documento.png" /><figcaption>Cada documento se lee en una ventana, con su versión y la fecha desde la que rige</figcaption></figure>
+  <div class="nota"><strong>Sin las dos casillas no hay registro.</strong> Si falta alguna, el formulario la señala y no crea la cuenta. Queda registrado qué versión aceptó, la fecha y la hora.</div>
+  <figure class="figura media"><img src="capturas/03-ingresar.png" /><figcaption>Ingreso al portal con la verificación de seguridad</figcaption></figure>
 
   <h3>Registrar la postulación</h3>
   <ol>
@@ -126,7 +143,20 @@
 </section>
 
 <section class="seccion">
-  <h2>3. Postulante: corregir un expediente devuelto</h2>
+  <h2>3. Postulante: aceptar una versión nueva de los documentos</h2>
+  <p><span class="rol">Postulante</span> Si se publica una versión nueva de los Términos y Condiciones o de la Política de Privacidad, al ingresar verá la pantalla <strong>«Documentos actualizados»</strong> antes de seguir con su postulación.</p>
+  <ol>
+    <li>Lea qué cambió en el recuadro del documento (<strong>«Qué cambió»</strong>).</li>
+    <li>Pulse el nombre del documento para leer el texto completo en la ventana.</li>
+    <li>Marque la casilla de aceptación y pulse <strong>«Aceptar y continuar»</strong>. Pasará a «Mi postulación».</li>
+  </ol>
+  <figure class="figura"><img src="capturas/18-aceptar-documentos.png" /><figcaption>Documentos actualizados: sólo aparecen las versiones que le faltan por aceptar</figcaption></figure>
+  <figure class="figura"><img src="capturas/18b-aceptar-modal.png" /><figcaption>Lectura de la versión nueva antes de aceptarla</figcaption></figure>
+  <div class="nota"><strong>Los descargos no esperan.</strong> Mientras no acepte, no puede modificar su postulación ni sus documentos. La sección «Objeciones» sigue disponible para que pueda presentar un descargo dentro de su plazo.</div>
+</section>
+
+<section class="seccion">
+  <h2>4. Postulante: corregir un expediente devuelto</h2>
   <p>Si la revisión documental encuentra algo que corregir, le devuelve el expediente con un motivo. Le llega un correo y, al ingresar, verá el aviso <strong>«La revisión le pide corregir su expediente»</strong> con el motivo exacto.</p>
   <ol>
     <li>Use <strong>«Corregir mis datos»</strong> si hay que cambiar nombres, apellidos, sala o teléfono. La cédula no se puede cambiar.</li>
@@ -139,7 +169,7 @@
 </section>
 
 <section class="seccion">
-  <h2>4. Postulante: responder una objeción admitida (descargo)</h2>
+  <h2>5. Postulante: responder una objeción admitida (descargo)</h2>
   <p>Usted sólo se entera de una objeción cuando el comité la <strong>admite</strong>. En ese momento le llega un correo de <strong>notificación</strong> con dos PDF adjuntos: el <strong>auto de admisión</strong> y la <strong>denuncia</strong> (sin la identidad de quien objetó), y el enlace para responder.</p>
   <figure class="figura"><img src="capturas/11-aviso-objecion.png" /><figcaption>Aviso en «Mi postulación»: objeción admitida</figcaption></figure>
   <ol>
@@ -155,7 +185,7 @@
 </section>
 
 <section class="seccion">
-  <h2>5. Revisión documental: devolver para corrección</h2>
+  <h2>6. Revisión documental: devolver para corrección</h2>
   <p><span class="rol">Revisor</span> En <strong>«Revisión documental»</strong> abra el expediente. Si falta algo o algo está mal:</p>
   <ol>
     <li>Pulse <strong>«Devolver para corrección»</strong>.</li>
@@ -167,7 +197,7 @@
 </section>
 
 <section class="seccion">
-  <h2>6. Visualizador: presentar una objeción</h2>
+  <h2>7. Visualizador: presentar una objeción</h2>
   <p><span class="rol">Visualizador</span> Sólo puede objetar mientras está abierto el lapso de objeciones (interruptor <strong>«Objeciones de los visualizadores»</strong>). Si está cerrado, el botón <strong>«Objetar»</strong> no aparece.</p>
   <ol>
     <li>En <strong>«Ranking interno»</strong>, pulse <strong>«Objetar»</strong> en la fila del postulante.</li>
@@ -179,7 +209,7 @@
 </section>
 
 <section class="seccion">
-  <h2>7. Comité: admisión, descargo, comprobación y decisión</h2>
+  <h2>8. Comité: admisión, descargo, comprobación y decisión</h2>
   <p><span class="rol">Comité</span> Toda objeción llega a <strong>«Comité»</strong>, organizada en cuatro pestañas. Arriba se recuerda el plazo de admisión según el calendario del proceso.</p>
   <table>
     <tr><th>Pestaña</th><th>Qué contiene</th></tr>
@@ -219,7 +249,7 @@
 </section>
 
 <section class="seccion">
-  <h2>8. Secretaría: descargos de postulantes sin cuenta</h2>
+  <h2>9. Secretaría: descargos de postulantes sin cuenta</h2>
   <p><span class="rol">Secretaría</span> Si el expediente lo dio de alta la secretaría y el postulante no tiene cuenta, la notificación de admisión llega al correo de la secretaría con el auto y la denuncia. En la ficha del expediente aparece <strong>«Objeciones y descargos»</strong>, sólo con las objeciones ya admitidas.</p>
   <ol>
     <li>Contacte al postulante, entréguele el auto y la denuncia. Tampoco aquí se ve quién objetó.</li>
@@ -232,7 +262,7 @@
 </section>
 
 <section class="seccion">
-  <h2>9. Consejo (evaluadores): objeciones declaradas con lugar</h2>
+  <h2>10. Consejo (evaluadores): objeciones declaradas con lugar</h2>
   <p><span class="rol">Evaluador</span> <span class="rol">Administrador</span> En <strong>«Objeciones»</strong> sólo aparecen las objeciones que el comité declaró <strong>con lugar</strong>. Las demás no se muestran.</p>
   <ul>
     <li>En <strong>«Ver objeciones»</strong> se lee cada objeción con el <strong>descargo</strong> del postulado (o el aviso de que venció sin él), las consideraciones del comité y el <strong>auto con lugar</strong> en PDF.</li>
@@ -243,7 +273,7 @@
 </section>
 
 <section class="seccion">
-  <h2>10. Superadministración: configuración del proceso y calendario</h2>
+  <h2>11. Superadministración: configuración del proceso y calendario</h2>
   <p><span class="rol">Superadministrador</span> Todos los interruptores del proceso están en <strong>«Configuración del proceso»</strong>:</p>
   <table>
     <tr><th>Interruptor</th><th>Qué hace</th></tr>
@@ -256,19 +286,47 @@
   <figure class="figura media"><img src="capturas/91-cerrar-postulaciones.png" /><figcaption>Cerrar las postulaciones pide confirmación</figcaption></figure>
 
   <h3>Calendario y plazos</h3>
-  <p>Al cerrar las postulaciones, el sistema calcula el calendario desde el día hábil siguiente (publicación de la nómina): lapso de objeciones, admisión, descargos y comprobación, cada uno con su color. Los feriados se marcan con un punto.</p>
-  <ul>
-    <li>Puede fijar a mano el <strong>inicio del lapso</strong>.</li>
-    <li>Si un periodo debe <strong>alargarse</strong> por un inconveniente, cambie sus días: la vista previa se recalcula al momento. Luego pulse <strong>«Guardar configuración»</strong>.</li>
-    <li>El lapso de objeciones se cuenta en días hábiles por defecto. Si se desmarca la casilla, cuenta días continuos, como dice el art. 71.</li>
-    <li>Los plazos de descargo y comprobación de las objeciones ya notificadas no cambian.</li>
-  </ul>
-  <figure class="figura"><img src="capturas/92-calendario.png" /><figcaption>Calendario del proceso y duraciones editables</figcaption></figure>
+  <p>El calendario se arma en tres pasos. A la derecha, <strong>«Así queda el calendario»</strong> muestra al momento cada periodo con su color: lapso de objeciones, admisión, descargos y comprobación. Los feriados llevan un punto vino.</p>
+  <ol>
+    <li><strong>¿Cuándo empieza el lapso de objeciones?</strong>
+      <ul>
+        <li><strong>Automático</strong>: el día hábil siguiente al cierre de postulaciones.</li>
+        <li><strong>Elegir una fecha</strong>: por ejemplo, el día de publicación de la nómina. Se abre un calendario; los fines de semana se ven atenuados y los feriados subrayados en vino.</li>
+      </ul>
+    </li>
+    <li><strong>¿Cuántos días dura cada etapa?</strong> Use <strong>−</strong> y <strong>+</strong> para alargar o acortar un periodo. Cada etapa recuerda lo que indica la ley; si cambia alguna, aparece <strong>«Usar los plazos de ley»</strong> para volver a los valores legales. El lapso se cuenta en días <strong>Hábiles</strong> o <strong>Continuos</strong> (el art. 71 habla de días continuos).</li>
+    <li><strong>Feriados.</strong> Toque un día del calendario para marcarlo o quitarlo como feriado. Debajo aparecen agrupados por año; la <strong>×</strong> quita uno y <strong>«Feriados nacionales»</strong> restablece la lista oficial. Sólo cuentan cuando el lapso va en días hábiles.</li>
+  </ol>
+  <p>Al terminar, pulse <strong>«Guardar configuración»</strong>. Los plazos de descargo y comprobación de las objeciones ya notificadas no cambian.</p>
+  <figure class="figura media"><img src="capturas/92b-calendario-fecha.png" /><figcaption>Paso 1: elegir el día de inicio del lapso</figcaption></figure>
+  <figure class="figura"><img src="capturas/92c-calendario-duraciones.png" /><figcaption>Paso 2: una etapa alargada; aparece «Usar los plazos de ley»</figcaption></figure>
+  <figure class="figura"><img src="capturas/92-calendario.png" /><figcaption>Los tres pasos y la vista previa del calendario</figcaption></figure>
   <div class="nota"><strong>Cierre del lapso.</strong> El lapso de objeciones se cierra apagando los interruptores de objeciones. Si el calendario indica que ya venció y siguen abiertas, la página muestra un aviso.</div>
 </section>
 
 <section class="seccion">
-  <h2>11. Administración: usuarios, Consejo y cuentas de postulantes</h2>
+  <h2>12. Superadministración: Términos y Condiciones y Política de Privacidad</h2>
+  <p><span class="rol">Superadministrador</span> En <strong>«Documentos legales»</strong> hay una tarjeta por documento con la versión vigente, desde cuándo rige, quién la publicó, cuántos postulantes la aceptaron, su <strong>huella SHA-256</strong> y el historial de versiones.</p>
+  <figure class="figura"><img src="capturas/96-legales-lista.png" /><figcaption>Documentos legales: versión vigente e historial</figcaption></figure>
+  <h3>Ver la versión vigente</h3>
+  <p>Pulse <strong>«Ver vigente»</strong>. A la derecha se ven el estado, la versión, las fechas, quién la publicó, las aceptaciones, el resumen de cambios y la huella del texto.</p>
+  <figure class="figura"><img src="capturas/97-legales-ver.png" /><figcaption>Lectura de una versión publicada</figcaption></figure>
+  <h3>Publicar una versión nueva</h3>
+  <ol>
+    <li>Pulse <strong>«Actualizar (nueva versión)»</strong>. Se crea un borrador con el texto vigente. Si ya había uno, verá <strong>«Continuar borrador»</strong>.</li>
+    <li>Corrija el título y el texto en <strong>«Escribir»</strong>. El texto usa formato Markdown: <span class="codigo">## Sección</span>, <span class="codigo">**negrita**</span>, listas con <span class="codigo">-</span> y tablas. Revíselo en <strong>«Vista previa»</strong>.</li>
+    <li>Escriba el <strong>resumen de cambios</strong> (obligatorio desde la versión 2). Es lo que leen los postulantes en «Documentos actualizados».</li>
+    <li>Puede pulsar <strong>«Guardar borrador»</strong> y seguir otro día, o <strong>«Descartar borrador»</strong>.</li>
+    <li>Pulse <strong>«Publicar versión N»</strong> y luego <strong>«Confirmar publicación»</strong>.</li>
+  </ol>
+  <figure class="figura"><img src="capturas/98-legales-editor.png" /><figcaption>Borrador: título, texto en Markdown y resumen de cambios</figcaption></figure>
+  <figure class="figura"><img src="capturas/99-legales-confirmar.png" /><figcaption>Vista previa y confirmación de la publicación</figcaption></figure>
+  <figure class="figura"><img src="capturas/99b-legales-publicado.png" /><figcaption>Versión publicada: ya es la que aceptan los postulantes</figcaption></figure>
+  <div class="nota"><strong>Una versión publicada no se modifica.</strong> La anterior pasa a «Reemplazada» y conserva sus aceptaciones. Desde la publicación, los postulantes nuevos aceptan la versión nueva al registrarse y quienes ya tienen cuenta deben aceptarla al ingresar.</div>
+</section>
+
+<section class="seccion">
+  <h2>13. Administración: usuarios, Consejo y cuentas de postulantes</h2>
   <p><span class="rol">Superadministrador</span> <span class="rol">Administrador</span></p>
   <h3>El Consejo</h3>
   <p>En <strong>«Usuarios y roles» → «Consejo»</strong> se ve cuántos puestos del Consejo están ocupados y quiénes lo integran. Use <strong>«Agregar al Consejo»</strong> para elegir un evaluador activo, o <strong>«Sacar del Consejo»</strong>, indicando el motivo.</p>
@@ -285,7 +343,7 @@
 </section>
 
 <section class="seccion">
-  <h2>12. Recuperar la contraseña (todos los usuarios)</h2>
+  <h2>14. Recuperar la contraseña (todos los usuarios)</h2>
   <p>Funciona igual en el portal del postulante y en el panel interno.</p>
   <ol>
     <li>En la pantalla de ingreso, pulse <strong>«¿Olvidó su contraseña?»</strong>.</li>
@@ -299,19 +357,19 @@
 </section>
 
 <section class="seccion">
-  <h2>13. Quién puede hacer qué</h2>
+  <h2>15. Quién puede hacer qué</h2>
   <table>
     <tr><th>Rol</th><th>Dónde entra</th><th>Qué hace</th></tr>
-    <tr><td>Postulante</td><td>Portal del postulante</td><td>Crear cuenta, postularse, cargar y corregir documentos, seguir su etapa, responder objeciones admitidas dentro del plazo y descargar sus autos.</td></tr>
+    <tr><td>Postulante</td><td>Portal del postulante</td><td>Crear cuenta aceptando los Términos y la Política de Privacidad, aceptar sus versiones nuevas, postularse, cargar y corregir documentos, seguir su etapa, responder objeciones admitidas dentro del plazo y descargar sus autos.</td></tr>
     <tr><td>Secretaría</td><td>Panel</td><td>Crear expedientes (con postulaciones abiertas), corregirlos en borrador y cargar descargos de postulantes sin cuenta.</td></tr>
     <tr><td>Revisor</td><td>Panel</td><td>Revisión documental: enviar a evaluación o devolver para corrección.</td></tr>
     <tr><td>Comité</td><td>Panel</td><td>Admitir o inadmitir objeciones, esperar el descargo, comprobar y decidir con lugar o sin lugar. Cada acto dicta un auto.</td></tr>
     <tr><td>Evaluador (Consejo)</td><td>Panel</td><td>Evaluar y, ante una objeción con lugar, declarar la inelegibilidad o ajustar el puntaje.</td></tr>
     <tr><td>Visualizador</td><td>Panel</td><td>Consultar, opinar y, con el lapso abierto, objetar.</td></tr>
     <tr><td>Administrador</td><td>Panel</td><td>Usuarios, Consejo, cuentas de postulantes, interruptor de objeciones de visualizadores; actualizar el ranking público si está habilitado.</td></tr>
-    <tr><td>Superadministrador</td><td>Panel</td><td>Todo lo anterior más la configuración del proceso: cierre de postulaciones, interruptores, calendario y plazos.</td></tr>
+    <tr><td>Superadministrador</td><td>Panel</td><td>Todo lo anterior más la configuración del proceso (cierre de postulaciones, interruptores, calendario y plazos) y los documentos legales.</td></tr>
   </table>
-  <p>Una cuenta de postulante no puede entrar al panel interno, y el personal no entra por el portal del postulante.</p>
+  <p>Una cuenta de postulante no puede entrar al panel interno, y el personal no entra por el portal del postulante. La verificación de seguridad (captcha) sólo se pide en el portal del postulante.</p>
 </section>
 
 </body>
