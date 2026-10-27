@@ -84,9 +84,11 @@ export function directorioVisiblePara(
   rolesActor: readonly Role[],
   lista: readonly UsuarioDirectorio[],
 ): readonly UsuarioDirectorio[] {
-  if (rolesActor.includes("SUPER_ADMIN")) return lista;
+  // Las cuentas de postulante tienen su propia pantalla y nunca cambian de rol.
+  const panel = lista.filter((cuenta) => !cuenta.roles.includes("APPLICANT"));
+  if (rolesActor.includes("SUPER_ADMIN")) return panel;
   const techo = rangoMasAlto(rolesActor);
-  return lista.filter((cuenta) => rangoMasAlto(cuenta.roles) >= techo);
+  return panel.filter((cuenta) => rangoMasAlto(cuenta.roles) >= techo);
 }
 
 export const WORKFLOW_STATUS = [
@@ -656,7 +658,89 @@ export interface AjustesPortal {
   readonly maxActiveEvaluators: number;
   readonly quorumThreshold: number;
   readonly roundDeadlineDays: number;
+  /** Cierre de postulaciones: sin expedientes nuevos ni primer envío (SUPER_ADMIN). */
+  readonly applicationsClosed: boolean;
+  readonly applicationsClosedAt: string | null;
+  /** Inicio del lapso de objeciones fijado a mano; null = el día hábil siguiente al cierre. */
+  readonly objectionPeriodStart: string | null;
+  readonly objectionPeriodDays: number;
+  /** true: el lapso de objeciones se cuenta en días hábiles. */
+  readonly objectionBusinessDays: boolean;
+  readonly admissionDays: number;
+  readonly descargoDays: number;
+  readonly verificationDays: number;
+  /** Feriados `AAAA-MM-DD`. */
+  readonly holidays: readonly string[];
+  readonly calendario: CalendarioProceso;
 }
+
+/** Ajustes mientras la API no responde: todo cerrado y los plazos legales. */
+export const AJUSTES_PORTAL_POR_DEFECTO: AjustesPortal = {
+  objectionsOpen: false,
+  viewerObjectionsOpen: false,
+  publicRefreshEnabled: false,
+  evaluationMode: "INDIVIDUAL",
+  maxActiveEvaluators: 7,
+  quorumThreshold: 5,
+  roundDeadlineDays: 5,
+  applicationsClosed: false,
+  applicationsClosedAt: null,
+  objectionPeriodStart: null,
+  objectionPeriodDays: 15,
+  objectionBusinessDays: true,
+  admissionDays: 8,
+  descargoDays: 3,
+  verificationDays: 5,
+  holidays: [],
+  calendario: {
+    pendiente: true,
+    cierrePostulaciones: null,
+    periodos: [],
+    finLapsoObjeciones: null,
+    finAdmision: null,
+  },
+};
+
+export const PERIODOS_PROCESO = [
+  "LAPSO_OBJECIONES",
+  "ADMISION",
+  "DESCARGOS",
+  "COMPROBACION",
+] as const;
+export type ClavePeriodo = (typeof PERIODOS_PROCESO)[number];
+
+export interface PeriodoProceso {
+  readonly clave: ClavePeriodo;
+  readonly titulo: string;
+  readonly detalle: string;
+  /** `AAAA-MM-DD` en hora de Caracas, ambos incluidos. */
+  readonly inicio: string;
+  readonly fin: string;
+}
+
+/** Calendario estimado del proceso que calcula la API. */
+export interface CalendarioProceso {
+  readonly pendiente: boolean;
+  readonly cierrePostulaciones: string | null;
+  readonly periodos: readonly PeriodoProceso[];
+  readonly finLapsoObjeciones: string | null;
+  readonly finAdmision: string | null;
+}
+
+/** Duraciones del proceso que el superadministrador puede alargar. */
+export const plazosProcesoSchema = z.object({
+  objectionPeriodStart: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, "Fecha no válida")
+    .nullable(),
+  objectionPeriodDays: z.coerce.number().int().min(1, "Mínimo 1 día").max(60, "Máximo 60 días"),
+  objectionBusinessDays: z.boolean(),
+  admissionDays: z.coerce.number().int().min(1, "Mínimo 1 día").max(60, "Máximo 60 días"),
+  descargoDays: z.coerce.number().int().min(1, "Mínimo 1 día").max(30, "Máximo 30 días"),
+  verificationDays: z.coerce.number().int().min(1, "Mínimo 1 día").max(60, "Máximo 60 días"),
+  holidays: z.array(z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Use el formato AAAA-MM-DD")).max(200),
+});
+export type PlazosProceso = z.infer<typeof plazosProcesoSchema>;
 
 export type EvaluationRoundKind = "ELIGIBILITY" | "SCORING" | "OBJECTION";
 
@@ -959,8 +1043,64 @@ export interface Descargo {
   readonly createdAt: string;
 }
 
-export const ETAPAS_COMITE = ["ESPERANDO_DESCARGO", "CON_DESCARGO", "ENVIADAS"] as const;
+/** Etapa legal de la objeción (LOTSJ arts. 71 y 72). */
+export const ETAPAS_OBJECION = [
+  "RECIBIDA",
+  "INADMITIDA",
+  "EN_DESCARGO",
+  "DESCARGO_PRESENTADO",
+  "SIN_DESCARGO",
+  "CON_LUGAR",
+  "SIN_LUGAR",
+] as const;
+export type EtapaObjecion = (typeof ETAPAS_OBJECION)[number];
+
+export const ETAPA_OBJECION_ETIQUETA: Record<EtapaObjecion, string> = {
+  RECIBIDA: "Recibida",
+  INADMITIDA: "Inadmitida",
+  EN_DESCARGO: "Admitida · en descargo",
+  DESCARGO_PRESENTADO: "Con descargo",
+  SIN_DESCARGO: "Sin descargos",
+  CON_LUGAR: "Con lugar",
+  SIN_LUGAR: "Sin lugar",
+};
+
+export type TipoAuto = "ADMISION" | "INADMISION" | "CON_LUGAR" | "SIN_LUGAR";
+
+export const AUTO_ETIQUETA: Record<TipoAuto, string> = {
+  ADMISION: "Auto de admisión",
+  INADMISION: "Auto de inadmisión",
+  CON_LUGAR: "Auto de decisión: con lugar",
+  SIN_LUGAR: "Auto de decisión: sin lugar",
+};
+
+/** Auto del comité. El PDF se descarga por /api/autos/:objectionId/:id. */
+export interface AutoObjecion {
+  readonly id: string;
+  readonly kind: TipoAuto;
+  readonly number: string;
+  readonly createdAt: string;
+}
+
+/**
+ * Bandeja del comité:
+ * - RECIBIDAS: esperan la admisión.
+ * - EN_DESCARGO: admitidas; corre el plazo del postulante.
+ * - POR_DECIDIR: con descargo o sin él (vencido); comprobación y decisión.
+ * - DECIDIDAS: inadmitidas, con lugar o sin lugar.
+ */
+export const ETAPAS_COMITE = ["RECIBIDAS", "EN_DESCARGO", "POR_DECIDIR", "DECIDIDAS"] as const;
 export type EtapaComite = (typeof ETAPAS_COMITE)[number];
+
+export interface PlazosComite {
+  readonly descargoDias: number;
+  readonly admisionDias: number;
+  readonly comprobacionDias: number;
+  readonly finLapsoObjeciones: string | null;
+  readonly finAdmision: string | null;
+  /** Alguno de los lapsos de objeciones sigue abierto. */
+  readonly lapsoAbierto: boolean;
+}
 
 /** Fila de la bandeja del comité: una objeción, sin identidad del objetante. */
 export interface ObjecionComite {
@@ -970,8 +1110,12 @@ export interface ObjecionComite {
   /** Categoría de las objeciones antiguas, que no traen causales. */
   readonly category: string;
   readonly receivedAt: string;
+  readonly stage: EtapaObjecion;
+  readonly descargoDueAt: string | null;
+  readonly verificationDueAt: string | null;
+  readonly noDescargoAt: string | null;
+  readonly finalDecidedAt: string | null;
   readonly forwardedAt: string | null;
-  readonly forwardReason: string | null;
   readonly etapa: EtapaComite;
   readonly descargo: { readonly createdAt: string; readonly submittedVia: string } | null;
   readonly candidate: {
@@ -990,6 +1134,7 @@ export interface BandejaComite {
   readonly page: number;
   readonly pageSize: number;
   readonly resumen: Record<EtapaComite, number>;
+  readonly plazos: PlazosComite;
 }
 
 /** Objeción abierta por el comité: con identidad del objetante (se audita). */
@@ -1006,12 +1151,21 @@ export interface ObjecionComiteDetalle {
   readonly description: string;
   readonly evidenceUrl: string;
   readonly receivedAt: string;
+  readonly stage: EtapaObjecion;
+  readonly admissionDecidedAt: string | null;
+  readonly notifiedAt: string | null;
+  readonly descargoDueAt: string | null;
+  readonly noDescargoAt: string | null;
+  readonly verificationDueAt: string | null;
+  readonly finalDecidedAt: string | null;
+  readonly committeeNotes: string | null;
   readonly forwardedAt: string | null;
   readonly forwardReason: string | null;
-  readonly forwardedBy: { readonly fullName: string } | null;
   readonly submittedBy: { readonly fullName: string } | null;
   readonly descargo: Descargo | null;
+  readonly autos: readonly AutoObjecion[];
   readonly etapa: EtapaComite;
+  readonly plazos: PlazosComite;
   readonly candidate: {
     readonly id: string;
     readonly fullName: string;
@@ -1033,7 +1187,66 @@ export interface ObjecionParaDescargo {
   readonly evidenceUrl: string;
   readonly receivedAt: string;
   readonly forwardedAt: string | null;
+  readonly stage: EtapaObjecion;
+  readonly notifiedAt: string | null;
+  readonly descargoDueAt: string | null;
+  readonly noDescargoAt: string | null;
+  readonly finalDecidedAt: string | null;
   readonly descargo: Descargo | null;
+  readonly autos: readonly AutoObjecion[];
+}
+
+/** El plazo de descargo sigue abierto. */
+export function admiteDescargo(
+  o: Pick<ObjecionParaDescargo, "stage" | "descargoDueAt" | "descargo">,
+  ahora: Date = new Date(),
+): boolean {
+  return (
+    o.stage === "EN_DESCARGO" &&
+    o.descargo === null &&
+    o.descargoDueAt !== null &&
+    new Date(o.descargoDueAt).getTime() > ahora.getTime()
+  );
+}
+
+/** Consideraciones opcionales del comité, que se añaden a su auto. */
+export const consideracionesComiteSchema = z
+  .string()
+  .trim()
+  .max(3000, "Máximo 3000 caracteres")
+  .optional();
+
+/** Cuenta del portal del postulante (fuera del directorio del panel). */
+export const ESTADOS_CUENTA_POSTULANTE = ["PENDING_VERIFICATION", "ACTIVE", "SUSPENDED"] as const;
+export type EstadoCuentaPostulante = (typeof ESTADOS_CUENTA_POSTULANTE)[number];
+
+export const ESTADO_CUENTA_ETIQUETA: Record<EstadoCuentaPostulante, string> = {
+  PENDING_VERIFICATION: "Sin verificar correo",
+  ACTIVE: "Activa",
+  SUSPENDED: "Suspendida",
+};
+
+export interface CuentaPostulante {
+  readonly id: string;
+  readonly email: string;
+  readonly fullName: string;
+  readonly status: EstadoCuentaPostulante;
+  readonly lastLoginAt: string | null;
+  readonly createdAt: string;
+  readonly expediente: {
+    readonly candidateId: string;
+    readonly nationalId: string;
+    readonly workflowStatus: WorkflowStatus;
+    readonly fileNumber: string | null;
+  } | null;
+}
+
+export interface ListaCuentasPostulantes {
+  readonly items: readonly CuentaPostulante[];
+  readonly total: number;
+  readonly page: number;
+  readonly pageSize: number;
+  readonly resumen: Record<EstadoCuentaPostulante, number>;
 }
 
 /** Espejo de civis-api `descargoSchema` (campos de texto; el adjunto va aparte). */

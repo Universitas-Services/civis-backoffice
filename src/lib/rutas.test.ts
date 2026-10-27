@@ -15,6 +15,7 @@ vi.mock("./sesion", () => ({
   usuarioActual: vi.fn(),
 }));
 
+import { destinoDeDigest, RecargaSesion } from "./recarga-sesion";
 import { renovarYVolver } from "./rutas";
 
 describe("renovarYVolver", () => {
@@ -23,21 +24,31 @@ describe("renovarYVolver", () => {
     cookiesGet.mockReset();
   });
 
-  it("redirige a renovar cuando no hay marca de recién renovada", async () => {
+  it("pide recargar hacia renovar cuando no hay marca de recién renovada", async () => {
     cookiesGet.mockReturnValue(undefined);
-    await expect(renovarYVolver("/revision-documental")).rejects.toThrow(
-      "REDIRECT:/api/sesion/renovar?volver=%2Frevision-documental",
+    const error = await renovarYVolver("/revision-documental").catch((e: unknown) => e);
+    expect(error).toBeInstanceOf(RecargaSesion);
+    expect(destinoDeDigest((error as RecargaSesion).digest)).toBe(
+      "/api/sesion/renovar?volver=%2Frevision-documental",
     );
+    // Nunca un redirect(): el cliente lo seguiría como navegación suave.
+    expect(redirect).not.toHaveBeenCalled();
   });
 
-  it("redirige a expirada (sin mutar cookies) si ya se renovó", async () => {
+  it("pide recargar hacia expirada (sin mutar cookies) si ya se renovó", async () => {
     cookiesGet.mockReturnValue({ value: "1" });
-    await expect(renovarYVolver("/revision-documental")).rejects.toThrow(
-      "REDIRECT:/api/sesion/expirada",
-    );
-    expect(redirect).toHaveBeenCalledWith("/api/sesion/expirada");
-    expect(redirect).not.toHaveBeenCalledWith(
-      expect.stringContaining("/api/sesion/renovar"),
-    );
+    const error = await renovarYVolver("/revision-documental").catch((e: unknown) => e);
+    expect(error).toBeInstanceOf(RecargaSesion);
+    expect(destinoDeDigest((error as RecargaSesion).digest)).toBe("/api/sesion/expirada");
+    expect(redirect).not.toHaveBeenCalled();
+  });
+});
+
+describe("destinoDeDigest", () => {
+  it("ignora digests ajenos y destinos fuera de /api/sesion", () => {
+    expect(destinoDeDigest(undefined)).toBeNull();
+    expect(destinoDeDigest("12345")).toBeNull();
+    expect(destinoDeDigest("CIVIS_RECARGA_SESION:https://otro.example")).toBeNull();
+    expect(destinoDeDigest("CIVIS_RECARGA_SESION://otro.example")).toBeNull();
   });
 });

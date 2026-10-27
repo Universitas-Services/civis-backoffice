@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import type { AjustesPortal, ResultadoRanking } from "@/contracts";
 import { exigirRol, renovarYVolver } from "@/lib/rutas";
 import { RankingInterno } from "@/components/ranking-interno";
@@ -35,8 +36,10 @@ export default async function PaginaRankingInterno() {
     esSuper ||
     (portal.publicRefreshEnabled && usuario.roles.some((r) => r === "ADMIN" || r === "EVALUATOR"));
 
+  // El superadministrador maneja sus interruptores en «Configuración del
+  // proceso»; aquí sólo el administrador conserva el de los visualizadores.
   const interruptores: Interruptor[] = [];
-  if (esSuper || esAdmin) {
+  if (esAdmin && !esSuper) {
     interruptores.push({
       ajuste: "viewerObjectionsOpen",
       titulo: "Objeciones de los visualizadores",
@@ -46,28 +49,6 @@ export default async function PaginaRankingInterno() {
       valor: portal.viewerObjectionsOpen,
     });
   }
-  if (esSuper) {
-    interruptores.push(
-      {
-        ajuste: "objectionsOpen",
-        titulo: "Objeciones públicas en la landing",
-        encendido:
-          "La landing muestra «Objetar» en los postulantes enviados al ranking público. Úselo solo si se decide abrir las objeciones a la ciudadanía.",
-        apagado:
-          "Las objeciones son cerradas: solo las presentan los visualizadores desde el panel.",
-        valor: portal.objectionsOpen,
-      },
-      {
-        ajuste: "publicRefreshEnabled",
-        titulo: "«Actualizar en el ranking público» para admin y evaluadores",
-        encendido:
-          "Administradores y evaluadores pueden actualizar en el ranking público la nota de un postulante ya publicado (por ejemplo, tras una re-evaluación por objeción).",
-        apagado: "Solo usted actualiza las notas del ranking público.",
-        valor: portal.publicRefreshEnabled,
-      },
-    );
-  }
-
   return (
     <>
       <CabeceraPagina
@@ -89,6 +70,19 @@ export default async function PaginaRankingInterno() {
 
       <div className="space-y-8 px-5 py-6 sm:px-8">
         <InterruptoresPortal items={interruptores} />
+        {esSuper && (
+          <p className="rounded-lg border border-toga-200 bg-white px-4 py-3 text-sm text-toga-700">
+            Los interruptores de objeciones, del ranking público y del cierre de postulaciones están
+            en{" "}
+            <Link
+              href="/configuracion"
+              className="font-semibold text-balanza-700 hover:text-balanza-600"
+            >
+              Configuración del proceso
+            </Link>
+            .
+          </p>
+        )}
 
         {visibles.length === 0 ? (
           <EstadoVacio

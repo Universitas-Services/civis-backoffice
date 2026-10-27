@@ -1,17 +1,19 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { BarraLateral } from "@/components/barra-lateral";
+import { RenovarSesion } from "@/components/renovar-sesion";
 import { ToastProvider } from "@/components/toast-provider";
 import { accessNecesitaRenovacion } from "@/lib/auth-refresh";
+import { rutaRenovar } from "@/lib/recarga-sesion";
 import { usuarioActual } from "@/lib/sesion";
 
 export default async function PanelLayout({ children }: { readonly children: React.ReactNode }) {
-  // Renovar en Route Handler: el layout no puede escribir cookies.
+  // Renovar en Route Handler: el layout no puede escribir cookies. Y no con
+  // `redirect()`: tras una Server Action el cliente aplicaría ese 307 como
+  // navegación suave y la pantalla quedaría en blanco (ver recarga-sesion.ts).
   if (await accessNecesitaRenovacion()) {
     const pathname = (await headers()).get("x-pathname") ?? "/inicio";
-    const volver =
-      pathname.startsWith("/") && !pathname.startsWith("//") ? pathname : "/inicio";
-    redirect(`/api/sesion/renovar?volver=${encodeURIComponent(volver)}`);
+    return <RenovarSesion destino={rutaRenovar(pathname)} />;
   }
 
   const usuario = await usuarioActual();

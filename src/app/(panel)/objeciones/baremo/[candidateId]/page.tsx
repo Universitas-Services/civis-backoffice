@@ -1,6 +1,11 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import type { AjustesPortal, ExpedienteDetalle, RondaComiteAbierta } from "@/contracts";
+import {
+  AJUSTES_PORTAL_POR_DEFECTO,
+  type AjustesPortal,
+  type ExpedienteDetalle,
+  type RondaComiteAbierta,
+} from "@/contracts";
 import {
   PantallaAplicarBaremo,
   type EvaluacionBaremoVista,
@@ -30,15 +35,7 @@ export default async function AjustarBaremo({
   let expediente: ExpedienteDetalle;
   let resumen: { fullName: string; items: readonly ResumenObjecion[] };
   let historial: EvaluacionBaremoVista[];
-  let portal: AjustesPortal = {
-    objectionsOpen: false,
-    viewerObjectionsOpen: false,
-    publicRefreshEnabled: false,
-    evaluationMode: "INDIVIDUAL",
-    maxActiveEvaluators: 7,
-    quorumThreshold: 5,
-    roundDeadlineDays: 5,
-  };
+  let portal: AjustesPortal = AJUSTES_PORTAL_POR_DEFECTO;
   try {
     [expediente, resumen, historial, portal] = await Promise.all([
       llamarApi<ExpedienteDetalle>(`/internal/candidates/${candidateId}`),

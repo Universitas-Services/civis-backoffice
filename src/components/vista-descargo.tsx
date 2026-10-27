@@ -26,19 +26,14 @@ export function VistaDescargo({
 }: {
   readonly objectionId: string;
   readonly descargo: Descargo | null;
-  /** Motivo del comité cuando la envió al Consejo sin descargo. */
+  /** Nota cuando no hay descargo (p. ej. «venció el plazo»). */
   readonly motivoSinDescargo?: string | null;
 }) {
   if (!descargo) {
     return (
       <div className="rounded-lg border border-dashed border-toga-300 bg-toga-50 px-4 py-3 text-sm text-toga-600">
         <p className="font-semibold text-toga-800">Sin descargo del postulante.</p>
-        {motivoSinDescargo && (
-          <p className="mt-1">
-            Motivo del comité para enviarla así:{" "}
-            <span className="text-toga-800">{motivoSinDescargo}</span>
-          </p>
-        )}
+        {motivoSinDescargo && <p className="mt-1">{motivoSinDescargo}</p>}
       </div>
     );
   }

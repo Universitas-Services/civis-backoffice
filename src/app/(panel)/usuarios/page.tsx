@@ -1,5 +1,9 @@
 import type { Metadata } from "next";
-import type { AjustesPortal, UsuarioDirectorio } from "@/contracts";
+import {
+  AJUSTES_PORTAL_POR_DEFECTO,
+  type AjustesPortal,
+  type UsuarioDirectorio,
+} from "@/contracts";
 import { directorioVisiblePara } from "@/contracts";
 import { llamarApi, NoAutorizado } from "@/lib/api";
 import { exigirRol, renovarYVolver } from "@/lib/rutas";
@@ -12,15 +16,7 @@ export default async function Usuarios() {
   const usuario = await exigirRol("SUPER_ADMIN", "ADMIN");
 
   let usuarios: readonly UsuarioDirectorio[];
-  let ajustes: AjustesPortal = {
-    objectionsOpen: false,
-    viewerObjectionsOpen: false,
-    publicRefreshEnabled: false,
-    evaluationMode: "INDIVIDUAL",
-    maxActiveEvaluators: 7,
-    quorumThreshold: 5,
-    roundDeadlineDays: 5,
-  };
+  let ajustes: AjustesPortal = AJUSTES_PORTAL_POR_DEFECTO;
   try {
     usuarios = await llamarApi<UsuarioDirectorio[]>("/internal/users");
     ajustes = await llamarApi<AjustesPortal>("/internal/portal");

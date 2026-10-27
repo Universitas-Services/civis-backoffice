@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import type {
-  AjustesPortal,
-  BaremoDetalle,
-  ExpedienteDetalle,
-  RondaComiteAbierta,
+import {
+  AJUSTES_PORTAL_POR_DEFECTO,
+  type AjustesPortal,
+  type BaremoDetalle,
+  type ExpedienteDetalle,
+  type RondaComiteAbierta,
 } from "@/contracts";
 import {
   PantallaAplicarBaremo,
@@ -34,15 +35,7 @@ export default async function BaremoDetalle({
   const puedeAbrirRonda = usuario.roles.some((rol) => rol === "SUPER_ADMIN" || rol === "ADMIN");
 
   let expediente: ExpedienteDetalle;
-  let portal: AjustesPortal = {
-    objectionsOpen: false,
-    viewerObjectionsOpen: false,
-    publicRefreshEnabled: false,
-    evaluationMode: "INDIVIDUAL",
-    maxActiveEvaluators: 7,
-    quorumThreshold: 5,
-    roundDeadlineDays: 5,
-  };
+  let portal: AjustesPortal = AJUSTES_PORTAL_POR_DEFECTO;
   try {
     [expediente, portal] = await Promise.all([
       llamarApi<ExpedienteDetalle>(`/internal/candidates/${candidateId}`),

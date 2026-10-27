@@ -2,7 +2,14 @@ import "server-only";
 import { NextResponse } from "next/server";
 import { API_INTERNA, COOKIE_SESION } from "./config";
 import { renovarSesionTras401 } from "./auth-refresh";
-import { cerrarSesion, cifrarSesion, guardarSesion, leerSesion, OPCIONES_COOKIE } from "./sesion";
+import {
+  cerrarSesion,
+  cifrarSesion,
+  guardarSesion,
+  leerSesion,
+  OPCIONES_COOKIE,
+  type ContenidoSesion,
+} from "./sesion";
 
 /**
  * Cliente de la API para el panel interno.
@@ -63,7 +70,8 @@ async function ejecutarLlamada<T>(
   /** True si esta llamada ya es el reintento tras un refresh exitoso. */
   yaRenovo = false,
 ): Promise<T> {
-  const sesion = await leerSesion();
+  let sesion = await leerSesion();
+  if (puedeRenovar && !yaRenovo) sesion = await renovarSiVencido(sesion);
   const token = sesion?.accessToken ?? null;
 
   const respuesta = await fetch(`${API_INTERNA}${ruta}`, {
@@ -103,11 +111,7 @@ async function ejecutarLlamada<T>(
     if (!tokens) {
       // Otra request pudo ganar la carrera y ya guardar tokens nuevos.
       const otra = await leerSesion();
-      if (
-        otra?.accessToken &&
-        otra.refreshCookie &&
-        otra.accessToken !== token
-      ) {
+      if (otra?.accessToken && otra.refreshCookie && otra.accessToken !== token) {
         return ejecutarLlamada<T>(ruta, { ...opciones, renovarSi401: false }, false, true);
       }
       await cerrarSesion().catch(() => undefined);
@@ -137,6 +141,35 @@ async function ejecutarLlamada<T>(
     );
   }
   return datos as T;
+}
+
+/**
+ * En una Server Action, renueva ANTES de llamar si el access ya venció.
+ *
+ * Esperar al 401 no basta: la acción funcionaría, pero el render que sigue a
+ * su `revalidatePath` vería la sesión vencida y el layout tendría que mandar
+ * a renovar en mitad de la respuesta. Renovando aquí, la cookie nueva se
+ * escribe en la propia acción y ese render ya la lee fresca.
+ *
+ * Si el refresh falla se sigue con la sesión que había: el camino del 401
+ * decide (reintento o cierre).
+ */
+async function renovarSiVencido(sesion: ContenidoSesion | null): Promise<ContenidoSesion | null> {
+  if (!sesion?.accessToken || !sesion.refreshCookie) return sesion;
+  const expira = sesion.accessExpiresAt;
+  if (typeof expira !== "number" || Date.now() < expira) return sesion;
+
+  const tokens = await renovarSesionTras401(sesion.accessToken, sesion.refreshCookie);
+  if (!tokens) return sesion;
+
+  const renovada: ContenidoSesion = {
+    usuario: sesion.usuario,
+    accessToken: tokens.accessToken,
+    refreshCookie: tokens.refreshCookie,
+    accessExpiresAt: tokens.accessExpiresAt,
+  };
+  await guardarSesion(renovada);
+  return renovada;
 }
 
 type FetchAutenticadoInit = {
