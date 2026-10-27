@@ -129,12 +129,17 @@ export async function actualizarEnRankingPublico(candidateId: string): Promise<E
   }
 }
 
-export type AjusteInterruptor = "viewerObjectionsOpen" | "objectionsOpen" | "publicRefreshEnabled";
+export type AjusteInterruptor =
+  | "viewerObjectionsOpen"
+  | "objectionsOpen"
+  | "publicRefreshEnabled"
+  | "applicationsClosed";
 
 const AJUSTES_INTERRUPTOR: readonly AjusteInterruptor[] = [
   "viewerObjectionsOpen",
   "objectionsOpen",
   "publicRefreshEnabled",
+  "applicationsClosed",
 ];
 
 const EXITO_AJUSTE: Record<AjusteInterruptor, [string, string]> = {
@@ -150,6 +155,10 @@ const EXITO_AJUSTE: Record<AjusteInterruptor, [string, string]> = {
     "Admin y evaluadores ya ven «Actualizar en el ranking público».",
     "Solo usted ve «Actualizar en el ranking público».",
   ],
+  applicationsClosed: [
+    "Postulaciones cerradas. El calendario del proceso ya está calculado.",
+    "Postulaciones abiertas de nuevo.",
+  ],
 };
 
 /** Cambia un interruptor del portal. Quién puede cambiar cada uno lo decide la API. */
@@ -161,6 +170,7 @@ export async function cambiarInterruptor(
   try {
     await llamarApiAccion("/internal/portal", { method: "PATCH", body: { [ajuste]: valor } });
     revalidatePath("/ranking");
+    revalidatePath("/configuracion");
     return { exito: EXITO_AJUSTE[ajuste][valor ? 0 : 1] };
   } catch (error) {
     return { error: mensajeDe(error, "No se pudo cambiar el ajuste") };

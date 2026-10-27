@@ -79,6 +79,7 @@ export async function cambiarEstado(
       body: { status, reason },
     });
     revalidatePath("/usuarios");
+    revalidatePath("/cuentas-postulantes");
     return { ok: true };
   } catch (error) {
     return { ok: false, error: error instanceof ErrorApi ? error.message : "No se pudo cambiar" };

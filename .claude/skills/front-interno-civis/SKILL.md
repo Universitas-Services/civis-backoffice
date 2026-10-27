@@ -63,12 +63,13 @@ Matriz UX del panel (más estricta que algunos `@Roles` de la API):
 - Crear expediente: `SUPER_ADMIN` + `SECRETARY`
 - Revisión documental: `SUPER_ADMIN` + `REVIEWER`
 - Evaluación: `SUPER_ADMIN` + `ADMIN` + `EVALUATOR` (solo evaluadores `committeeActive` votan/puntúan; ADMIN reabre escaladas por empate o plazo; SUPER_ADMIN ve conteos y puede forzar cierre sin quorum)
-- Comité (`/comite-objeciones`): `SUPER_ADMIN` + `COMMITTEE`. Toda objeción llega primero aquí; espera el descargo del postulante (él desde su cuenta, o la secretaría en el expediente si no tiene cuenta) y la envía al Consejo. Sin descargo también puede enviarla, con **motivo obligatorio** que el Consejo ve
-- Objeciones del Consejo (bandeja y ajuste): `SUPER_ADMIN` + `ADMIN` + `EVALUATOR` (abrir ronda de objeción, `SUPER_ADMIN` + `ADMIN`; puntuar/votar inelegible, evaluadores activos). Solo ven las objeciones que el comité envió, con su descargo
-- Descargo: el postulante y la secretaría **nunca** ven quién presentó la objeción
+- Comité (`/comite-objeciones`): `SUPER_ADMIN` + `COMMITTEE`. Procedimiento legal (LOTSJ arts. 71-72): admite o inadmite (auto en PDF), espera el descargo dentro de su plazo (el postulante desde su cuenta, o la secretaría si no tiene cuenta), y decide con lugar (pasa al Consejo) o sin lugar. Cada acto dicta un auto que no se modifica
+- Objeciones del Consejo (bandeja y ajuste): `SUPER_ADMIN` + `ADMIN` + `EVALUATOR` (abrir ronda de objeción, `SUPER_ADMIN` + `ADMIN`; puntuar/votar inelegible, evaluadores activos). Solo ven las objeciones que el comité declaró con lugar, con su descargo y el auto
+- Descargo: el postulante y la secretaría **nunca** ven quién presentó la objeción, y sólo ven objeciones ya admitidas (nunca las recibidas ni las inadmitidas)
 - Baremo: `SUPER_ADMIN` + `ADMIN` + `EVALUATOR` (crear baremo, solo `SUPER_ADMIN`; ADMIN consulta el activo, ve postulados y aplica)
 - Ranking interno: `SUPER_ADMIN` + `ADMIN` + `EVALUATOR` + `VIEWER`. En `/ranking/[candidateId]` todos leen las opiniones; el `VIEWER` opina (comentario, no se borra) y objeta **solo si** el interruptor «Objeciones de los visualizadores» está activo
-- Interruptores del portal (en `/ranking`): objeciones de visualizadores, `SUPER_ADMIN` + `ADMIN`; objeciones públicas en la landing y «Actualizar en el ranking público» para admin/evaluadores, solo `SUPER_ADMIN`
+- Configuración del proceso (`/configuracion`): solo `SUPER_ADMIN`. Cierre de postulaciones, objeciones de visualizadores y públicas, «Actualizar en el ranking público» y el calendario de plazos. El `ADMIN` conserva en `/ranking` el interruptor de objeciones de visualizadores
+- Cuentas de postulantes (`/cuentas-postulantes`): `SUPER_ADMIN` + `ADMIN`. Fuera de «Usuarios y roles»; nunca cambian de rol, sólo se suspenden o reactivan
 - Publicación: enviar al ranking público, solo `SUPER_ADMIN`. «Actualizar en el ranking público» (llevar la nota re-evaluada a la landing): `SUPER_ADMIN` siempre; `ADMIN` y `EVALUATOR` cuando el interruptor lo habilita. La API vuelve a comprobarlo
 - `VIEWER` ve todo el expediente (datos, documentos, historial, notas) y el Ranking interno, pero sus únicas acciones son opinar y objetar; no entra a la bandeja de Objeciones. Entra directo a `/ranking`
 - Informes: solo `SUPER_ADMIN`

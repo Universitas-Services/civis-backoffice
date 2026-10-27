@@ -1,19 +1,13 @@
 import type { ObjecionParaDescargo } from "@/contracts";
-import { CAUSA_DENUNCIA_ETIQUETA } from "@/contracts";
+import { CAUSA_DENUNCIA_ETIQUETA, ETAPA_OBJECION_ETIQUETA, admiteDescargo } from "@/contracts";
+import { CLASE_TONO, fechaHora, fechaLarga as fecha, restante } from "@/lib/plazos";
 import { VistaDescargo } from "@/components/vista-descargo";
 import { FormularioDescargo } from "@/components/formulario-descargo";
-
-const fecha = (iso: string) =>
-  new Date(iso).toLocaleDateString("es-VE", {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-    timeZone: "America/Caracas",
-  });
+import { ListaAutos } from "@/components/lista-autos";
 
 /**
- * Objeciones de un postulante sin cuenta, para que la secretaría cargue su
- * descargo. Nunca muestra quién presentó la objeción.
+ * Objeciones admitidas de un postulante sin cuenta, para que la secretaría
+ * cargue su descargo dentro del plazo. Nunca muestra quién la presentó.
  */
 export function SeccionDescargosSecretaria({
   objeciones,
@@ -23,7 +17,7 @@ export function SeccionDescargosSecretaria({
   readonly contacto: React.ReactNode;
 }) {
   if (objeciones.length === 0) return null;
-  const pendientes = objeciones.filter((o) => !o.descargo && !o.forwardedAt).length;
+  const pendientes = objeciones.filter((o) => admiteDescargo(o)).length;
 
   return (
     <section
@@ -37,14 +31,15 @@ export function SeccionDescargosSecretaria({
         {pendientes > 0 ? (
           <>
             <span className="font-semibold text-toga-900">
-              {pendientes} {pendientes === 1 ? "objeción espera" : "objeciones esperan"} el descargo
-              del postulante.
+              {pendientes}{" "}
+              {pendientes === 1 ? "objeción admitida espera" : "objeciones admitidas esperan"} el
+              descargo del postulante.
             </span>{" "}
-            Contáctelo, léale la objeción y cargue aquí su respuesta. El comité la enviará al
-            Consejo.
+            Contáctelo, entréguele el auto de admisión y la denuncia, y cargue aquí su respuesta
+            antes de que venza el plazo.
           </>
         ) : (
-          "Todas las objeciones tienen descargo o ya se enviaron al Consejo."
+          "Ninguna objeción espera descargo."
         )}
       </p>
       {pendientes > 0 && <p className="mt-2 text-sm text-toga-700">{contacto}</p>}
@@ -53,23 +48,42 @@ export function SeccionDescargosSecretaria({
         {objeciones.map((o) => {
           const causales = o.causes.map((c) => CAUSA_DENUNCIA_ETIQUETA[c] ?? c);
           if (o.otherCause) causales.push(o.otherCause);
+          const abierto = admiteDescargo(o);
+          const plazo = o.descargoDueAt ? restante(o.descargoDueAt) : null;
           return (
             <li key={o.id} className="rounded-lg border border-toga-200 p-4">
               <p className="text-xs text-toga-500">
-                <span className="codigo">{o.trackingCode}</span> · recibida el {fecha(o.receivedAt)}
-                {o.forwardedAt && " · enviada al Consejo"}
+                <span className="codigo">{o.trackingCode}</span> · recibida el {fecha(o.receivedAt)}{" "}
+                · {ETAPA_OBJECION_ETIQUETA[o.stage]}
               </p>
+              {abierto && plazo && o.descargoDueAt && (
+                <p className="mt-1 text-sm">
+                  Plazo de descargo: hasta el {fechaHora(o.descargoDueAt)} ·{" "}
+                  <span className={CLASE_TONO[plazo.tono]}>{plazo.texto}</span>
+                </p>
+              )}
               {causales.length > 0 && (
                 <p className="mt-1.5 text-sm font-medium text-toga-800">{causales.join(" · ")}</p>
               )}
               <p className="prosa mt-2 whitespace-pre-wrap text-base leading-relaxed text-toga-700">
                 {o.description}
               </p>
+              {o.autos.length > 0 && (
+                <div className="mt-3">
+                  <ListaAutos objectionId={o.id} autos={o.autos} />
+                </div>
+              )}
               <div className="mt-4 border-t border-toga-100 pt-4">
-                {o.descargo || o.forwardedAt ? (
-                  <VistaDescargo objectionId={o.id} descargo={o.descargo} />
-                ) : (
+                {abierto ? (
                   <FormularioDescargo objectionId={o.id} trackingCode={o.trackingCode} />
+                ) : (
+                  <VistaDescargo
+                    objectionId={o.id}
+                    descargo={o.descargo}
+                    motivoSinDescargo={
+                      o.descargo ? null : "Venció el plazo sin que se presentara descargo."
+                    }
+                  />
                 )}
               </div>
             </li>

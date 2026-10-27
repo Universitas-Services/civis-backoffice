@@ -1,8 +1,9 @@
 "use client";
 
-import type { Descargo } from "@/contracts";
+import type { AutoObjecion, Descargo } from "@/contracts";
 import { CAUSA_DENUNCIA_ETIQUETA } from "@/contracts";
 import { VistaDescargo } from "@/components/vista-descargo";
+import { ListaAutos } from "@/components/lista-autos";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Sheet,
@@ -21,10 +22,12 @@ export interface ObjecionVista {
   readonly evidenceUrl: string;
   /** Sólo viene si la presentó un visualizador; la ciudadana es reservada. */
   readonly submittedBy?: { readonly fullName: string } | null;
-  /** Respuesta del postulante; null si el comité la envió sin descargo. */
+  /** Respuesta del postulante; null si venció su plazo sin descargo. */
   readonly descargo?: Descargo | null;
-  /** Motivo del comité para enviarla sin descargo. */
+  /** Consideraciones del comité al declararla con lugar. */
   readonly forwardReason?: string | null;
+  /** Auto con lugar con el que llega al Consejo. */
+  readonly autos?: readonly AutoObjecion[];
 }
 
 /** Botón compacto que abre las denuncias del postulante en un panel lateral. */
@@ -123,8 +126,23 @@ export function ModalObjeciones({
                           <VistaDescargo
                             objectionId={item.id}
                             descargo={item.descargo}
-                            motivoSinDescargo={item.forwardReason}
+                            motivoSinDescargo="Venció el plazo sin que el postulante presentara descargo."
                           />
+                        </div>
+                      </div>
+                    )}
+                    {item.autos && item.autos.length > 0 && (
+                      <div className="border-t border-toga-100 pt-2.5">
+                        <p className="text-[0.65rem] font-medium tracking-wide text-toga-500 uppercase">
+                          Decisión del comité
+                        </p>
+                        {item.forwardReason && (
+                          <p className="mt-1.5 whitespace-pre-wrap text-sm text-toga-700">
+                            {item.forwardReason}
+                          </p>
+                        )}
+                        <div className="mt-1.5">
+                          <ListaAutos objectionId={item.id} autos={item.autos} />
                         </div>
                       </div>
                     )}

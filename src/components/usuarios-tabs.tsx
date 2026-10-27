@@ -1,13 +1,15 @@
 "use client";
 
+import { useState } from "react";
 import type { AjustesPortal, Role, UsuarioDirectorio } from "@/contracts";
 import { etiquetaRol } from "@/contracts";
 import { CrearUsuario, EditorRoles, InterruptorUsuario } from "@/components/gestion-usuarios";
 import { ConfiguracionEvaluacion, InterruptorComite } from "@/components/configuracion-evaluacion";
+import { PanelConsejo } from "@/components/panel-consejo";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 /**
- * Usuarios: directorio primero; modalidad de evaluación en pestaña aparte.
+ * Usuarios: directorio primero; Consejo y modalidad de evaluación en pestañas aparte.
  */
 export function UsuariosTabs({
   directorio,
@@ -23,13 +25,23 @@ export function UsuariosTabs({
   readonly esSuperAdmin: boolean;
 }) {
   const modoComite = ajustes.evaluationMode === "COMMITTEE";
+  const [pestana, setPestana] = useState("usuarios");
+  const enConsejo = directorio.filter(
+    (u) => u.committeeActive && u.roles.includes("EVALUATOR"),
+  ).length;
 
   return (
-    <Tabs defaultValue="usuarios" className="w-full">
-      <TabsList aria-label="Usuarios y modalidad" className="w-full sm:w-auto">
+    <Tabs value={pestana} onValueChange={setPestana} className="w-full">
+      <TabsList aria-label="Usuarios, Consejo y modalidad" className="w-full sm:w-auto">
         <TabsTrigger value="usuarios" className="flex-1 sm:flex-none">
           Usuarios
           <span className="cifra ml-1.5 text-xs text-toga-500">({directorio.length})</span>
+        </TabsTrigger>
+        <TabsTrigger value="consejo" className="flex-1 sm:flex-none">
+          Consejo
+          <span className="cifra ml-1.5 text-xs text-toga-500">
+            ({enConsejo}/{ajustes.maxActiveEvaluators})
+          </span>
         </TabsTrigger>
         <TabsTrigger value="modalidad" className="flex-1 sm:flex-none">
           Modalidad de evaluación
@@ -174,6 +186,14 @@ export function UsuariosTabs({
             </table>
           </div>
         </section>
+      </TabsContent>
+
+      <TabsContent value="consejo">
+        <PanelConsejo
+          directorio={directorio}
+          ajustes={ajustes}
+          onIrAUsuarios={() => setPestana("usuarios")}
+        />
       </TabsContent>
 
       <TabsContent value="modalidad">

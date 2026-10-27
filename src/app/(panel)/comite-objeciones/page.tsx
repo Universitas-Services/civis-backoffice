@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import type { BandejaComite, EtapaComite, ObjecionComite } from "@/contracts";
+import type { BandejaComite, EtapaComite, ObjecionComite, PlazosComite } from "@/contracts";
 import { CAUSA_DENUNCIA_ETIQUETA, CAUSAL_ETIQUETA, SALA_ETIQUETA } from "@/contracts";
+import { CLASE_TONO, fechaCorta as fecha, fechaLarga, restante } from "@/lib/plazos";
 import { llamarApi, NoAutorizado } from "@/lib/api";
 import { exigirRol, renovarYVolver } from "@/lib/rutas";
 import { CabeceraPagina, EstadoVacio } from "@/components/cabecera-pagina";
@@ -13,9 +14,10 @@ const PAGE_SIZE = 10;
 
 /** Pestañas: valor en la URL, etapa de la API y etiqueta. */
 const FILTROS = [
-  { valor: undefined, etapa: "ESPERANDO_DESCARGO", etiqueta: "Esperando descargo" },
-  { valor: "con_descargo", etapa: "CON_DESCARGO", etiqueta: "Con descargo" },
-  { valor: "enviadas", etapa: "ENVIADAS", etiqueta: "Enviadas al Consejo" },
+  { valor: undefined, etapa: "RECIBIDAS", etiqueta: "Por admitir" },
+  { valor: "en_descargo", etapa: "EN_DESCARGO", etiqueta: "En descargo" },
+  { valor: "por_decidir", etapa: "POR_DECIDIR", etiqueta: "Por decidir" },
+  { valor: "decididas", etapa: "DECIDIDAS", etiqueta: "Decididas" },
 ] as const satisfies readonly {
   valor: string | undefined;
   etapa: EtapaComite;
@@ -23,21 +25,11 @@ const FILTROS = [
 }[];
 
 const VACIO: Record<EtapaComite, string> = {
-  ESPERANDO_DESCARGO: "Ninguna objeción espera el descargo del postulante.",
-  CON_DESCARGO: "No hay objeciones con descargo pendientes de enviar al Consejo.",
-  ENVIADAS: "Todavía no se ha enviado ninguna objeción al Consejo.",
+  RECIBIDAS: "No hay objeciones pendientes de admisión.",
+  EN_DESCARGO: "Ninguna objeción admitida espera el descargo del postulante.",
+  POR_DECIDIR: "No hay objeciones pendientes de decisión.",
+  DECIDIDAS: "Todavía no se ha decidido ninguna objeción.",
 };
-
-const fecha = (iso: string) =>
-  new Date(iso).toLocaleDateString("es-VE", {
-    day: "numeric",
-    month: "short",
-    timeZone: "America/Caracas",
-  });
-
-function diasDesde(iso: string) {
-  return Math.floor((Date.now() - new Date(iso).getTime()) / 86_400_000);
-}
 
 export default async function BandejaDelComite({
   searchParams,
@@ -67,10 +59,11 @@ export default async function BandejaDelComite({
     <>
       <CabeceraPagina
         titulo="Comité de objeciones"
-        descripcion="Toda objeción llega primero aquí. Espere el descargo del postulante y envíela al Consejo; sin descargo también puede enviarla, indicando el motivo."
+        descripcion="Toda objeción llega primero aquí. Admítala o inadmítala; si la admite, el postulante tiene su plazo para el descargo. Después decida con lugar (pasa al Consejo) o sin lugar."
       />
 
       <div className="px-5 py-6 sm:px-8">
+        <AvisoLapso plazos={datos.plazos} />
         <nav aria-label="Filtrar por etapa" className="-mx-1 flex flex-wrap gap-1.5">
           {FILTROS.map((f) => {
             const activo = f.etapa === filtro.etapa;
@@ -203,44 +196,105 @@ function Causales({
   return <>{causes.map((c) => CAUSA_DENUNCIA_ETIQUETA[c] ?? c).join(" · ")}</>;
 }
 
-/** Quién debe responder y desde cuándo, o cuándo se envió. */
-function Situacion({ o }: { readonly o: ObjecionComite }) {
-  if (o.etapa === "ENVIADAS") {
+/** Recordatorio de los plazos del comité según el calendario del proceso. */
+function AvisoLapso({ plazos }: { readonly plazos: PlazosComite }) {
+  if (plazos.lapsoAbierto) {
     return (
-      <div>
-        <span className="inline-flex rounded-full bg-validado-50 px-2.5 py-0.5 text-xs font-semibold text-validado-700">
-          {o.descargo ? "Enviada con descargo" : "Enviada sin descargo"}
-        </span>
-        {o.forwardedAt && <p className="mt-1 text-xs text-toga-500">El {fecha(o.forwardedAt)}</p>}
-      </div>
-    );
-  }
-  if (o.etapa === "CON_DESCARGO") {
-    return (
-      <div>
-        <span className="inline-flex rounded-full bg-balanza-50 px-2.5 py-0.5 text-xs font-semibold text-balanza-700">
-          Descargo recibido
-        </span>
-        {o.descargo && (
-          <p className="mt-1 text-xs text-toga-500">
-            El {fecha(o.descargo.createdAt)} · listo para enviar al Consejo
-          </p>
-        )}
-      </div>
-    );
-  }
-  const dias = diasDesde(o.receivedAt);
-  return (
-    <div>
-      <span className="inline-flex rounded-full bg-toga-100 px-2.5 py-0.5 text-xs font-semibold text-toga-700">
-        Esperando descargo
-      </span>
-      <p className="mt-1 text-xs text-toga-500">
-        {o.candidate.conCuenta ? "Lo presenta el postulante" : "Lo carga la secretaría"} ·{" "}
-        <span className="cifra">{dias}</span> {dias === 1 ? "día" : "días"}
+      <p className="mb-4 rounded-md border border-toga-200 bg-toga-50 px-4 py-3 text-sm text-toga-700">
+        El lapso de objeciones sigue abierto
+        {plazos.finLapsoObjeciones && <> hasta el {fechaLarga(plazos.finLapsoObjeciones)}</>}. La
+        admisión se resuelve al cerrarlo, en {plazos.admisionDias} días continuos.
       </p>
-    </div>
+    );
+  }
+  if (!plazos.finAdmision) return null;
+  const r = restante(plazos.finAdmision);
+  return (
+    <p className="mb-4 rounded-md border border-toga-200 bg-toga-50 px-4 py-3 text-sm text-toga-700">
+      Plazo de admisión: hasta el {fechaLarga(plazos.finAdmision)} ·{" "}
+      <span className={CLASE_TONO[r.tono]}>{r.texto}</span>
+    </p>
   );
+}
+
+const PASTILLA = "inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold";
+
+/** Etapa y plazo de cada objeción. */
+function Situacion({ o }: { readonly o: ObjecionComite }) {
+  switch (o.stage) {
+    case "RECIBIDA":
+      return (
+        <div>
+          <span className={`${PASTILLA} bg-toga-100 text-toga-700`}>Por admitir</span>
+          <p className="mt-1 text-xs text-toga-500">
+            {o.candidate.conCuenta ? "Postulante con cuenta" : "Expediente de secretaría"}
+          </p>
+        </div>
+      );
+    case "EN_DESCARGO": {
+      const r = o.descargoDueAt ? restante(o.descargoDueAt) : null;
+      return (
+        <div>
+          <span className={`${PASTILLA} bg-balanza-50 text-balanza-700`}>En descargo</span>
+          <p className="mt-1 text-xs text-toga-500">
+            {o.candidate.conCuenta ? "Lo presenta el postulante" : "Lo carga la secretaría"}
+            {r && (
+              <>
+                {" · "}
+                <span className={CLASE_TONO[r.tono]}>{r.texto}</span>
+              </>
+            )}
+          </p>
+        </div>
+      );
+    }
+    case "DESCARGO_PRESENTADO":
+    case "SIN_DESCARGO": {
+      const r = o.verificationDueAt ? restante(o.verificationDueAt) : null;
+      return (
+        <div>
+          <span
+            className={`${PASTILLA} ${
+              o.stage === "SIN_DESCARGO"
+                ? "bg-objetado-100 text-objetado-600"
+                : "bg-validado-50 text-validado-700"
+            }`}
+          >
+            {o.stage === "SIN_DESCARGO" ? "Sin descargos" : "Con descargo"}
+          </span>
+          {r && (
+            <p className="mt-1 text-xs text-toga-500">
+              Comprobación · <span className={CLASE_TONO[r.tono]}>{r.texto}</span>
+            </p>
+          )}
+        </div>
+      );
+    }
+    default: {
+      const etiqueta =
+        o.stage === "CON_LUGAR"
+          ? "Con lugar · en el Consejo"
+          : o.stage === "SIN_LUGAR"
+            ? "Sin lugar"
+            : "Inadmitida";
+      return (
+        <div>
+          <span
+            className={`${PASTILLA} ${
+              o.stage === "CON_LUGAR"
+                ? "bg-balanza-50 text-balanza-700"
+                : "bg-toga-100 text-toga-700"
+            }`}
+          >
+            {etiqueta}
+          </span>
+          {o.finalDecidedAt && (
+            <p className="mt-1 text-xs text-toga-500">El {fecha(o.finalDecidedAt)}</p>
+          )}
+        </div>
+      );
+    }
+  }
 }
 
 function EnlaceAbrir({ id }: { readonly id: string }) {

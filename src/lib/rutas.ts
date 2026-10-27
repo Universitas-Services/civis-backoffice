@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import type { Role, Sesion } from "@/contracts";
 import { COOKIE_RECIEN_RENOVADA } from "./config";
+import { RecargaSesion, RUTA_EXPIRADA, rutaRenovar } from "./recarga-sesion";
 import { usuarioActual } from "./sesion";
 
 export { SECCIONES, seccionesDe, puedeVerRuta } from "./secciones-nav";
@@ -34,14 +35,19 @@ export async function exigirRol(...roles: readonly Role[]): Promise<Sesion> {
  * cookies ahí—, así que se delega en /api/sesion/renovar, que sí puede. Si el
  * refresh tampoco vale, ese handler manda al login.
  *
+ * No se usa `redirect()`: si este render viene de una Server Action o de un
+ * `router.refresh`, el cliente seguiría el 307 hacia el Route Handler como
+ * navegación suave y dejaría la pantalla en blanco. Se lanza `RecargaSesion`,
+ * que `(panel)/error.tsx` convierte en una carga completa.
+ *
  * Si ya renovamos hace un instante (`cp_bo_recien_renovada`) y la API sigue
- * en 401, NO borramos cookies aquí (ilégal en RSC → React #441): redirigimos
- * a /api/sesion/expirada, que limpia marca + sesión y manda al login.
+ * en 401, NO borramos cookies aquí (ilégal en RSC → React #441): vamos a
+ * /api/sesion/expirada, que limpia marca + sesión y manda al login.
  */
 export async function renovarYVolver(ruta: string): Promise<never> {
   const store = await cookies();
   if (store.get(COOKIE_RECIEN_RENOVADA)?.value === "1") {
-    redirect("/api/sesion/expirada");
+    throw new RecargaSesion(RUTA_EXPIRADA);
   }
-  redirect(`/api/sesion/renovar?volver=${encodeURIComponent(ruta)}`);
+  throw new RecargaSesion(rutaRenovar(ruta));
 }

@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import { RenovarSesion } from "@/components/renovar-sesion";
+import { destinoDeDigest } from "@/lib/recarga-sesion";
 
 /**
  * Red de seguridad del panel.
@@ -8,14 +10,20 @@ import Link from "next/link";
  * Muestra el identificador de correlación cuando la API lo devolvió: es lo
  * que permite a quien administra encontrar en la bitácora exactamente qué
  * ocurrió en esa petición.
+ *
+ * También recibe `RecargaSesion` (lanzado por `renovarYVolver`): en ese caso
+ * no es un fallo, sino la petición de renovar el token con una carga completa.
  */
 export default function ErrorPanel({
   error,
-  reset,
+  retry,
 }: {
   readonly error: Error & { digest?: string };
-  readonly reset: () => void;
+  readonly retry: () => void;
 }) {
+  const destino = destinoDeDigest(error.digest);
+  if (destino) return <RenovarSesion destino={destino} />;
+
   return (
     <div className="px-5 py-16 sm:px-8">
       <div className="mx-auto max-w-lg rounded-lg border border-balanza-600/25 bg-balanza-50 p-8">
@@ -29,7 +37,7 @@ export default function ErrorPanel({
         <div className="mt-6 flex flex-wrap gap-3">
           <button
             type="button"
-            onClick={reset}
+            onClick={retry}
             className="rounded-md bg-balanza-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-balanza-700"
           >
             Reintentar

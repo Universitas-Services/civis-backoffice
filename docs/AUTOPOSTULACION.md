@@ -1,4 +1,4 @@
-# CIVIS — Autopostulación, comité de objeciones y PDF del visualizador
+# CIVIS — Autopostulación, procedimiento de objeciones y PDF del visualizador
 
 Contrato entre el backoffice y `civis-api`. Prefijo `/api/v1`. Migración `20261025120000_cuentas_comite`.
 
@@ -29,37 +29,61 @@ Formato nacional de 11 dígitos: `0` + código + 7 dígitos.
 | Móviles | 0412 y 0422 (Digitel), 0414 y 0424 (Movistar), 0416 y 0426 (Movilnet) |
 | Fijos | 02XX |
 
-## 2. Comité y descargos
+## 2. Comité: procedimiento legal de objeciones (LOTSJ arts. 71 y 72)
 
-Toda objeción llega primero al **comité** (rol `COMMITTEE`), no al Consejo (los evaluadores activos).
+Toda objeción llega primero al **comité** (rol `COMMITTEE`). Etapas (`Objection.stage`):
 
-1. **Recibida:** el postulante con cuenta recibe un correo y la ve en «Objeciones». Si el
-   expediente lo creó la secretaría, ella lo ve en el expediente y contacta al postulante.
-2. **Descargo:** título, descripción y un documento opcional (PDF, JPEG o PNG). Uno por objeción;
-   no se edita. Lo presenta el postulante con cuenta, o la secretaría si no tiene cuenta.
-   Ni el postulante ni la secretaría ven quién presentó la objeción.
-3. **Envío al Consejo:** el comité la envía cuando hay descargo. **Sin descargo también puede
-   enviarla, pero con un motivo obligatorio** (≥10 caracteres) que el Consejo ve junto a la objeción.
-4. **Consejo:** su bandeja, el resumen, las rondas de objeción y la inelegibilidad solo consideran
-   objeciones enviadas (`forwardedAt`). Desde ahí, el flujo es el mismo de siempre.
+1. **Recibida** (`RECIBIDA`): durante el lapso de objeciones **sólo el comité la ve**. Nadie más
+   recibe aviso.
+2. **Admisión** (8 días continuos tras cerrar el lapso):
+   - **Admitir** → auto de admisión en PDF y notificación al postulado con el auto y la denuncia
+     (con la identidad del objetante reservada). Si el expediente lo cargó la secretaría y el
+     postulado no tiene cuenta, el correo va a la secretaría. Abre el **plazo de descargo**
+     (3 días continuos, vence al final del día en Caracas) → `EN_DESCARGO`.
+   - **Inadmitir** → auto de inadmisión al objetante. El postulado nunca la ve → `INADMITIDA`.
+3. **Descargo**: título, descripción y documento opcional, sólo dentro del plazo. Lo presenta el
+   postulado desde su cuenta, o la secretaría si no tiene cuenta → `DESCARGO_PRESENTADO`.
+   Si vence sin respuesta → `SIN_DESCARGO` y alerta «sin descargos» al postulado (o la secretaría)
+   y al comité.
+4. **Comprobación** (hasta 5 días continuos tras vencer el descargo) y **decisión**:
+   - **Con lugar** → auto y paso al Consejo (`forwardedAt`), que declara la inelegibilidad
+     (excluye del ranking interno) o ajusta el puntaje → `CON_LUGAR`.
+   - **Sin lugar** → auto que ratifica la elegibilidad → `SIN_LUGAR`.
+   - La decisión se notifica al postulado (o la secretaría) y al objetante.
+
+Ni el postulado ni la secretaría ven quién objetó. El Consejo sólo ve lo declarado con lugar.
+Los autos se generan una vez, se guardan en el bucket y se numeran `CIVIS-AUTO-<año>-<n>`
+(ver `civis-api/docs/AUTOS.md`).
+
+Los vencimientos se marcan solos: cada 10 minutos en la API, al abrir las bandejas y desde
+Cloud Scheduler (`POST /internal/tareas/vencimientos` con la cabecera `X-Tareas-Token`).
 
 | Ruta | Roles |
 |---|---|
-| `GET /internal/comite/objeciones?etapa=&page=` | SA, COMMITTEE |
+| `GET /internal/comite/objeciones?etapa=RECIBIDAS\|EN_DESCARGO\|POR_DECIDIR\|DECIDIDAS` | SA, COMMITTEE |
 | `GET /internal/comite/objeciones/:id` (identidad del objetante; se audita) | SA, COMMITTEE |
-| `POST /internal/comite/objeciones/:id/enviar-consejo` `{ motivo? }` | SA, COMMITTEE |
-| `GET /internal/candidates/:id/objeciones-descargo` | SA, SECRETARY |
+| `POST /internal/comite/objeciones/:id/admision` `{ admitir, consideraciones? }` | SA, COMMITTEE |
+| `POST /internal/comite/objeciones/:id/decision` `{ decision, consideraciones? }` | SA, COMMITTEE |
+| `GET /internal/objections/:id/autos/:autoId` (PDF) | SA, ADMIN, EVALUATOR, COMMITTEE, SECRETARY |
+| `GET /internal/candidates/:id/objeciones-descargo` (sólo admitidas) | SA, SECRETARY |
 | `POST /internal/objections/:id/descargo` (multipart `title`, `description`, `file?`) | SA, SECRETARY |
 | `GET /internal/objections/:id/descargo/archivo` | SA, ADMIN, EVALUATOR, COMMITTEE, SECRETARY |
-| `GET /applicant/objeciones`, `POST /applicant/objeciones/:id/descargo` | APPLICANT |
+| `GET /applicant/objeciones`, `POST /applicant/objeciones/:id/descargo`, `GET /applicant/objeciones/:id/autos/:autoId` | APPLICANT |
 
-## 3. Interruptores del portal (`PATCH /internal/portal`, `GET /internal/portal`)
+## 3. Configuración del proceso (`/configuracion`, sólo SA)
 
 | Ajuste | Quién lo cambia | Efecto |
 |---|---|---|
+| `applicationsClosed` | SA | Sin expedientes nuevos ni primer envío (secretaría y portal). Los devueltos sí se reenvían |
 | `viewerObjectionsOpen` | SA, ADMIN | Los visualizadores ven «Objetar» en el ranking interno |
 | `objectionsOpen` | SA | Objeciones públicas desde la landing |
 | `publicRefreshEnabled` | SA | ADMIN y evaluadores ven «Actualizar en el ranking público» |
+| `objectionPeriodStart`, `objectionPeriodDays`, `objectionBusinessDays`, `admissionDays`, `descargoDays`, `verificationDays`, `holidays` | SA | Calendario del proceso |
+
+Al cerrar las postulaciones se calcula el **calendario**: lapso de objeciones desde el día hábil
+siguiente (15 días hábiles por defecto; la ley dice continuos y se puede cambiar), admisión,
+descargos y comprobación estimados. Alargar un periodo es cambiar sus días y guardar. El ADMIN
+conserva en `/ranking` el interruptor de los visualizadores.
 
 Enviar postulantes del ranking interno al público (`POST /internal/publications/ranking/enviar`):
 solo SA.
