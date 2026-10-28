@@ -1,0 +1,386 @@
+<!doctype html>
+<html lang="es-VE">
+<head>
+<meta charset="utf-8" />
+<title>Manual general — CIVIS</title>
+<style>
+  @page { size: A4; margin: 18mm 16mm 20mm; }
+  :root { --vino:#7a1e2d; --azul:#0f2a44; --gris:#64748b; --claro:#cbd5e1; --fondo:#f8fafc; --texto:#1f2937; }
+  * { box-sizing: border-box; }
+  body { font-family: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif; color: var(--texto); font-size: 10.5pt; line-height: 1.55; margin: 0; }
+  h1, h2, h3 { font-family: Merriweather, Georgia, "Times New Roman", serif; color: var(--azul); font-weight: 700; line-height: 1.25; }
+  h1 { font-size: 24pt; margin: 0 0 6pt; }
+  h2 { font-size: 16pt; margin: 0 0 4pt; padding-bottom: 6pt; border-bottom: 2px solid var(--vino); }
+  h3 { font-size: 12pt; margin: 16pt 0 4pt; }
+  p { margin: 0 0 7pt; }
+  ol, ul { margin: 0 0 8pt; padding-left: 18pt; }
+  li { margin-bottom: 3pt; }
+  code, .codigo { font-family: "IBM Plex Mono", Consolas, monospace; font-size: 9.5pt; background: #eef2f6; padding: 0 3pt; border-radius: 3px; }
+  .portada { height: 255mm; display: flex; flex-direction: column; justify-content: space-between; background: var(--azul); color: #fff; padding: 22mm 18mm; margin: -18mm -16mm 0; page-break-after: always; position: relative; overflow: hidden; }
+  .portada img { height: 22mm; align-self: flex-start; }
+  .portada h1 { color: #fff; font-size: 30pt; margin-top: 12mm; }
+  .portada .lema { font-family: Merriweather, Georgia, serif; font-size: 15pt; color: #e2e8f0; }
+  .portada .raya { width: 18mm; height: 2px; background: #c2414f; margin: 8mm 0; }
+  .portada small { color: #cbd5e1; font-size: 9pt; }
+  .seccion { page-break-before: always; }
+  .figura { margin: 8pt 0 12pt; page-break-inside: avoid; }
+  .figura img { width: 100%; border: 1px solid var(--claro); border-radius: 6px; display: block; }
+  .figura.media img { width: 70%; margin: 0 auto; }
+  .figura.angosta img { width: 55%; margin: 0 auto; }
+  .figura.movil img { width: 38%; margin: 0 auto; }
+  .figura figcaption { font-size: 8.5pt; color: var(--gris); margin-top: 4pt; text-align: center; }
+  .nota { border: 1px solid #e8b4bc; background: #fdf2f4; border-radius: 6px; padding: 7pt 10pt; margin: 8pt 0 10pt; page-break-inside: avoid; }
+  .nota strong { color: var(--vino); }
+  .ok { border: 1px solid #a7f3d0; background: #ecfdf5; border-radius: 6px; padding: 7pt 10pt; margin: 8pt 0 10pt; }
+  table { width: 100%; border-collapse: collapse; margin: 6pt 0 10pt; font-size: 9.5pt; page-break-inside: avoid; }
+  th, td { border: 1px solid var(--claro); padding: 4pt 6pt; text-align: left; vertical-align: top; }
+  th { background: var(--fondo); color: var(--azul); }
+  .indice li { margin-bottom: 2pt; }
+  .rol { display: inline-block; background: var(--azul); color: #fff; font-size: 8pt; font-weight: 600; padding: 1pt 6pt; border-radius: 10pt; margin-right: 4pt; }
+  .etapas { display: flex; flex-wrap: wrap; gap: 4pt; margin: 6pt 0 10pt; }
+  .etapas span { border: 1px solid var(--claro); border-radius: 4px; padding: 3pt 7pt; font-size: 9pt; background: #fff; }
+  .etapas b { color: var(--vino); }
+</style>
+</head>
+<body>
+
+
+<section class="portada">
+  <img src="../../../civis-postulacion/public/brand/civis-horiz-blanco-slogan.png" alt="CIVIS" />
+  <div>
+    <h1>Manual general</h1>
+    <p class="lema">Todo el recorrido de la plataforma: sitio público, portal del postulante y panel interno</p>
+    <div class="raya"></div>
+    <p>Ciudadanía · Postulantes · Secretaría · Revisión documental · Evaluadores (Consejo) · Comité de objeciones · Visualizadores · Administración · Superadministración</p>
+  </div>
+  <small>Versión 1 · Octubre de 2026 · Capturas tomadas en un entorno de prueba con datos ficticios.</small>
+</section>
+
+<section>
+  <h2>Contenido</h2>
+  <ol class="indice">
+    <li>La plataforma y sus tres aplicaciones</li>
+    <li>El recorrido completo de una postulación</li>
+    <li>Sitio público: consultar, verificar y objetar</li>
+    <li>Portal del postulante: cuenta, documentos legales y verificación de seguridad</li>
+    <li>Portal del postulante: postulación, correcciones y descargos</li>
+    <li>Panel interno: ingreso y panel de control</li>
+    <li>Secretaría: expedientes</li>
+    <li>Revisión documental</li>
+    <li>Evaluación: elegibilidad y baremo</li>
+    <li>Ranking interno y ranking público</li>
+    <li>Visualizadores: opinar y objetar</li>
+    <li>Comité de objeciones</li>
+    <li>Consejo: objeciones declaradas con lugar</li>
+    <li>Informes finales</li>
+    <li>Administración: usuarios, Consejo y cuentas de postulantes</li>
+    <li>Superadministración: configuración, calendario, baremo, documentos legales y bitácora</li>
+    <li>Recuperar la contraseña</li>
+    <li>Quién puede hacer qué</li>
+  </ol>
+
+  <h3>1. La plataforma y sus tres aplicaciones</h3>
+  <p>CIVIS verifica las credenciales de quienes aspiran a magistrados del Tribunal Supremo de Justicia. La plataforma tiene tres aplicaciones que comparten un mismo servidor, la única fuente de verdad:</p>
+  <table>
+    <tr><th>Aplicación</th><th>Quién la usa</th><th>Para qué</th></tr>
+    <tr><td><strong>Sitio público</strong> (landing)</td><td>Cualquier ciudadano, sin cuenta</td><td>Consultar las reglas y el baremo, los perfiles publicados, el ranking y los informes; presentar objeciones cuando el lapso está abierto y seguir su trámite con un código.</td></tr>
+    <tr><td><strong>Portal del postulante</strong></td><td>Aspirantes, con su propia cuenta</td><td>Crear la cuenta, aceptar los documentos legales, postularse, cargar documentos, seguir su etapa, corregir lo que le pidan y responder las objeciones admitidas.</td></tr>
+    <tr><td><strong>Panel interno</strong></td><td>El personal del proceso, según su rol</td><td>Registrar y revisar expedientes, evaluar, decidir objeciones, publicar resultados y administrar el proceso.</td></tr>
+  </table>
+  <div class="nota"><strong>Puertas separadas.</strong> Una cuenta de postulante no entra al panel interno y el personal no entra por el portal del postulante. El portal pide una verificación de seguridad (captcha) al registrarse y en cada ingreso.</div>
+
+  <h3>2. El recorrido completo de una postulación</h3>
+  <ol>
+    <li><strong>Postulación.</strong> El aspirante crea su cuenta en el portal (o la secretaría registra su expediente), carga los documentos y lo envía a revisión. Al <strong>cerrar las postulaciones</strong> ya no se registran expedientes nuevos.</li>
+    <li><strong>Revisión documental.</strong> Se verifica cada documento. El expediente pasa a evaluación o se <em>devuelve para corrección</em> con un motivo.</li>
+    <li><strong>Evaluación.</strong> El Consejo vota la <strong>elegibilidad</strong> (requisitos de ley) y aplica el <strong>baremo</strong> a los elegibles. El puntaje es el promedio y lo calcula el servidor.</li>
+    <li><strong>Ranking interno</strong> y, cuando el superadministrador lo decide, <strong>ranking público</strong> en el sitio.</li>
+    <li><strong>Objeciones</strong> (arts. 71 y 72 de la LOTSJ), presentadas por visualizadores o, si está abierto, por la ciudadanía:</li>
+  </ol>
+  <div class="etapas">
+    <span><b>1</b> Lapso de objeciones (15 días)</span>
+    <span><b>2</b> Admisión por el comité (8 días)</span>
+    <span><b>3</b> Descargo del postulado (3 días)</span>
+    <span><b>4</b> Comprobación (hasta 5 días)</span>
+    <span><b>5</b> Decisión: con lugar o sin lugar</span>
+    <span><b>6</b> Consejo: inelegibilidad o ajuste del puntaje</span>
+  </div>
+  <ol start="6">
+    <li><strong>Informes finales</strong>, con huella digital para verificar que el documento publicado es el aprobado.</li>
+  </ol>
+  <p>Cada pronunciamiento del comité queda en un <strong>auto</strong> en PDF numerado (por ejemplo <span class="codigo">CIVIS-AUTO-2026-0008</span>) que se notifica por correo y no se modifica. Todas las acciones sensibles quedan en la <strong>bitácora</strong>.</p>
+</section>
+
+<section class="seccion">
+  <h2>3. Sitio público: consultar, verificar y objetar</h2>
+  <p><span class="rol">Ciudadanía</span> El sitio público no pide cuenta. El menú superior lleva a <strong>Reglas y baremo</strong>, <strong>Postulados</strong>, <strong>Ranking</strong> e <strong>Informes</strong>.</p>
+  <figure class="figura"><img src="capturas/g-landing-inicio.png" /><figcaption>Inicio del sitio público</figcaption></figure>
+  <h3>Reglas y baremo</h3>
+  <p>Explica el marco legal y cómo la Constitución y la LOTSJ se traducen en una calificación objetiva de 100 puntos.</p>
+  <figure class="figura"><img src="capturas/g-landing-reglas.png" /><figcaption>Marco legal y baremo unificado</figcaption></figure>
+  <h3>Postulados y ficha pública</h3>
+  <ol>
+    <li>En <strong>«Postulados»</strong> busque por nombre o filtre por sala y pulse <strong>«Filtrar»</strong>.</li>
+    <li>Abra un perfil: verá la sala, el resumen profesional, el puntaje total y su desglose por criterio del baremo.</li>
+  </ol>
+  <figure class="figura"><img src="capturas/g-landing-postulados.png" /><figcaption>Lista de postulados con publicación autorizada</figcaption></figure>
+  <figure class="figura"><img src="capturas/g-landing-ficha.png" /><figcaption>Ficha pública: puntaje y desglose</figcaption></figure>
+  <h3>Ranking e informes</h3>
+  <p><strong>«Ranking»</strong> ordena a los postulantes publicados por puntaje; los empates se marcan y quienes quedaron fuera de competencia se listan aparte con su causal. <strong>«Informes»</strong> reúne los informes finales con su huella SHA-256.</p>
+  <figure class="figura"><img src="capturas/g-landing-ranking.png" /><figcaption>Ranking de idoneidad</figcaption></figure>
+  <h3>Presentar una objeción ciudadana</h3>
+  <p>Sólo es posible mientras el superadministrador mantiene abiertas las <strong>objeciones públicas</strong>. Entonces la ficha muestra <strong>«Objetar candidato»</strong>.</p>
+  <ol>
+    <li>Pulse <strong>«Objetar candidato»</strong> en la ficha del postulante.</li>
+    <li>Complete sus datos (nombre, cédula y correo), las causales, los hechos y las pruebas, y envíe. Al correo le llega un <strong>código de seguimiento</strong>.</li>
+    <li>Su identidad nunca se publica ni la ve el postulante.</li>
+  </ol>
+  <figure class="figura"><img src="capturas/g-landing-objetar.png" /><figcaption>Formulario de objeción ciudadana</figcaption></figure>
+  <h3>Seguimiento</h3>
+  <p>En <strong>«Consultar con mi código»</strong> escriba el código recibido y pulse <strong>«Consultar»</strong>. Verá si la objeción está recibida, en revisión, resuelta o cerrada.</p>
+  <figure class="figura"><img src="capturas/g-landing-seguimiento.png" /><figcaption>Seguimiento de una objeción con su código</figcaption></figure>
+  <div class="ok"><strong>Privacidad.</strong> La página «Privacidad» explica qué se publica (nombre, sala, resumen profesional y puntaje) y qué no (cédula, correo, teléfono, notas internas e identidad de quien objeta).</div>
+</section>
+
+<section class="seccion">
+  <h2>4. Portal del postulante: cuenta, documentos legales y verificación de seguridad</h2>
+  <p><span class="rol">Postulante</span> Entre al portal de postulación y pulse <strong>«Créela aquí»</strong>.</p>
+  <ol>
+    <li>Escriba sus <strong>nombres</strong>, <strong>apellidos</strong>, correo y una contraseña de al menos 12 caracteres con mayúscula, minúscula y un número.</li>
+    <li>Marque las dos casillas obligatorias: <strong>Términos y Condiciones</strong> y <strong>Política de Privacidad</strong>. Cada aceptación se guarda por separado, con la versión, la fecha y la hora. Pulse el nombre del documento para leerlo en una ventana.</li>
+    <li>Espere la marca verde de la verificación de seguridad y pulse <strong>«Crear cuenta»</strong>.</li>
+    <li>Escriba el código de 6 dígitos que le llega al correo (vence en 10 minutos) y pulse <strong>«Confirmar correo»</strong>.</li>
+    <li>Ingrese con su correo y contraseña. La verificación de seguridad se pide en cada ingreso.</li>
+  </ol>
+  <figure class="figura"><img src="capturas/01-registro.png" /><figcaption>Crear la cuenta con las dos aceptaciones y la verificación de seguridad</figcaption></figure>
+  <figure class="figura"><img src="capturas/01b-modal-documento.png" /><figcaption>Lectura de un documento legal sin salir del registro</figcaption></figure>
+  <figure class="figura"><img src="capturas/01c-registro-sin-casillas.png" /><figcaption>Sin las casillas marcadas, la cuenta no se crea</figcaption></figure>
+  <h3>Versiones nuevas de los documentos</h3>
+  <p>Si se publica una versión nueva, al ingresar verá <strong>«Documentos actualizados»</strong> con lo que cambió. Léala, marque la casilla y pulse <strong>«Aceptar y continuar»</strong>. Mientras no acepte no puede modificar su postulación, pero sí presentar descargos dentro de su plazo.</p>
+  <figure class="figura"><img src="capturas/18-aceptar-documentos.png" /><figcaption>Aceptar la versión nueva al ingresar</figcaption></figure>
+</section>
+
+<section class="seccion">
+  <h2>5. Portal del postulante: postulación, correcciones y descargos</h2>
+  <h3>Registrar la postulación y cargar documentos</h3>
+  <ol>
+    <li>La primera vez verá <strong>«Registrar mi postulación»</strong>: cédula, sala a la que aspira y teléfono. Pulse <strong>«Registrar postulación»</strong>; se crea su expediente (por ejemplo <span class="codigo">EXP-0009</span>).</li>
+    <li>Elija cada documento, adjunte el PDF o la imagen y pulse <strong>«Guardar documento»</strong>. Puede hacerlo en varias sesiones.</li>
+    <li>Pulse <strong>«Enviar a revisión»</strong> y confirme. Arriba verá siempre su <strong>etapa actual</strong>.</li>
+  </ol>
+  <figure class="figura"><img src="capturas/09-en-revision.png" /><figcaption>Expediente enviado: etapa «En revisión documental»</figcaption></figure>
+  <h3>Corregir un expediente devuelto</h3>
+  <p>Si la revisión le pide corregir algo, le llega un correo y verá el motivo en «Mi postulación». Use <strong>«Corregir mis datos»</strong>, sustituya los documentos señalados y pulse <strong>«Reenviar a revisión»</strong>.</p>
+  <figure class="figura"><img src="capturas/10-devuelto.png" /><figcaption>Expediente devuelto con el motivo</figcaption></figure>
+  <h3>Responder una objeción admitida</h3>
+  <p>Sólo se entera de una objeción cuando el comité la <strong>admite</strong>: le llega un correo con el auto de admisión y la denuncia (sin la identidad de quien objetó).</p>
+  <ol>
+    <li>Abra <strong>«Objeciones»</strong> y la objeción. Verá las causales, los hechos, el auto y el <strong>plazo</strong> de 3 días continuos, que vence a las 11:59 p. m. del tercer día.</li>
+    <li>En <strong>«Presentar mi descargo»</strong> escriba título y descripción, adjunte pruebas si quiere, y pulse <strong>«Revisar y presentar»</strong> y <strong>«Confirmar y presentar»</strong>.</li>
+    <li>Cuando el comité decide, recibe el <strong>auto de decisión</strong>: con lugar (pasa al Consejo) o sin lugar (se ratifica su elegibilidad).</li>
+  </ol>
+  <figure class="figura media"><img src="capturas/13-detalle-objecion.png" /><figcaption>Objeción admitida: auto, plazo y formulario de descargo</figcaption></figure>
+</section>
+
+<section class="seccion">
+  <h2>6. Panel interno: ingreso y panel de control</h2>
+  <p>Cada persona entra con su correo institucional y su contraseña, y pulsa <strong>«Ingresar al sistema»</strong>. El menú de la izquierda muestra sólo las secciones de su rol. El panel no pide captcha, pero bloquea la cuenta tras varios intentos fallidos.</p>
+  <figure class="figura media"><img src="capturas/g-panel-login.png" /><figcaption>Ingreso al panel interno</figcaption></figure>
+  <p>El <strong>Panel</strong> resume el proceso: expedientes registrados, aprobados, objeciones recibidas, expedientes por etapa, evaluaciones por banda y actividad de los últimos 14 días.</p>
+  <figure class="figura"><img src="capturas/g-dashboard.png" /><figcaption>Panel de control</figcaption></figure>
+</section>
+
+<section class="seccion">
+  <h2>7. Secretaría: expedientes</h2>
+  <p><span class="rol">Secretaría</span> <strong>«Expedientes»</strong> lista cada expediente con número, postulante, sala, etapa, documentos, objeciones y evaluación. Filtre por nombre, cédula o número, o por etapa.</p>
+  <figure class="figura"><img src="capturas/g-expedientes.png" /><figcaption>Lista de expedientes</figcaption></figure>
+  <h3>Registrar un postulante sin cuenta</h3>
+  <ol>
+    <li>Pulse <strong>«Nuevo expediente»</strong>, complete nombres, apellidos, cédula vigente y sala, y pulse <strong>«Registrar expediente»</strong>. Sólo es posible con las postulaciones abiertas.</li>
+    <li>A la derecha está el listado de recaudos por bloque. Elija un documento, adjunte el archivo y pulse <strong>«Guardar documento»</strong>.</li>
+    <li>Pulse <strong>«Enviar a revisión»</strong> y confirme.</li>
+  </ol>
+  <figure class="figura"><img src="capturas/g-nuevo-expediente.png" /><figcaption>Registrar postulante</figcaption></figure>
+  <figure class="figura"><img src="capturas/g-expediente-detalle.png" /><figcaption>Ficha del expediente con sus documentos</figcaption></figure>
+  <p>Los expedientes que crea el propio postulante desde el portal aparecen con la etiqueta <strong>«Autopostulación»</strong>. Si el postulante no tiene cuenta y le admiten una objeción, la secretaría recibe la notificación y carga el descargo desde la ficha, en <strong>«Objeciones y descargos»</strong>.</p>
+  <figure class="figura"><img src="capturas/30-secretaria-descargo.png" /><figcaption>Cargar el descargo de un postulante sin cuenta</figcaption></figure>
+</section>
+
+<section class="seccion">
+  <h2>8. Revisión documental</h2>
+  <p><span class="rol">Revisor</span> La cola lista los expedientes enviados a revisión. Pulse el postulante para abrir sus documentos.</p>
+  <figure class="figura"><img src="capturas/g-revision-cola.png" /><figcaption>Cola de revisión documental</figcaption></figure>
+  <ol>
+    <li>Elija un documento del listado de la derecha: se muestra el archivo y el formulario de ese tipo de documento.</li>
+    <li>Complete los datos que se leen en el documento y pulse <strong>«Verificado»</strong>.</li>
+    <li>Con todos verificados se habilita <strong>«Enviar al evaluador»</strong>. Si algo falta o está mal, pulse <strong>«Devolver para corrección»</strong>, escriba el motivo (mínimo 10 caracteres) y confirme: lo recibe el postulante por correo.</li>
+  </ol>
+  <figure class="figura"><img src="capturas/g-revision-verificar.png" /><figcaption>Verificar un documento con su formulario</figcaption></figure>
+  <div class="nota"><strong>Un expediente, un revisor.</strong> Mientras alguien lo tiene abierto, el expediente queda reservado para esa persona; se libera solo tras 15 minutos sin actividad.</div>
+</section>
+
+<section class="seccion">
+  <h2>9. Evaluación: elegibilidad y baremo</h2>
+  <p><span class="rol">Evaluador</span> La evaluación tiene dos pasos.</p>
+  <h3>Paso 1: elegibilidad</h3>
+  <ol>
+    <li>En <strong>«Evaluación»</strong>, pestaña <strong>«Pendientes por evaluar»</strong>, abra el postulante.</li>
+    <li>Revise los documentos y marque en la <strong>lista de verificación</strong> los requisitos que el expediente acredita.</li>
+    <li>Escriba la fundamentación y pulse <strong>«Votar elegible»</strong> o <strong>«Votar inelegible»</strong>. Ante un conflicto de interés, use la <strong>recusación</strong>, que exige motivo.</li>
+  </ol>
+  <p>El voto es ciego y el veredicto se cierra al alcanzar el quórum. Los casos sin acuerdo pasan a <strong>«Escaladas»</strong>, que resuelve la administración.</p>
+  <figure class="figura"><img src="capturas/g-eval-voto.png" /><figcaption>Voto de elegibilidad con lista de verificación</figcaption></figure>
+  <h3>Paso 2: baremo</h3>
+  <ol>
+    <li>En <strong>«Baremo» → «Postulados»</strong> aparecen los declarados elegibles. <strong>«Baremo activo»</strong> muestra los criterios vigentes en sólo lectura.</li>
+    <li>Pulse <strong>«Aplicar baremo»</strong>. En cada criterio marque el rango que aplica y escriba el resultado del postulante y el puntaje, dentro del mínimo y el máximo del rango.</li>
+    <li>Pulse <strong>«Enviar nota al comité»</strong>. El puntaje del postulante es el promedio y lo calcula el servidor.</li>
+  </ol>
+  <figure class="figura"><img src="capturas/g-baremo-aplicar.png" /><figcaption>Aplicar el baremo</figcaption></figure>
+</section>
+
+<section class="seccion">
+  <h2>10. Ranking interno y ranking público</h2>
+  <p><span class="rol">Superadministrador</span> <span class="rol">Administrador</span> <span class="rol">Evaluador</span> <span class="rol">Visualizador</span> <strong>«Ranking interno»</strong> ordena a los postulantes con baremo consolidado. Los empates se marcan. <strong>«Ver opiniones»</strong> abre la ficha con los comentarios de los visualizadores.</p>
+  <figure class="figura"><img src="capturas/g-ranking.png" /><figcaption>Ranking interno y bloque «Ranking público»</figcaption></figure>
+  <h3>Publicar en el sitio</h3>
+  <ul>
+    <li><strong>Enviar al ranking público</strong> (uno o los marcados): sólo el superadministrador. Lo que no se envía, la ciudadanía no lo ve.</li>
+    <li><strong>Actualizar en el ranking público</strong>: lleva al sitio la nota re-evaluada de un postulante ya publicado. El superadministrador siempre; el administrador y los evaluadores sólo si el interruptor está activo.</li>
+  </ul>
+  <figure class="figura"><img src="capturas/g-ranking-detalle.png" /><figcaption>Ficha del postulante en el ranking interno</figcaption></figure>
+</section>
+
+<section class="seccion">
+  <h2>11. Visualizadores: opinar y objetar</h2>
+  <p><span class="rol">Visualizador</span> Entra directo al ranking interno. Consulta los expedientes en sólo lectura.</p>
+  <ul>
+    <li><strong>Opinar</strong>: desde la ficha del postulante, escriba su opinión (mínimo 10 caracteres) y pulse <strong>«Publicar opinión»</strong>. No cambia el puntaje y no se puede borrar.</li>
+    <li><strong>Objetar</strong>: sólo con el interruptor «Objeciones de los visualizadores» activo. Pulse <strong>«Objetar»</strong>, marque las causales, describa los hechos (mínimo 50 caracteres), pegue el enlace a las pruebas y confirme. Recibe el acuse con el PDF de la denuncia.</li>
+  </ul>
+  <figure class="figura angosta"><img src="capturas/43-formulario-objecion.png" /><figcaption>Formulario de objeción del visualizador</figcaption></figure>
+</section>
+
+<section class="seccion">
+  <h2>12. Comité de objeciones</h2>
+  <p><span class="rol">Comité</span> Toda objeción, ciudadana o de un visualizador, llega primero a <strong>«Comité»</strong>. Durante el lapso y la admisión sólo el comité la ve.</p>
+  <table>
+    <tr><th>Pestaña</th><th>Qué contiene</th></tr>
+    <tr><td>Por admitir</td><td>Objeciones recibidas en el lapso.</td></tr>
+    <tr><td>En descargo</td><td>Admitidas y notificadas; cuánto le queda al postulado para responder.</td></tr>
+    <tr><td>Por decidir</td><td>Con descargo, o «sin descargos» si venció el plazo. Corre la comprobación.</td></tr>
+    <tr><td>Decididas</td><td>Inadmitidas, con lugar y sin lugar.</td></tr>
+  </table>
+  <figure class="figura"><img src="capturas/50-comite-bandeja.png" /><figcaption>Bandeja del comité</figcaption></figure>
+  <ol>
+    <li><strong>Admitir o inadmitir.</strong> Abra la objeción (verá aparte quién objeta, dato reservado), agregue si quiere consideraciones y confirme. Se dicta el auto: la admisión se notifica al postulado con la denuncia y abre su plazo de descargo; la inadmisión sólo a quien objetó.</li>
+    <li><strong>Descargo.</strong> El postulado responde en 3 días continuos. Si vence sin respuesta, el sistema la marca «Sin descargos».</li>
+    <li><strong>Comprobación y decisión.</strong> Hasta 5 días para pedir informes. Luego pulse <strong>«Con lugar»</strong> o <strong>«Sin lugar»</strong> y confirme. Se dicta el auto y se notifica al postulado y a quien objetó.</li>
+  </ol>
+  <figure class="figura"><img src="capturas/51-comite-admision.png" /><figcaption>Admisión con confirmación</figcaption></figure>
+  <figure class="figura"><img src="capturas/54-comite-decision.png" /><figcaption>Decisión final</figcaption></figure>
+  <div class="nota"><strong>Confidencialidad.</strong> El postulante y la secretaría nunca ven quién objetó, ni en los autos ni en la copia de la denuncia. Sólo el comité y el Consejo ven esa identidad, y cada consulta queda en la bitácora.</div>
+</section>
+
+<section class="seccion">
+  <h2>13. Consejo: objeciones declaradas con lugar</h2>
+  <p><span class="rol">Evaluador</span> <span class="rol">Administrador</span> En <strong>«Objeciones»</strong> sólo aparecen las que el comité declaró <strong>con lugar</strong>, con el descargo, las consideraciones del comité y el auto en PDF.</p>
+  <ul>
+    <li>El Consejo <strong>declara la inelegibilidad</strong> (el postulado sale del ranking de inmediato) o <strong>ajusta el puntaje</strong> en una ronda de objeción con el baremo congelado.</li>
+    <li>En la ronda, cada evaluador vuelve a puntuar, se abstiene o vota inelegible con motivación.</li>
+  </ul>
+  <figure class="figura"><img src="capturas/g-objeciones-consejo.png" /><figcaption>Gestión de objeciones del Consejo</figcaption></figure>
+  <figure class="figura"><img src="capturas/61-consejo-ve-descargo.png" /><figcaption>El Consejo ve la objeción, el descargo y el auto con lugar</figcaption></figure>
+</section>
+
+<section class="seccion">
+  <h2>14. Informes finales</h2>
+  <p><span class="rol">Superadministrador</span> En <strong>«Informes»</strong>, <strong>«Nuevo borrador»</strong> genera un informe a partir de las evaluaciones aprobadas. Al aprobarlo, el informe lleva su huella SHA-256 y se publica en el sitio, donde cualquiera puede comprobar que el documento consultado es exactamente el aprobado.</p>
+  <figure class="figura"><img src="capturas/g-informes.png" /><figcaption>Informes finales</figcaption></figure>
+</section>
+
+<section class="seccion">
+  <h2>15. Administración: usuarios, Consejo y cuentas de postulantes</h2>
+  <p><span class="rol">Superadministrador</span> <span class="rol">Administrador</span></p>
+  <h3>Usuarios y roles</h3>
+  <ol>
+    <li>Pulse <strong>«Crear usuario»</strong>, escriba nombre y correo institucional y marque el rol.</li>
+    <li>El sistema muestra una <strong>contraseña temporal</strong> una sola vez: entréguela por un canal seguro. En su primer ingreso, la persona debe cambiarla.</li>
+    <li><strong>«Cambiar rol»</strong> y el estado (activo o suspendido) exigen un motivo, que queda registrado.</li>
+  </ol>
+  <figure class="figura"><img src="capturas/g-usuarios.png" /><figcaption>Usuarios y roles</figcaption></figure>
+  <h3>El Consejo</h3>
+  <p>En la pestaña <strong>«Consejo»</strong> se ve cuántos puestos están ocupados. <strong>«Agregar al Consejo»</strong> elige un evaluador activo; <strong>«Sacar del Consejo»</strong> pide el motivo.</p>
+  <figure class="figura"><img src="capturas/94-usuarios-consejo.png" /><figcaption>Pestaña «Consejo»</figcaption></figure>
+  <h3>Cuentas de postulantes</h3>
+  <p>Las cuentas del portal se consultan en <strong>«Cuentas de postulantes»</strong>: búsqueda por nombre, correo o cédula, estado y enlace al expediente. Desde ahí se suspenden o reactivan. Nunca cambian de rol.</p>
+  <figure class="figura"><img src="capturas/g-cuentas.png" /><figcaption>Cuentas de postulantes</figcaption></figure>
+</section>
+
+<section class="seccion">
+  <h2>16. Superadministración: configuración, calendario, baremo, documentos legales y bitácora</h2>
+  <p><span class="rol">Superadministrador</span></p>
+  <h3>Configuración del proceso</h3>
+  <table>
+    <tr><th>Interruptor</th><th>Qué hace</th></tr>
+    <tr><td>Postulaciones cerradas</td><td>Ni la secretaría ni el portal registran expedientes ni hacen un primer envío. Pide confirmación.</td></tr>
+    <tr><td>Objeciones de los visualizadores</td><td>Abre o cierra el lapso para los visualizadores.</td></tr>
+    <tr><td>Objeciones públicas en la landing</td><td>Abre las objeciones a la ciudadanía en el sitio público.</td></tr>
+    <tr><td>«Actualizar en el ranking público» para admin y evaluadores</td><td>Les permite llevar al sitio la nota re-evaluada de un postulante ya publicado.</td></tr>
+  </table>
+  <figure class="figura"><img src="capturas/90-configuracion.png" /><figcaption>Configuración del proceso</figcaption></figure>
+  <h3>Calendario y plazos, en tres pasos</h3>
+  <ol>
+    <li><strong>Inicio del lapso</strong>: automático (día hábil siguiente al cierre de postulaciones) o una fecha elegida en el calendario, que atenúa los fines de semana y subraya los feriados.</li>
+    <li><strong>Duración de cada etapa</strong> con <strong>−</strong> y <strong>+</strong>; <strong>«Usar los plazos de ley»</strong> devuelve los valores legales. El lapso cuenta días <strong>Hábiles</strong> o <strong>Continuos</strong>.</li>
+    <li><strong>Feriados</strong>: un toque en el calendario marca o quita el día; <strong>«Feriados nacionales»</strong> restablece la lista oficial.</li>
+  </ol>
+  <p>La vista previa <strong>«Así queda el calendario»</strong> se recalcula al momento. Pulse <strong>«Guardar configuración»</strong>.</p>
+  <figure class="figura"><img src="capturas/92-calendario.png" /><figcaption>Calendario del proceso en tres pasos</figcaption></figure>
+  <h3>Baremo</h3>
+  <p>En <strong>«Baremo» → «Crear baremo»</strong> se definen los criterios, sus rangos y puntajes (el total debe sumar 100). Sólo puede haber un baremo activo; <strong>«Activar»</strong> lo pone en uso.</p>
+  <figure class="figura"><img src="capturas/g-baremo-detalle.png" /><figcaption>Edición de un baremo</figcaption></figure>
+  <h3>Documentos legales</h3>
+  <ol>
+    <li>En <strong>«Documentos legales»</strong>, cada tarjeta muestra la versión vigente, quién la publicó, las aceptaciones, la huella y el historial. <strong>«Ver vigente»</strong> la abre.</li>
+    <li><strong>«Actualizar (nueva versión)»</strong> crea un borrador con el texto vigente. Edite en <strong>«Escribir»</strong>, revise en <strong>«Vista previa»</strong> y escriba el <strong>resumen de cambios</strong>.</li>
+    <li><strong>«Publicar versión N»</strong> → <strong>«Confirmar publicación»</strong>. La versión anterior queda «Reemplazada» y los postulantes con cuenta deben aceptar la nueva al ingresar.</li>
+  </ol>
+  <figure class="figura"><img src="capturas/96-legales-lista.png" /><figcaption>Documentos legales</figcaption></figure>
+  <figure class="figura"><img src="capturas/98-legales-editor.png" /><figcaption>Borrador de una versión nueva</figcaption></figure>
+  <h3>Bitácora</h3>
+  <p>Registro inmutable de toda operación sensible: ingresos, cambios de rol, votos, autos, publicaciones, aceptaciones de documentos legales y consultas de datos reservados. Se filtra por tipo de acción y persona, y se exporta a CSV.</p>
+  <figure class="figura"><img src="capturas/g-bitacora.png" /><figcaption>Bitácora de auditoría</figcaption></figure>
+</section>
+
+<section class="seccion">
+  <h2>17. Recuperar la contraseña</h2>
+  <p>Funciona igual en el portal del postulante y en el panel interno.</p>
+  <ol>
+    <li>En la pantalla de ingreso, pulse <strong>«¿Olvidó su contraseña?»</strong>.</li>
+    <li>Escriba el correo de su cuenta y pulse <strong>«Enviarme un código»</strong>.</li>
+    <li>Escriba el código de 6 dígitos (vence en 10 minutos) y su contraseña nueva dos veces.</li>
+    <li>Pulse <strong>«Restablecer contraseña»</strong> e ingrese con la nueva.</li>
+  </ol>
+  <div class="ok">Al restablecerla se cierran todas sus sesiones abiertas, se quita el bloqueo por intentos fallidos y le llega un correo de aviso.</div>
+  <figure class="figura media"><img src="capturas/80-recuperar-panel.png" /><figcaption>Pedir el código</figcaption></figure>
+</section>
+
+<section class="seccion">
+  <h2>18. Quién puede hacer qué</h2>
+  <table>
+    <tr><th>Rol</th><th>Dónde entra</th><th>Qué hace</th></tr>
+    <tr><td>Ciudadanía</td><td>Sitio público</td><td>Consultar reglas, perfiles, ranking e informes; objetar con el lapso abierto y seguir su objeción con un código.</td></tr>
+    <tr><td>Postulante</td><td>Portal del postulante</td><td>Crear cuenta aceptando los Términos y la Política de Privacidad, aceptar sus versiones nuevas, postularse, cargar y corregir documentos, seguir su etapa y responder objeciones admitidas.</td></tr>
+    <tr><td>Secretaría</td><td>Panel</td><td>Crear expedientes (con postulaciones abiertas), corregirlos y cargar descargos de postulantes sin cuenta.</td></tr>
+    <tr><td>Revisor</td><td>Panel</td><td>Verificar documentos; enviar a evaluación o devolver para corrección.</td></tr>
+    <tr><td>Evaluador (Consejo)</td><td>Panel</td><td>Votar la elegibilidad, aplicar el baremo y, ante una objeción con lugar, declarar la inelegibilidad o ajustar el puntaje.</td></tr>
+    <tr><td>Comité</td><td>Panel</td><td>Admitir o inadmitir objeciones, esperar el descargo, comprobar y decidir con lugar o sin lugar. Cada acto dicta un auto.</td></tr>
+    <tr><td>Visualizador</td><td>Panel</td><td>Consultar, opinar y, con el lapso abierto, objetar.</td></tr>
+    <tr><td>Administrador</td><td>Panel</td><td>Usuarios, Consejo, cuentas de postulantes, escaladas de evaluación y objeciones del Consejo; actualizar el ranking público si está habilitado.</td></tr>
+    <tr><td>Superadministrador</td><td>Panel</td><td>Todo lo anterior, más configuración del proceso y calendario, baremo, publicación en el ranking público, informes, documentos legales y bitácora.</td></tr>
+  </table>
+</section>
+
+</body>
+</html>

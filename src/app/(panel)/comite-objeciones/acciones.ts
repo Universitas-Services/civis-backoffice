@@ -18,14 +18,27 @@ function consideraciones(formData: FormData): string | undefined | { error: stri
   return analisis.data || undefined;
 }
 
-async function dictar(
+/** Motivo de fuerza mayor: sólo se envía si el formulario lo pidió (fuera de plazo). */
+function motivoExtemporaneo(formData: FormData): string | undefined | { error: string } {
+  const campo = formData.get("motivoExtemporaneo");
+  if (campo === null) return undefined;
+  const texto = String(campo).trim();
+  if (texto.length < 20) {
+    return { error: "Explique el motivo de fuerza mayor (al menos 20 caracteres)." };
+  }
+  if (texto.length > 2000) return { error: "El motivo no puede superar 2000 caracteres." };
+  return texto;
+}
+
+async function dictar<T>(
   objectionId: string,
   ruta: "admision" | "decision",
   cuerpo: Record<string, unknown>,
-  exito: string,
+  exito: (respuesta: T) => string,
 ): Promise<EstadoActoComite> {
+  let respuesta: T;
   try {
-    await llamarApiAccion(`/internal/comite/objeciones/${objectionId}/${ruta}`, {
+    respuesta = await llamarApiAccion<T>(`/internal/comite/objeciones/${objectionId}/${ruta}`, {
       method: "POST",
       body: cuerpo,
     });
@@ -36,10 +49,21 @@ async function dictar(
   }
   revalidatePath("/comite-objeciones");
   revalidatePath(`/comite-objeciones/${objectionId}`);
-  return { exito, hecho: true };
+  return { exito: exito(respuesta), hecho: true };
 }
 
-/** Admite (abre el plazo de descargo) o inadmite la objeción. */
+const fechaCaracas = (iso: string) =>
+  new Date(iso).toLocaleDateString("es-VE", {
+    timeZone: "America/Caracas",
+    day: "numeric",
+    month: "long",
+  });
+
+/**
+ * Admite o inadmite la objeción. En plazo, el auto queda dictado y se
+ * notifica al día siguiente del último día de admisión; fuera de plazo (con
+ * motivo de fuerza mayor), se notifica en el acto.
+ */
 export async function pronunciarAdmision(
   objectionId: string,
   admitir: boolean,
@@ -48,13 +72,24 @@ export async function pronunciarAdmision(
 ): Promise<EstadoActoComite> {
   const texto = consideraciones(formData);
   if (typeof texto === "object") return texto;
-  return dictar(
+  const motivo = motivoExtemporaneo(formData);
+  if (typeof motivo === "object") return motivo;
+  return dictar<{ stage: string; notificationDueAt: string; notificados: number }>(
     objectionId,
     "admision",
-    { admitir, consideraciones: texto },
-    admitir
-      ? "Objeción admitida. Se notificó al postulado con el auto y la denuncia."
-      : "Objeción inadmitida. Se notificó a la persona objetante.",
+    { admitir, consideraciones: texto, motivoExtemporaneo: motivo },
+    (r) => {
+      const notificada = r.stage === "EN_DESCARGO" || r.notificados > 0;
+      if (notificada) {
+        return admitir
+          ? "Objeción admitida y notificada al postulado con el auto y la denuncia."
+          : "Objeción inadmitida y notificada a la persona objetante.";
+      }
+      const cuando = fechaCaracas(r.notificationDueAt);
+      return admitir
+        ? `Objeción admitida. Se notificará al postulado el ${cuando}.`
+        : `Objeción inadmitida. Se notificará a la persona objetante el ${cuando}.`;
+    },
   );
 }
 
@@ -67,12 +102,15 @@ export async function decidirObjecion(
 ): Promise<EstadoActoComite> {
   const texto = consideraciones(formData);
   if (typeof texto === "object") return texto;
+  const motivo = motivoExtemporaneo(formData);
+  if (typeof motivo === "object") return motivo;
   return dictar(
     objectionId,
     "decision",
-    { decision, consideraciones: texto },
-    decision === "CON_LUGAR"
-      ? "Declarada con lugar. Pasó al Consejo y se notificó a ambas partes."
-      : "Declarada sin lugar. Se notificó a ambas partes.",
+    { decision, consideraciones: texto, motivoExtemporaneo: motivo },
+    () =>
+      decision === "CON_LUGAR"
+        ? "Declarada con lugar. Pasó al Consejo y se notificó a ambas partes."
+        : "Declarada sin lugar. Se notificó a ambas partes.",
   );
 }

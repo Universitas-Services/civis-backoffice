@@ -6,6 +6,7 @@ import { PastillaBanda, salaDe } from "@/components/ranking-interno";
 import {
   actualizarEnRankingPublico,
   enviarAlRankingPublico,
+  retirarDelRankingPublico,
   type EstadoRanking,
 } from "@/app/(panel)/ranking/acciones";
 import { useToastDesdeEstado } from "@/hooks/use-toast-desde-estado";
@@ -16,6 +17,7 @@ import { useToastDesdeEstado } from "@/hooks/use-toast-desde-estado";
  * - Enviar uno o varios (sin cola ni segunda aprobación): solo SUPER_ADMIN.
  * - «Actualizar» a un ya publicado con su nota vigente: SUPER_ADMIN siempre;
  *   ADMIN y evaluadores cuando SUPER_ADMIN lo habilitó. La API lo vuelve a comprobar.
+ * - «Retirar» a uno o a todos del sitio público, con motivo: solo SUPER_ADMIN.
  */
 export function PublicacionRanking({
   entries,
@@ -31,6 +33,9 @@ export function PublicacionRanking({
   const [marcados, setMarcados] = useState<readonly string[]>([]);
   const [confirmar, setConfirmar] = useState<readonly EntradaRanking[] | null>(null);
   const [aActualizar, setAActualizar] = useState<EntradaRanking | null>(null);
+  /** Fila a retirar del sitio público. Retirar a todos está en Configuración del proceso. */
+  const [aRetirar, setARetirar] = useState<EntradaRanking | null>(null);
+  const [motivo, setMotivo] = useState("");
   useToastDesdeEstado(estado);
 
   const publicados = entries.filter((e) => e.published === true);
@@ -76,6 +81,26 @@ export function PublicacionRanking({
       const r = await actualizarEnRankingPublico(fila.candidateId!);
       setEstado(r);
       if (!r.error) setAActualizar(null);
+    });
+  }
+
+  function pedirRetiro(fila: EntradaRanking) {
+    setConfirmar(null);
+    setAActualizar(null);
+    setMotivo("");
+    setARetirar(fila);
+  }
+
+  function retirar() {
+    if (!aRetirar?.candidateId || pendiente) return;
+    const id = aRetirar.candidateId;
+    iniciar(async () => {
+      const r = await retirarDelRankingPublico([id], motivo);
+      setEstado(r);
+      if (!r.error) {
+        setARetirar(null);
+        setMotivo("");
+      }
     });
   }
 
@@ -157,7 +182,49 @@ export function PublicacionRanking({
         <p className="mt-1 text-sm text-toga-500">
           Su ficha ya está en el sitio público. Si la nota cambió y el sitio muestra la anterior,
           use «Actualizar».
+          {puedeEnviar &&
+            " «Retirar» la quita del sitio; para retirar a todos, vaya a Configuración del proceso."}
         </p>
+        {aRetirar && (
+          <div className="mt-4 space-y-3 rounded-lg border border-balanza-600/25 bg-balanza-50/40 p-4">
+            <p className="text-sm text-toga-800">
+              ¿Retirar del sitio público a{" "}
+              <span className="font-semibold">{aRetirar.fullName}</span>? El ranking público se
+              vuelve a publicar sin esa persona. El ranking interno no cambia y se puede volver a
+              enviar después.
+            </p>
+            <label className="block">
+              <span className="text-sm font-medium text-toga-800">
+                Motivo (queda en la bitácora)
+              </span>
+              <textarea
+                value={motivo}
+                onChange={(e) => setMotivo(e.target.value)}
+                rows={2}
+                maxLength={500}
+                className="mt-1 w-full rounded-md border border-toga-300 bg-white px-3 py-2 text-sm focus:border-balanza-600 focus:outline-none focus:ring-2 focus:ring-balanza-600/20"
+              />
+            </label>
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                disabled={pendiente || motivo.trim().length < 10}
+                onClick={retirar}
+                className="rounded-md bg-balanza-600 px-3 py-2 text-sm font-semibold text-white hover:bg-balanza-700 disabled:opacity-60"
+              >
+                {pendiente ? "Retirando…" : "Confirmar retiro"}
+              </button>
+              <button
+                type="button"
+                disabled={pendiente}
+                onClick={() => setARetirar(null)}
+                className="rounded-md border border-toga-300 bg-white px-3 py-2 text-sm font-medium text-toga-700 hover:bg-toga-50"
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        )}
         {aActualizar && (
           <div className="mt-4 space-y-3 rounded-lg border border-balanza-600/25 bg-balanza-50/40 p-4">
             <p className="text-sm text-toga-800">
@@ -198,8 +265,10 @@ export function PublicacionRanking({
           onAlternarTodos={() => undefined}
           onEnviarUno={(fila) => {
             setConfirmar(null);
+            setARetirar(null);
             setAActualizar(fila);
           }}
+          onRetirar={puedeEnviar ? pedirRetiro : undefined}
           pendiente={pendiente}
           vacio="Todavía no hay postulantes publicados."
         />
@@ -219,6 +288,7 @@ function TablaRanking({
   onAlternar,
   onAlternarTodos,
   onEnviarUno,
+  onRetirar,
   pendiente,
   vacio,
 }: {
@@ -233,12 +303,28 @@ function TablaRanking({
   readonly onAlternar: (id: string) => void;
   readonly onAlternarTodos: () => void;
   readonly onEnviarUno: (fila: EntradaRanking) => void;
+  /** Muestra «Retirar» en cada fila (solo SUPER_ADMIN, en los ya publicados). */
+  readonly onRetirar?: (fila: EntradaRanking) => void;
   readonly pendiente: boolean;
   readonly vacio: string;
 }) {
   if (entries.length === 0) {
     return <p className="mt-4 text-sm text-toga-500">{vacio}</p>;
   }
+  const conAcciones = puedePublicar || onRetirar !== undefined;
+  const botonRetirar = (e: EntradaRanking) =>
+    onRetirar &&
+    e.candidateId && (
+      <button
+        type="button"
+        disabled={pendiente}
+        onClick={() => onRetirar(e)}
+        className="rounded-md border border-toga-300 bg-white px-3 py-1.5 text-sm font-medium text-toga-700 hover:bg-toga-50 disabled:opacity-60"
+        aria-label={`Retirar del ranking público: ${e.fullName}`}
+      >
+        Retirar
+      </button>
+    );
 
   return (
     <>
@@ -279,6 +365,7 @@ function TablaRanking({
                   </button>
                 </>
               )}
+              {botonRetirar(e)}
             </div>
           </li>
         ))}
@@ -315,9 +402,9 @@ function TablaRanking({
               <th scope="col" className="px-4 py-3 font-semibold text-toga-700">
                 Estatus
               </th>
-              {puedePublicar && (
+              {conAcciones && (
                 <th scope="col" className="px-4 py-3 font-semibold text-toga-700">
-                  <span className="sr-only">{textoAccion}</span>
+                  <span className="sr-only">Acciones</span>
                 </th>
               )}
             </tr>
@@ -352,19 +439,22 @@ function TablaRanking({
                 <td className="px-4 py-3">
                   <PastillaBanda band={e.band} />
                 </td>
-                {puedePublicar && (
+                {conAcciones && (
                   <td className="px-4 py-3 text-right">
-                    {e.candidateId && (
-                      <button
-                        type="button"
-                        disabled={pendiente}
-                        onClick={() => onEnviarUno(e)}
-                        className="rounded-md border border-balanza-600 bg-white px-3 py-1.5 text-sm font-semibold text-balanza-700 hover:bg-balanza-50 disabled:opacity-60"
-                        aria-label={`${textoAccion}: ${e.fullName}`}
-                      >
-                        {textoAccionCorto}
-                      </button>
-                    )}
+                    <div className="flex justify-end gap-2">
+                      {puedePublicar && e.candidateId && (
+                        <button
+                          type="button"
+                          disabled={pendiente}
+                          onClick={() => onEnviarUno(e)}
+                          className="rounded-md border border-balanza-600 bg-white px-3 py-1.5 text-sm font-semibold text-balanza-700 hover:bg-balanza-50 disabled:opacity-60"
+                          aria-label={`${textoAccion}: ${e.fullName}`}
+                        >
+                          {textoAccionCorto}
+                        </button>
+                      )}
+                      {botonRetirar(e)}
+                    </div>
                   </td>
                 )}
               </tr>

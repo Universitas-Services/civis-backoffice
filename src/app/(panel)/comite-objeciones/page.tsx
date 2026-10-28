@@ -15,6 +15,7 @@ const PAGE_SIZE = 10;
 /** Pestañas: valor en la URL, etapa de la API y etiqueta. */
 const FILTROS = [
   { valor: undefined, etapa: "RECIBIDAS", etiqueta: "Por admitir" },
+  { valor: "por_notificar", etapa: "POR_NOTIFICAR", etiqueta: "Por notificar" },
   { valor: "en_descargo", etapa: "EN_DESCARGO", etiqueta: "En descargo" },
   { valor: "por_decidir", etapa: "POR_DECIDIR", etiqueta: "Por decidir" },
   { valor: "decididas", etapa: "DECIDIDAS", etiqueta: "Decididas" },
@@ -26,6 +27,7 @@ const FILTROS = [
 
 const VACIO: Record<EtapaComite, string> = {
   RECIBIDAS: "No hay objeciones pendientes de admisión.",
+  POR_NOTIFICAR: "No hay pronunciamientos de admisión esperando su notificación.",
   EN_DESCARGO: "Ninguna objeción admitida espera el descargo del postulante.",
   POR_DECIDIR: "No hay objeciones pendientes de decisión.",
   DECIDIDAS: "Todavía no se ha decidido ninguna objeción.",
@@ -59,7 +61,7 @@ export default async function BandejaDelComite({
     <>
       <CabeceraPagina
         titulo="Comité de objeciones"
-        descripcion="Toda objeción llega primero aquí. Admítala o inadmítala; si la admite, el postulante tiene su plazo para el descargo. Después decida con lugar (pasa al Consejo) o sin lugar."
+        descripcion="Toda objeción llega primero aquí. Cada etapa transcurre completa antes de la siguiente: terminado el lapso, admítala o inadmítala en los días de admisión (se notifica al día siguiente del último); vencido el descargo del postulante, decida con lugar (pasa al Consejo) o sin lugar."
       />
 
       <div className="px-5 py-6 sm:px-8">
@@ -196,23 +198,45 @@ function Causales({
   return <>{causes.map((c) => CAUSA_DENUNCIA_ETIQUETA[c] ?? c).join(" · ")}</>;
 }
 
+const AVISO = "mb-4 rounded-md border border-toga-200 bg-toga-50 px-4 py-3 text-sm text-toga-700";
+
 /** Recordatorio de los plazos del comité según el calendario del proceso. */
 function AvisoLapso({ plazos }: { readonly plazos: PlazosComite }) {
-  if (plazos.lapsoAbierto) {
+  if (!plazos.finAdmision) {
+    return plazos.lapsoAbierto ? (
+      <p className={AVISO}>
+        El lapso de objeciones está abierto, pero el calendario del proceso todavía no tiene fechas:
+        se calculan al cerrar las postulaciones o al fijar el inicio del lapso.
+      </p>
+    ) : null;
+  }
+  if (plazos.admision === "ANTES") {
     return (
-      <p className="mb-4 rounded-md border border-toga-200 bg-toga-50 px-4 py-3 text-sm text-toga-700">
-        El lapso de objeciones sigue abierto
-        {plazos.finLapsoObjeciones && <> hasta el {fechaLarga(plazos.finLapsoObjeciones)}</>}. La
-        admisión se resuelve al cerrarlo, en {plazos.admisionDias} días continuos.
+      <p className={AVISO}>
+        El lapso de objeciones corre
+        {plazos.finLapsoObjeciones && <> hasta el {fechaLarga(plazos.finLapsoObjeciones)}</>}. El
+        comité podrá pronunciarse sobre la admisión desde el{" "}
+        {plazos.inicioAdmision ? fechaLarga(plazos.inicioAdmision) : "día siguiente"}, durante{" "}
+        {plazos.admisionDias} días continuos.
       </p>
     );
   }
-  if (!plazos.finAdmision) return null;
+  if (plazos.admision === "DESPUES") {
+    return (
+      <p className={AVISO}>
+        Los días de admisión terminaron el {fechaLarga(plazos.finAdmision)}. Sólo se puede
+        pronunciar sobre las objeciones pendientes indicando un motivo de fuerza mayor.
+      </p>
+    );
+  }
   const r = restante(plazos.finAdmision);
   return (
-    <p className="mb-4 rounded-md border border-toga-200 bg-toga-50 px-4 py-3 text-sm text-toga-700">
-      Plazo de admisión: hasta el {fechaLarga(plazos.finAdmision)} ·{" "}
+    <p className={AVISO}>
+      Días de admisión: hasta el {fechaLarga(plazos.finAdmision)} ·{" "}
       <span className={CLASE_TONO[r.tono]}>{r.texto}</span>
+      {plazos.notificacion && (
+        <> · Los pronunciamientos se notifican el {fechaLarga(plazos.notificacion)}.</>
+      )}
     </p>
   );
 }
@@ -229,8 +253,26 @@ function Situacion({ o }: { readonly o: ObjecionComite }) {
           <p className="mt-1 text-xs text-toga-500">
             {o.candidate.conCuenta ? "Postulante con cuenta" : "Expediente de secretaría"}
           </p>
+          <EnTrabajo o={o} />
         </div>
       );
+    case "ADMITIDA":
+    case "INADMITIDA":
+      if (o.etapa === "POR_NOTIFICAR") {
+        return (
+          <div>
+            <span className={`${PASTILLA} bg-toga-100 text-toga-700`}>
+              {o.stage === "ADMITIDA" ? "Admitida" : "Inadmitida"} · por notificar
+            </span>
+            {o.notificationDueAt && (
+              <p className="mt-1 text-xs text-toga-500">
+                Se notifica el {fecha(o.notificationDueAt)}
+              </p>
+            )}
+          </div>
+        );
+      }
+      return <Decidida o={o} />;
     case "EN_DESCARGO": {
       const r = o.descargoDueAt ? restante(o.descargoDueAt) : null;
       return (
@@ -262,39 +304,57 @@ function Situacion({ o }: { readonly o: ObjecionComite }) {
           >
             {o.stage === "SIN_DESCARGO" ? "Sin descargos" : "Con descargo"}
           </span>
-          {r && (
+          {o.descargoDueAt && new Date(o.descargoDueAt).getTime() > Date.now() ? (
             <p className="mt-1 text-xs text-toga-500">
-              Comprobación · <span className={CLASE_TONO[r.tono]}>{r.texto}</span>
+              Podrá decidir desde el {fecha(o.descargoDueAt)} (al vencer el descargo)
             </p>
+          ) : (
+            r && (
+              <p className="mt-1 text-xs text-toga-500">
+                Comprobación · <span className={CLASE_TONO[r.tono]}>{r.texto}</span>
+              </p>
+            )
           )}
+          <EnTrabajo o={o} />
         </div>
       );
     }
-    default: {
-      const etiqueta =
-        o.stage === "CON_LUGAR"
-          ? "Con lugar · en el Consejo"
-          : o.stage === "SIN_LUGAR"
-            ? "Sin lugar"
-            : "Inadmitida";
-      return (
-        <div>
-          <span
-            className={`${PASTILLA} ${
-              o.stage === "CON_LUGAR"
-                ? "bg-balanza-50 text-balanza-700"
-                : "bg-toga-100 text-toga-700"
-            }`}
-          >
-            {etiqueta}
-          </span>
-          {o.finalDecidedAt && (
-            <p className="mt-1 text-xs text-toga-500">El {fecha(o.finalDecidedAt)}</p>
-          )}
-        </div>
-      );
-    }
+    default:
+      return <Decidida o={o} />;
   }
+}
+
+/** Quién la tiene abierta ahora, si es otra persona del comité. */
+function EnTrabajo({ o }: { readonly o: ObjecionComite }) {
+  if (!o.bloqueo || o.bloqueo.mio) return null;
+  return (
+    <p className="mt-1 text-xs font-medium text-balanza-700">
+      La está trabajando {o.bloqueo.fullName}
+    </p>
+  );
+}
+
+function Decidida({ o }: { readonly o: ObjecionComite }) {
+  const etiqueta =
+    o.stage === "CON_LUGAR"
+      ? "Con lugar · en el Consejo"
+      : o.stage === "SIN_LUGAR"
+        ? "Sin lugar"
+        : "Inadmitida";
+  return (
+    <div>
+      <span
+        className={`${PASTILLA} ${
+          o.stage === "CON_LUGAR" ? "bg-balanza-50 text-balanza-700" : "bg-toga-100 text-toga-700"
+        }`}
+      >
+        {etiqueta}
+      </span>
+      {o.finalDecidedAt && (
+        <p className="mt-1 text-xs text-toga-500">El {fecha(o.finalDecidedAt)}</p>
+      )}
+    </div>
+  );
 }
 
 function EnlaceAbrir({ id }: { readonly id: string }) {
