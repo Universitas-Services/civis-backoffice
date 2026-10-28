@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
-import type { AjustesPortal } from "@/contracts";
+import type { AjustesPortal, ResultadoRanking } from "@/contracts";
 import { llamarApi, NoAutorizado } from "@/lib/api";
 import { exigirRol, renovarYVolver } from "@/lib/rutas";
 import { fechaHora, fechaLarga } from "@/lib/plazos";
 import { CabeceraPagina } from "@/components/cabecera-pagina";
 import { InterruptoresPortal, type Interruptor } from "@/components/interruptores-portal";
 import { ConfiguracionPlazos } from "@/components/configuracion-plazos";
+import { RetiroRankingPublico } from "@/components/retiro-ranking-publico";
 
 export const metadata: Metadata = { title: "Configuración del proceso" };
 
@@ -18,8 +19,12 @@ export default async function ConfiguracionDelProceso() {
   await exigirRol("SUPER_ADMIN");
 
   let ajustes: AjustesPortal;
+  let ranking: ResultadoRanking;
   try {
-    ajustes = await llamarApi<AjustesPortal>("/internal/portal");
+    [ajustes, ranking] = await Promise.all([
+      llamarApi<AjustesPortal>("/internal/portal"),
+      llamarApi<ResultadoRanking>("/internal/ranking"),
+    ]);
   } catch (error) {
     if (error instanceof NoAutorizado) await renovarYVolver("/configuracion");
     throw error;
@@ -67,7 +72,9 @@ export default async function ConfiguracionDelProceso() {
     },
   ];
 
-  const ranking: Interruptor[] = [
+  const publicados = ranking.entries.filter((e) => e.published === true).length;
+
+  const interruptoresRanking: Interruptor[] = [
     {
       ajuste: "publicRefreshEnabled",
       titulo: "«Actualizar en el ranking público» para admin y evaluadores",
@@ -111,11 +118,14 @@ export default async function ConfiguracionDelProceso() {
           )}
         </div>
 
-        <InterruptoresPortal
-          id="ajustes-ranking-publico"
-          titulo="Ranking público"
-          items={ranking}
-        />
+        <div className="space-y-3">
+          <InterruptoresPortal
+            id="ajustes-ranking-publico"
+            titulo="Ranking público"
+            items={interruptoresRanking}
+          />
+          <RetiroRankingPublico publicados={publicados} />
+        </div>
 
         <section aria-labelledby="plazos" className="space-y-3">
           <div>

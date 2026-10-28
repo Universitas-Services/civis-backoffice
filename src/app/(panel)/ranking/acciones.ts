@@ -129,6 +129,36 @@ export async function actualizarEnRankingPublico(candidateId: string): Promise<E
   }
 }
 
+/**
+ * Retira del sitio público a los indicados, o a todos si `candidateIds` es
+ * null. El ranking interno no cambia: se pueden volver a enviar. Solo
+ * SUPER_ADMIN (la API lo exige). El motivo queda en la bitácora.
+ */
+export async function retirarDelRankingPublico(
+  candidateIds: string[] | null,
+  motivo: string,
+): Promise<EstadoRanking> {
+  const reason = motivo.trim();
+  if (reason.length < 10) return { error: "Escriba el motivo (al menos 10 caracteres)." };
+  try {
+    const r = await llamarApiAccion<{ retirados: number }>(
+      "/internal/publications/ranking/retirar",
+      {
+        method: "POST",
+        body: candidateIds ? { candidateIds, reason } : { reason },
+        timeoutMs: 60_000,
+      },
+    );
+    revalidatePath("/ranking");
+    revalidatePath("/configuracion");
+    return {
+      exito: `Retirados del ranking público: ${r.retirados}. El sitio se actualiza en menos de un minuto.`,
+    };
+  } catch (error) {
+    return { error: mensajeDe(error, "No se pudo retirar del ranking público") };
+  }
+}
+
 export type AjusteInterruptor =
   | "viewerObjectionsOpen"
   | "objectionsOpen"

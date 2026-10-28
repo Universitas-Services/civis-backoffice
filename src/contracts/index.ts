@@ -1046,6 +1046,7 @@ export interface Descargo {
 /** Etapa legal de la objeción (LOTSJ arts. 71 y 72). */
 export const ETAPAS_OBJECION = [
   "RECIBIDA",
+  "ADMITIDA",
   "INADMITIDA",
   "EN_DESCARGO",
   "DESCARGO_PRESENTADO",
@@ -1057,6 +1058,7 @@ export type EtapaObjecion = (typeof ETAPAS_OBJECION)[number];
 
 export const ETAPA_OBJECION_ETIQUETA: Record<EtapaObjecion, string> = {
   RECIBIDA: "Recibida",
+  ADMITIDA: "Admitida · por notificar",
   INADMITIDA: "Inadmitida",
   EN_DESCARGO: "Admitida · en descargo",
   DESCARGO_PRESENTADO: "Con descargo",
@@ -1085,21 +1087,46 @@ export interface AutoObjecion {
 /**
  * Bandeja del comité:
  * - RECIBIDAS: esperan la admisión.
- * - EN_DESCARGO: admitidas; corre el plazo del postulante.
+ * - POR_NOTIFICAR: admitidas o inadmitidas que se notifican al día siguiente
+ *   del último día de admisión.
+ * - EN_DESCARGO: notificadas; corre el plazo del postulante.
  * - POR_DECIDIR: con descargo o sin él (vencido); comprobación y decisión.
- * - DECIDIDAS: inadmitidas, con lugar o sin lugar.
+ * - DECIDIDAS: inadmitidas ya notificadas, con lugar o sin lugar.
  */
-export const ETAPAS_COMITE = ["RECIBIDAS", "EN_DESCARGO", "POR_DECIDIR", "DECIDIDAS"] as const;
+export const ETAPAS_COMITE = [
+  "RECIBIDAS",
+  "POR_NOTIFICAR",
+  "EN_DESCARGO",
+  "POR_DECIDIR",
+  "DECIDIDAS",
+] as const;
 export type EtapaComite = (typeof ETAPAS_COMITE)[number];
+
+/** Dónde estamos respecto de una ventana de plazos: antes, dentro o vencida. */
+export type MomentoPlazo = "ANTES" | "DENTRO" | "DESPUES";
 
 export interface PlazosComite {
   readonly descargoDias: number;
   readonly admisionDias: number;
   readonly comprobacionDias: number;
   readonly finLapsoObjeciones: string | null;
+  /** Primer día en que el comité puede pronunciarse sobre la admisión. */
+  readonly inicioAdmision: string | null;
   readonly finAdmision: string | null;
+  /** Hoy respecto de los días de admisión. Sin calendario, siempre DENTRO. */
+  readonly admision: MomentoPlazo;
+  /** Cuándo se notifican los pronunciamientos dados en plazo. */
+  readonly notificacion: string | null;
   /** Alguno de los lapsos de objeciones sigue abierto. */
   readonly lapsoAbierto: boolean;
+}
+
+/** Bloqueo de la objeción: un solo miembro del comité la trabaja a la vez. */
+export interface BloqueoComite {
+  readonly fullName: string;
+  readonly lastActivityAt: string;
+  readonly expiresAt: string;
+  readonly mio: boolean;
 }
 
 /** Fila de la bandeja del comité: una objeción, sin identidad del objetante. */
@@ -1111,12 +1138,15 @@ export interface ObjecionComite {
   readonly category: string;
   readonly receivedAt: string;
   readonly stage: EtapaObjecion;
+  readonly notificationDueAt: string | null;
+  readonly notifiedAt: string | null;
   readonly descargoDueAt: string | null;
   readonly verificationDueAt: string | null;
   readonly noDescargoAt: string | null;
   readonly finalDecidedAt: string | null;
   readonly forwardedAt: string | null;
   readonly etapa: EtapaComite;
+  readonly bloqueo: BloqueoComite | null;
   readonly descargo: { readonly createdAt: string; readonly submittedVia: string } | null;
   readonly candidate: {
     readonly id: string;
@@ -1153,6 +1183,10 @@ export interface ObjecionComiteDetalle {
   readonly receivedAt: string;
   readonly stage: EtapaObjecion;
   readonly admissionDecidedAt: string | null;
+  readonly notificationDueAt: string | null;
+  /** Motivo de fuerza mayor de un pronunciamiento fuera de plazo. */
+  readonly admissionLateReason: string | null;
+  readonly decisionLateReason: string | null;
   readonly notifiedAt: string | null;
   readonly descargoDueAt: string | null;
   readonly noDescargoAt: string | null;
@@ -1165,6 +1199,9 @@ export interface ObjecionComiteDetalle {
   readonly descargo: Descargo | null;
   readonly autos: readonly AutoObjecion[];
   readonly etapa: EtapaComite;
+  readonly bloqueo: BloqueoComite | null;
+  /** Ventana de la decisión final: desde que vence el descargo hasta el fin de la comprobación. */
+  readonly decision: { readonly desde: string | null; readonly hasta: string | null };
   readonly plazos: PlazosComite;
   readonly candidate: {
     readonly id: string;
