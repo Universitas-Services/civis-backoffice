@@ -32,10 +32,13 @@ export default async function ConfiguracionDelProceso() {
 
   const lapso = ajustes.calendario.periodos.find((p) => p.clave === "LAPSO_OBJECIONES");
   const finLapso = ajustes.calendario.finLapsoObjeciones;
-  const lapsoVencidoAbierto =
-    finLapso !== null &&
-    new Date(finLapso).getTime() < Date.now() &&
-    (ajustes.objectionsOpen || ajustes.viewerObjectionsOpen);
+  // Los cierres los aplica la API sola según el calendario; aquí sólo se informan.
+  const lapsoTerminado = finLapso !== null && new Date(finLapso).getTime() < Date.now();
+  const lapsoEmpezado =
+    lapso !== undefined && new Date(`${lapso.inicio}T04:00:00Z`).getTime() <= Date.now();
+  const abrirCierraPostulaciones = ajustes.applicationsClosed
+    ? undefined
+    : "Al abrir las objeciones se cierran también las postulaciones: nadie podrá crear expedientes ni enviar uno por primera vez, y el calendario se calcula desde el día hábil siguiente. ¿Continuar?";
 
   const postulaciones: Interruptor[] = [
     {
@@ -43,10 +46,11 @@ export default async function ConfiguracionDelProceso() {
       titulo: "Postulaciones cerradas",
       encendido: `Ni la secretaría ni el portal del postulante crean expedientes nuevos ni hacen un primer envío. Los expedientes devueltos por la revisión sí se pueden corregir y reenviar.${
         ajustes.applicationsClosedAt
-          ? ` Cerradas el ${fechaHora(ajustes.applicationsClosedAt)}.`
+          ? ` Cerradas el ${fechaHora(ajustes.applicationsClosedAt).replace(/\.?$/, ".")}`
           : ""
       }`,
-      apagado: "La secretaría y el portal del postulante reciben postulaciones.",
+      apagado:
+        "La secretaría y el portal del postulante reciben postulaciones. Se cierran solas al abrirse el lapso de objeciones.",
       valor: ajustes.applicationsClosed,
       confirmarAlEncender:
         "¿Cerrar el periodo de postulaciones? Nadie podrá crear expedientes ni enviar uno por primera vez, y se calculará el calendario del proceso desde el día hábil siguiente.",
@@ -61,6 +65,7 @@ export default async function ConfiguracionDelProceso() {
         "Los visualizadores ven «Objetar» en el ranking interno. Sus objeciones llegan sólo al comité, que se pronuncia sobre su admisión.",
       apagado: "Los visualizadores sólo consultan y opinan; no pueden objetar.",
       valor: ajustes.viewerObjectionsOpen,
+      confirmarAlEncender: abrirCierraPostulaciones,
     },
     {
       ajuste: "objectionsOpen",
@@ -69,6 +74,7 @@ export default async function ConfiguracionDelProceso() {
         "La landing muestra «Objetar» en los postulantes enviados al ranking público. Úselo sólo si se decide abrir las objeciones a la ciudadanía.",
       apagado: "Las objeciones son cerradas: sólo las presentan los visualizadores desde el panel.",
       valor: ajustes.objectionsOpen,
+      confirmarAlEncender: abrirCierraPostulaciones,
     },
   ];
 
@@ -104,16 +110,12 @@ export default async function ConfiguracionDelProceso() {
           {lapso && (
             <p className="text-sm text-toga-600">
               Lapso de objeciones según el calendario: del {fechaLarga(`${lapso.inicio}T16:00:00Z`)}{" "}
-              al {fechaLarga(`${lapso.fin}T16:00:00Z`)}.
-            </p>
-          )}
-          {lapsoVencidoAbierto && (
-            <p
-              role="alert"
-              className="rounded-md border border-balanza-600/30 bg-balanza-50 px-4 py-3 text-sm font-medium text-balanza-700"
-            >
-              El lapso de objeciones ya venció según el calendario y las objeciones siguen abiertas.
-              Ciérrelas para que el comité empiece la admisión.
+              al {fechaLarga(`${lapso.fin}T16:00:00Z`)}.{" "}
+              {lapsoTerminado
+                ? "Ya terminó: las objeciones se cerraron solas y no se pueden reabrir sin cambiar el calendario."
+                : lapsoEmpezado
+                  ? "Está en curso: las postulaciones quedaron cerradas y las objeciones se cierran solas al terminar."
+                  : "Al empezar se cierran solas las postulaciones, y al terminar, las objeciones."}
             </p>
           )}
         </div>

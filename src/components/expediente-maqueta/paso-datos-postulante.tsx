@@ -16,12 +16,14 @@ export type DatosPostulanteMaqueta = {
   prefijoCedula: "V" | "E";
   cedulaDigitos: string;
   sala: SalaMaqueta | "";
-  /** Sólo en la autopostulación: prefijo móvil (0412, 0414…). */
+  /** Prefijo móvil (0412, 0414…), cuando se pide el teléfono. */
   telefonoPrefijo?: PrefijoTelefono | "";
-  /** Sólo en la autopostulación: los 7 dígitos que siguen al prefijo. */
+  /** Los 7 dígitos que siguen al prefijo. */
   telefonoDigitos?: string;
   /** Clave de error del teléfono (prefijo + dígitos). */
   telefono?: string;
+  /** Correo de contacto, cuando lo registra la secretaría. */
+  email?: string;
 };
 
 const CAMPO =
@@ -38,6 +40,7 @@ export function PasoDatosPostulante({
   onRegistrar,
   registrando = false,
   conTelefono = false,
+  conCorreo = false,
   titulo = "Datos del postulante",
   descripcion = "Complete la identificación y registre el expediente para continuar con los documentos.",
 }: {
@@ -46,8 +49,10 @@ export function PasoDatosPostulante({
   readonly onChange: (v: DatosPostulanteMaqueta) => void;
   readonly onRegistrar: () => void;
   readonly registrando?: boolean;
-  /** Pide el teléfono (autopostulación). */
+  /** Pide el teléfono de contacto. */
   readonly conTelefono?: boolean;
+  /** Pide el correo de contacto (registro por la secretaría). */
+  readonly conCorreo?: boolean;
   readonly titulo?: string;
   readonly descripcion?: string;
 }) {
@@ -221,6 +226,33 @@ export function PasoDatosPostulante({
               )}
             </div>
           )}
+          {conCorreo && (
+            <div className="sm:col-span-2 sm:max-w-sm">
+              <label
+                htmlFor="correo_postulante"
+                className="block text-xs font-medium text-toga-600"
+              >
+                Correo electrónico <span className="text-balanza-700">*</span>
+              </label>
+              <input
+                id="correo_postulante"
+                type="email"
+                inputMode="email"
+                autoComplete="email"
+                maxLength={254}
+                placeholder="nombre@correo.com"
+                value={valores.email ?? ""}
+                onChange={(e) => actualizar("email", e.target.value.trim())}
+                className={`${CAMPO}${errores.email ? " campo-con-error" : ""}`}
+                aria-invalid={Boolean(errores.email)}
+              />
+              {errores.email && (
+                <p role="alert" className="mensaje-error-campo">
+                  {errores.email}
+                </p>
+              )}
+            </div>
+          )}
         </div>
       </fieldset>
 
@@ -238,7 +270,10 @@ export function PasoDatosPostulante({
 
 export function validarDatosPostulante(
   v: DatosPostulanteMaqueta,
-  { conTelefono = false }: { readonly conTelefono?: boolean } = {},
+  {
+    conTelefono = false,
+    conCorreo = false,
+  }: { readonly conTelefono?: boolean; readonly conCorreo?: boolean } = {},
 ): Partial<Record<keyof DatosPostulanteMaqueta, string>> {
   const e: Partial<Record<keyof DatosPostulanteMaqueta, string>> = {};
   if (v.nombre.trim().length < 2) e.nombre = "Indique el nombre (mínimo 2 letras)";
@@ -252,6 +287,11 @@ export function validarDatosPostulante(
     else if (!/^\d{7}$/.test(v.telefonoDigitos ?? "")) {
       e.telefono = "El número debe tener exactamente 7 dígitos";
     }
+  }
+  if (conCorreo) {
+    const correo = (v.email ?? "").trim();
+    if (!correo) e.email = "Indique el correo electrónico";
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo)) e.email = "Correo electrónico inválido";
   }
   return e;
 }

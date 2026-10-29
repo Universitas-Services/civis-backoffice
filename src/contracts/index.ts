@@ -384,10 +384,11 @@ const nombrePersonaSchema = z
     "Sólo letras y espacios (sin números ni signos)",
   );
 
+/** Mismo formato que guarda el portal del postulante: 11 dígitos, sin espacios. */
 export const telefonoVeSchema = z
   .string()
   .trim()
-  .regex(/^0(412|414|416|422|424|426) \d{7}$/, "Formato esperado: 0424 1234567");
+  .regex(/^0(412|414|416|422|424|426)\d{7}$/, "Formato esperado: 04241234567");
 
 export const crearExpedienteSchema = z.object({
   nationalId: nationalIdSchema,
@@ -395,8 +396,9 @@ export const crearExpedienteSchema = z.object({
   lastName: nombrePersonaSchema,
   chamber: z.enum(CHAMBERS, { message: "Seleccione la sala" }),
   publicSummary: z.string().trim().max(1200).optional(),
-  email: z.string().trim().toLowerCase().email("Correo inválido").optional().or(z.literal("")),
-  phone: telefonoVeSchema.optional().or(z.literal("")),
+  /** Contacto obligatorio: hace falta para localizar al postulante (p. ej. su descargo). */
+  email: z.string().trim().toLowerCase().email("Correo electrónico inválido"),
+  phone: telefonoVeSchema,
   internalNotes: z.string().trim().max(4000).optional(),
 });
 export type CrearExpedienteInput = z.infer<typeof crearExpedienteSchema>;
