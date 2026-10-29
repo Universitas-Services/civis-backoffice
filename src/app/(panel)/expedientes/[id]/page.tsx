@@ -59,6 +59,7 @@ export default async function DetalleExpediente({
   // El postulante con cuenta responde sus objeciones él mismo; si no tiene
   // cuenta, la secretaría lo contacta y carga el descargo aquí.
   let objecionesDescargo: ObjecionParaDescargo[] = [];
+  let errorDescargos: string | null = null;
   if (!conCuenta && tieneRol(usuario, "SUPER_ADMIN", "SECRETARY") && e._count.objections > 0) {
     try {
       objecionesDescargo = await llamarApi<ObjecionParaDescargo[]>(
@@ -66,6 +67,8 @@ export default async function DetalleExpediente({
       );
     } catch (error) {
       if (error instanceof NoAutorizado) await renovarYVolver(`/expedientes/${id}`);
+      // Sin esto la sección quedaba vacía y parecía que no había nada que responder.
+      errorDescargos = error instanceof ErrorApi ? error.message : "No se pudo contactar la API.";
     }
   }
   const contacto = (
@@ -147,7 +150,7 @@ export default async function DetalleExpediente({
                 <dt className="text-xs text-toga-500">
                   Teléfono <span className="font-normal text-toga-400">(interno)</span>
                 </dt>
-                <dd className="mt-0.5 text-toga-900">{e.phone}</dd>
+                <dd className="mt-0.5 text-toga-900">{telefonoLegible(e.phone)}</dd>
               </div>
             )}
             {(e._count?.objections ?? 0) > 0 && (
@@ -212,6 +215,15 @@ export default async function DetalleExpediente({
             )}
             <p className="mt-2">{contacto}</p>
           </div>
+        )}
+        {errorDescargos && (
+          <p
+            role="alert"
+            className="rounded-md border border-balanza-600/30 bg-balanza-50 px-4 py-3 text-sm text-balanza-700"
+          >
+            No se pudieron cargar las objeciones de este expediente: {errorDescargos} Recargue la
+            página; si persiste, avise a soporte.
+          </p>
         )}
         <SeccionDescargosSecretaria objeciones={objecionesDescargo} contacto={contacto} />
 

@@ -56,16 +56,16 @@ type TelefonoArmado =
 function armarTelefono(prefix: string, digits: string): TelefonoArmado {
   const p = prefix.trim();
   const d = digits.trim();
-  // Sin dígitos = teléfono omitido (el prefijo puede venir por defecto en la UI).
-  if (!d) return { ok: true, valor: undefined };
   if (!p) return { ok: false, mensaje: "Seleccione el prefijo (0412, 0414…)" };
+  if (!d) return { ok: false, mensaje: "Indique el número de teléfono" };
   if (!(PREFIJOS_TELEFONO as readonly string[]).includes(p)) {
     return { ok: false, mensaje: "Prefijo telefónico no válido" };
   }
   if (!/^\d{7}$/.test(d)) {
     return { ok: false, mensaje: "El número debe tener exactamente 7 dígitos" };
   }
-  return { ok: true, valor: `${p} ${d}` };
+  // Sin espacio: es el formato que guarda la API, igual que en el portal.
+  return { ok: true, valor: `${p}${d}` };
 }
 
 async function crearDesdeValores(valores: ValoresWizard): Promise<EstadoWizard> {
@@ -88,8 +88,8 @@ async function crearDesdeValores(valores: ValoresWizard): Promise<EstadoWizard> 
     lastName: valores.lastName,
     chamber: valores.chamber || undefined,
     publicSummary: valores.publicSummary || undefined,
-    email: valores.email || undefined,
-    phone: telefono.ok ? telefono.valor : undefined,
+    email: valores.email,
+    phone: telefono.ok ? telefono.valor : "",
     internalNotes: valores.internalNotes || undefined,
   };
 
@@ -107,11 +107,7 @@ async function crearDesdeValores(valores: ValoresWizard): Promise<EstadoWizard> 
     return { campos, valores };
   }
 
-  const datos = {
-    ...analisis.data,
-    email: analisis.data.email || undefined,
-    phone: analisis.data.phone || undefined,
-  };
+  const datos = analisis.data;
 
   try {
     const creado = await llamarApiAccion<{
@@ -157,6 +153,9 @@ export async function registrarPostulante(input: {
   readonly firstName: string;
   readonly lastName: string;
   readonly chamber: string;
+  readonly email: string;
+  readonly phonePrefix: string;
+  readonly phoneDigits: string;
 }): Promise<EstadoWizard> {
   return crearDesdeValores({
     nationalIdPrefix: input.nationalIdPrefix,
@@ -165,9 +164,9 @@ export async function registrarPostulante(input: {
     lastName: input.lastName,
     chamber: input.chamber,
     publicSummary: "",
-    email: "",
-    phonePrefix: "0412",
-    phoneDigits: "",
+    email: input.email.trim(),
+    phonePrefix: input.phonePrefix,
+    phoneDigits: input.phoneDigits.replace(/\D/g, "").slice(0, 7),
     internalNotes: "",
   });
 }

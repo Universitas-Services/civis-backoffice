@@ -19,6 +19,9 @@ const DATOS_VACIOS: DatosPostulanteMaqueta = {
   prefijoCedula: "V",
   cedulaDigitos: "",
   sala: "",
+  telefonoPrefijo: "",
+  telefonoDigitos: "",
+  email: "",
 };
 
 type ExpedienteCreado = {
@@ -40,7 +43,7 @@ export function FormularioNuevoExpedienteMaqueta() {
   const [creado, setCreado] = useState<ExpedienteCreado | null>(null);
 
   function registrarExpediente() {
-    const e = validarDatosPostulante(datos);
+    const e = validarDatosPostulante(datos, { conTelefono: true, conCorreo: true });
     setErrores(e);
     if (Object.keys(e).length > 0) return;
 
@@ -51,6 +54,9 @@ export function FormularioNuevoExpedienteMaqueta() {
         firstName: datos.nombre,
         lastName: datos.apellido,
         chamber: datos.sala,
+        email: datos.email ?? "",
+        phonePrefix: datos.telefonoPrefijo ?? "",
+        phoneDigits: datos.telefonoDigitos ?? "",
       });
 
       if (resultado.campos || resultado.error || !resultado.creado) {
@@ -61,6 +67,8 @@ export function FormularioNuevoExpedienteMaqueta() {
         if (resultado.campos?.firstName) campos.nombre = resultado.campos.firstName;
         if (resultado.campos?.lastName) campos.apellido = resultado.campos.lastName;
         if (resultado.campos?.chamber) campos.sala = resultado.campos.chamber;
+        if (resultado.campos?.email) campos.email = resultado.campos.email;
+        if (resultado.campos?.phone) campos.telefono = resultado.campos.phone;
         setErrores(campos);
         toast.error(resultado.error ?? "Revise los datos del postulante.");
         return;
@@ -106,6 +114,9 @@ export function FormularioNuevoExpedienteMaqueta() {
           }}
           onRegistrar={registrarExpediente}
           registrando={pending}
+          conTelefono
+          conCorreo
+          descripcion="Complete la identificación y los datos de contacto, y registre el expediente para continuar con los documentos."
         />
       ) : creado ? (
         <PasoCargaDocumentos
