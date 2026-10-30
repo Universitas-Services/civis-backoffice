@@ -2,12 +2,12 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { AjustesPortal, MiObjecion, OpinionPostulante, ResultadoRanking } from "@/contracts";
-import { ESTADO_PUBLICO_OBJECION } from "@/contracts";
 import { ErrorApi, llamarApi, NoAutorizado } from "@/lib/api";
 import { exigirRol, renovarYVolver } from "@/lib/rutas";
 import { CabeceraPagina, EstadoVacio } from "@/components/cabecera-pagina";
 import { PastillaBanda, salaDe } from "@/components/ranking-interno";
 import { FormularioObjecion, FormularioOpinion } from "@/components/formularios-visualizador";
+import { ListaMisObjeciones } from "@/components/lista-mis-objeciones";
 
 export const metadata: Metadata = { title: "Opiniones y objeciones" };
 
@@ -175,28 +175,9 @@ export default async function FichaRanking({
                 No ha presentado objeciones a este postulante.
               </p>
             ) : (
-              <ul className="mt-2 divide-y divide-toga-100 rounded-lg border border-toga-200 bg-white text-sm">
-                {misObjeciones.map((m) => (
-                  <li
-                    key={m.trackingCode}
-                    className="flex flex-wrap items-center justify-between gap-2 px-4 py-2.5"
-                  >
-                    <span className="codigo text-toga-900">{m.trackingCode}</span>
-                    <span className="flex flex-wrap items-center gap-3 text-xs text-toga-500">
-                      <span>
-                        {fecha(m.receivedAt)} ·{" "}
-                        {ESTADO_PUBLICO_OBJECION[m.publicStatus] ?? m.publicStatus}
-                      </span>
-                      <a
-                        href={`/api/objeciones/mias/${encodeURIComponent(m.trackingCode)}/pdf`}
-                        className="rounded-md border border-toga-300 bg-white px-2.5 py-1 text-xs font-semibold text-toga-700 hover:bg-toga-50"
-                      >
-                        Descargar PDF
-                      </a>
-                    </span>
-                  </li>
-                ))}
-              </ul>
+              <div className="mt-2">
+                <ListaMisObjeciones objeciones={misObjeciones} conPostulante={false} />
+              </div>
             )}
           </section>
         )}

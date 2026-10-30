@@ -10,8 +10,12 @@ const con = (...roles: Role[]): Sesion => ({
 });
 
 describe("visualizador (VIEWER)", () => {
-  it("sólo ve Expedientes y Ranking interno", () => {
-    expect(seccionesDe(con("VIEWER")).map((s) => s.href)).toEqual(["/expedientes", "/ranking"]);
+  it("sólo ve Expedientes, Ranking interno y sus propias objeciones", () => {
+    expect(seccionesDe(con("VIEWER")).map((s) => s.href)).toEqual([
+      "/expedientes",
+      "/ranking",
+      "/mis-objeciones",
+    ]);
   });
 
   it("entra directo al ranking", () => {

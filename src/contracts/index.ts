@@ -233,10 +233,33 @@ export const ESTADO_PUBLICO_OBJECION: Record<string, string> = {
   CLOSED: "Cerrada",
 };
 
+/** Situación de una objeción para quien la presentó: nada se ve antes de notificarse. */
+export type SituacionMiObjecion =
+  "EN_COMITE" | "ADMITIDA" | "INADMITIDA" | "CON_LUGAR" | "SIN_LUGAR";
+
+export const SITUACION_MI_OBJECION: Record<SituacionMiObjecion, string> = {
+  EN_COMITE: "En el comité",
+  ADMITIDA: "Admitida",
+  INADMITIDA: "Inadmitida",
+  CON_LUGAR: "Con lugar",
+  SIN_LUGAR: "Sin lugar",
+};
+
+/** Objeción presentada por el visualizador en sesión, con los autos ya notificados. */
 export interface MiObjecion {
+  readonly id: string;
   readonly trackingCode: string;
   readonly receivedAt: string;
-  readonly publicStatus: string;
+  readonly causes: readonly string[];
+  readonly category: string;
+  readonly situacion: SituacionMiObjecion;
+  /** Cuándo se le comunicó la admisión o inadmisión. */
+  readonly notifiedAt: string | null;
+  readonly finalDecidedAt: string | null;
+  /** Sólo si fue inadmitida y ya se le notificó. */
+  readonly motivoInadmision: string | null;
+  readonly autos: readonly AutoObjecion[];
+  readonly candidate: { readonly id: string; readonly fullName: string; readonly chamber: string };
 }
 
 export interface ResultadoRanking {
@@ -1159,6 +1182,41 @@ export interface ObjecionComite {
     readonly conCuenta: boolean;
   };
 }
+
+/** Pronunciamiento de admisión, para el control del comité. */
+export interface AdmisionComite {
+  readonly id: string;
+  readonly trackingCode: string;
+  readonly objectorFullName: string;
+  readonly receivedAt: string;
+  readonly stage: EtapaObjecion;
+  readonly admissionDecidedAt: string;
+  readonly admissionLateReason: string | null;
+  readonly notificationDueAt: string | null;
+  readonly notifiedAt: string | null;
+  readonly decision: "ADMITIDA" | "INADMITIDA";
+  readonly etapa: EtapaComite;
+  readonly porVisualizador: boolean;
+  readonly decididaPor: string | null;
+  readonly fueraDePlazo: boolean;
+  readonly auto: { readonly id: string; readonly kind: TipoAuto; readonly number: string } | null;
+  readonly candidate: { readonly id: string; readonly fullName: string; readonly chamber: string };
+}
+
+export interface ListaAdmisiones {
+  readonly items: readonly AdmisionComite[];
+  readonly total: number;
+  readonly page: number;
+  readonly pageSize: number;
+  readonly resumen: {
+    readonly TODAS: number;
+    readonly ADMITIDAS: number;
+    readonly INADMITIDAS: number;
+  };
+}
+
+/** Mínimo del motivo de inadmisión (lo exige también la API). */
+export const MINIMO_MOTIVO_INADMISION = 100;
 
 export interface BandejaComite {
   readonly items: readonly ObjecionComite[];

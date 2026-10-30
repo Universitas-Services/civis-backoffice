@@ -24,6 +24,13 @@ function rutaActiva(pathname: string, href: string) {
       (pathname.startsWith("/baremo/") && !pathname.startsWith("/baremo/configuracion"))
     );
   }
+  // «Bandeja» del comité: no se marca cuando se está en «Admisiones».
+  if (href === "/comite-objeciones") {
+    return (
+      pathname === href ||
+      (pathname.startsWith(`${href}/`) && !pathname.startsWith("/comite-objeciones/admisiones"))
+    );
+  }
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
@@ -414,6 +421,7 @@ function IconoSeccion({
         />
       );
     case "/objeciones":
+    case "/mis-objeciones":
       return (
         <svg {...props}>
           <path
