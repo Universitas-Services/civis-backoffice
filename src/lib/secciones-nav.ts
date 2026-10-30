@@ -68,13 +68,26 @@ export const SECCIONES: readonly SeccionNav[] = [
       },
     ],
   },
-  { href: "/comite-objeciones", texto: "Comité", roles: ["SUPER_ADMIN", "COMMITTEE"] },
+  {
+    href: "/comite-objeciones",
+    texto: "Comité",
+    roles: ["SUPER_ADMIN", "COMMITTEE"],
+    hijos: [
+      { href: "/comite-objeciones", texto: "Bandeja", roles: ["SUPER_ADMIN", "COMMITTEE"] },
+      {
+        href: "/comite-objeciones/admisiones",
+        texto: "Admisiones",
+        roles: ["SUPER_ADMIN", "COMMITTEE"],
+      },
+    ],
+  },
   { href: "/objeciones", texto: "Objeciones", roles: ["SUPER_ADMIN", "ADMIN", "EVALUATOR"] },
   {
     href: "/ranking",
     texto: "Ranking interno",
     roles: ["SUPER_ADMIN", "ADMIN", "EVALUATOR", "VIEWER"],
   },
+  { href: "/mis-objeciones", texto: "Mis objeciones", roles: ["VIEWER"] },
   {
     href: "/informes",
     texto: "Informes",

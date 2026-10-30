@@ -8,6 +8,7 @@ import {
   type EstadoActoComite,
 } from "@/app/(panel)/comite-objeciones/acciones";
 import { useToastDesdeEstado } from "@/hooks/use-toast-desde-estado";
+import { MINIMO_MOTIVO_INADMISION } from "@/contracts";
 
 type Acto = "ADMITIR" | "INADMITIR" | "CON_LUGAR" | "SIN_LUGAR";
 
@@ -22,7 +23,7 @@ const TEXTO: Record<Acto, { boton: string; confirmar: string; efecto: string }> 
     boton: "Inadmitir",
     confirmar: "Confirmar inadmisión",
     efecto:
-      "Se dicta el auto de inadmisión. Al notificarse lo recibe sólo la persona objetante; el postulado nunca verá esta objeción.",
+      "Se dicta el auto de inadmisión. Al notificarse, la persona objetante recibe el auto y el motivo; el postulado nunca verá esta objeción.",
   },
   CON_LUGAR: {
     boton: "Con lugar",
@@ -73,25 +74,56 @@ function Formulario({
       ? pronunciarAdmision.bind(null, objectionId, acto === "ADMITIR")
       : decidirObjecion.bind(null, objectionId, acto);
   const [estado, enviar] = useActionState<EstadoActoComite, FormData>(accion, {});
+  const [motivo, setMotivo] = useState("");
   useToastDesdeEstado(estado);
   if (estado.hecho) return null;
 
   return (
     <form action={enviar} className="space-y-3">
-      <label className="block">
-        <span className="text-sm font-medium text-toga-800">
-          Consideraciones adicionales <span className="font-normal text-toga-500">(opcional)</span>
-        </span>
-        <span className="mt-0.5 block text-xs text-toga-500">
-          El auto ya trae su fundamentación completa. Lo que escriba aquí se añade al auto.
-        </span>
-        <textarea
-          name="consideraciones"
-          maxLength={3000}
-          rows={3}
-          className="mt-1.5 block w-full rounded-md border border-toga-300 bg-white px-3 py-2 text-base text-toga-900 focus:border-balanza-600"
-        />
-      </label>
+      {acto === "INADMITIR" ? (
+        <label className="block">
+          <span className="text-sm font-medium text-toga-800">Motivo de la inadmisión</span>
+          <span className="mt-0.5 block text-xs text-toga-500">
+            Obligatorio. Explique por qué se inadmite (mínimo {MINIMO_MOTIVO_INADMISION}{" "}
+            caracteres): se añade al auto y se le notifica a la persona objetante.
+          </span>
+          <textarea
+            name="consideraciones"
+            required
+            minLength={MINIMO_MOTIVO_INADMISION}
+            maxLength={3000}
+            rows={5}
+            value={motivo}
+            onChange={(e) => setMotivo(e.target.value)}
+            className="mt-1.5 block w-full rounded-md border border-toga-300 bg-white px-3 py-2 text-base text-toga-900 focus:border-balanza-600"
+          />
+          <span
+            className={`mt-1 block text-xs ${
+              motivo.trim().length >= MINIMO_MOTIVO_INADMISION
+                ? "text-validado-700"
+                : "text-toga-500"
+            }`}
+          >
+            {motivo.trim().length} / {MINIMO_MOTIVO_INADMISION} caracteres mínimos
+          </span>
+        </label>
+      ) : (
+        <label className="block">
+          <span className="text-sm font-medium text-toga-800">
+            Consideraciones adicionales{" "}
+            <span className="font-normal text-toga-500">(opcional)</span>
+          </span>
+          <span className="mt-0.5 block text-xs text-toga-500">
+            El auto ya trae su fundamentación completa. Lo que escriba aquí se añade al auto.
+          </span>
+          <textarea
+            name="consideraciones"
+            maxLength={3000}
+            rows={3}
+            className="mt-1.5 block w-full rounded-md border border-toga-300 bg-white px-3 py-2 text-base text-toga-900 focus:border-balanza-600"
+          />
+        </label>
+      )}
       {extemporaneo && (
         <label className="block">
           <span className="text-sm font-medium text-toga-800">Motivo de fuerza mayor</span>

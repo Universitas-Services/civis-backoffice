@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { consideracionesComiteSchema } from "@/contracts";
+import { consideracionesComiteSchema, MINIMO_MOTIVO_INADMISION } from "@/contracts";
 import { ErrorApi, llamarApiAccion } from "@/lib/api";
 
 export interface EstadoActoComite {
@@ -72,6 +72,11 @@ export async function pronunciarAdmision(
 ): Promise<EstadoActoComite> {
   const texto = consideraciones(formData);
   if (typeof texto === "object") return texto;
+  if (!admitir && (texto?.length ?? 0) < MINIMO_MOTIVO_INADMISION) {
+    return {
+      error: `Explique por qué se inadmite (mínimo ${MINIMO_MOTIVO_INADMISION} caracteres).`,
+    };
+  }
   const motivo = motivoExtemporaneo(formData);
   if (typeof motivo === "object") return motivo;
   return dictar<{ stage: string; notificationDueAt: string; notificados: number }>(
